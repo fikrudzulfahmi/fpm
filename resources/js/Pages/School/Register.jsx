@@ -247,7 +247,9 @@ export default function Register({ competitions = [], school }) {
                 [key]: existing
                     ? {
                           ok: false,
-                          message: `NISN ini terdaftar di ${existing.competition ?? 'cabang lain'} atas nama ${existing.full_name}.`,
+                          message: existing.full_name
+                              ? `NISN ini terdaftar di ${existing.competition ?? 'cabang lain'} atas nama ${existing.full_name}.`
+                              : `NISN ini sudah terdaftar di ${existing.competition ?? 'cabang lain'} oleh sekolah lain.`,
                       }
                     : { ok: true, message: 'NISN tersedia.' },
             }));

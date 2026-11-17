@@ -299,7 +299,19 @@ class CertificateSettingController extends Controller
     private function storeImage(UploadedFile $file, string $folder): string
     {
         $name = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'latar';
-        $filename = $name.'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
+
+        // Ekstensi ditentukan dari MIME (hasil validasi `image`), bukan nama
+        // berkas kiriman klien — mencegah berkas gambar bernama .php tersimpan
+        // sebagai skrip yang bisa dieksekusi web server.
+        $extension = match ($file->getMimeType()) {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+            'image/avif' => 'avif',
+            default => 'jpg',
+        };
+
+        $filename = $name.'-'.Str::random(6).'.'.$extension;
 
         $destination = public_path('uploads/'.$folder);
         $file->move($destination, $filename);

@@ -35,7 +35,9 @@ Route::get('/lomba/{competition:slug}', [PublicController::class, 'show'])->name
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:10,1')
+        ->name('login.store');
 
     Route::get('/klaim', [ClaimController::class, 'index'])->name('klaim.index');
     Route::post('/klaim/cek', [ClaimController::class, 'cek'])
@@ -74,6 +76,7 @@ Route::middleware(['auth', 'school'])->group(function () {
         ->name('pendaftaran.show');
 
     Route::get('/api/nisn-check', [RegistrationController::class, 'nisnCheck'])
+        ->middleware('throttle:60,1')
         ->name('api.nisn-check');
 
     Route::get('/sertifikat/{registration}', [CertificateController::class, 'participant'])

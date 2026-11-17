@@ -68,8 +68,8 @@ class Event extends Model
         $cfg = $this->theme_config ?: [];
 
         return [
-            'primary' => $cfg['primary'] ?? '#0f766e',
-            'secondary' => $cfg['secondary'] ?? '#c9a45c',
+            'primary' => $cfg['primary'] ?? '#064b3d',
+            'secondary' => $cfg['secondary'] ?? '#f3d95b',
             'logo_url' => $cfg['logo_url'] ?? null,
             'edition_title' => $cfg['edition_title'] ?? $this->event_name,
         ];

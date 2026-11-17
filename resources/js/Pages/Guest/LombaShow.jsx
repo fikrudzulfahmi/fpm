@@ -1,5 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
 
 const categoryLabel = {
@@ -7,124 +6,223 @@ const categoryLabel = {
     group: 'Kelompok',
 };
 
-function status(c) {
-    if (!c.is_open) return { label: 'Ditutup', tone: 'bg-slate-100 text-slate-600' };
-    if (c.is_full) return { label: 'Kuota penuh', tone: 'bg-rose-50 text-rose-700' };
-    return { label: 'Buka', tone: 'bg-emerald-50 text-emerald-700' };
+function ArrowIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+    );
 }
 
-function QuotaBar({ used, total }) {
-    const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
-
-    return (
-        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-            <div
-                className="h-full rounded-full transition-all"
-                style={{ width: `${pct}%`, backgroundColor: 'var(--primary-color, #0f766e)' }}
-            />
-        </div>
-    );
+function statusOf(c) {
+    if (!c.is_open) return { label: 'Pendaftaran ditutup', tone: 'badge--closed' };
+    if (c.is_full) return { label: 'Kuota penuh', tone: 'badge--closed' };
+    return { label: 'Pendaftaran dibuka', tone: 'badge--open' };
 }
 
 export default function LombaShow({ event_info, competition }) {
     const { auth } = usePage().props;
     const user = auth?.user ?? null;
-    const s = status(competition);
+
+    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim';
+    const s = statusOf(competition);
+    const primaryHref = user ? '/daftar' : '/klaim';
+    const isGroup = competition.category_type === 'group';
+    const usedPct =
+        competition.global_quota > 0
+            ? Math.min(100, Math.round((competition.used_quota / competition.global_quota) * 100))
+            : 0;
+    const fillTone =
+        competition.remaining_quota === 0
+            ? ' quota__fill--full'
+            : competition.remaining_quota <= Math.max(1, Math.round(competition.global_quota * 0.15))
+              ? ' quota__fill--low'
+              : '';
 
     return (
         <GuestLayout title={competition.name}>
             <Head title={competition.name} />
 
-            <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <Link href="/" className="hover:text-slate-900">
-                        Beranda
-                    </Link>
-                    <span>/</span>
-                    <Link href="/lomba" className="hover:text-slate-900">
-                        Cabang Lomba
-                    </Link>
-                    <span>/</span>
-                    <span className="font-semibold text-slate-900">{competition.name}</span>
+            <section className="page-head">
+                <div className="container page-head__inner">
+                    <ol className="crumbs">
+                        <li>
+                            <Link href="/">Beranda</Link>
+                        </li>
+                        <li>
+                            <Link href="/lomba">Lomba</Link>
+                        </li>
+                        <li aria-current="page">{competition.name}</li>
+                    </ol>
+                    <span className="eyebrow eyebrow--gold">
+                        {categoryLabel[competition.category_type] ?? competition.category_type}
+                        {competition.gender_mode === 'separate' ? ' · Putra & Putri' : ''}
+                    </span>
+                    <h1>{competition.name}</h1>
+                    <p>{competition.description ?? `${eventName} — ketentuan cabang lomba.`}</p>
                 </div>
+            </section>
 
-                {/* Header */}
-                <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                            <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">{competition.name}</h1>
-                            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                {categoryLabel[competition.category_type] ?? competition.category_type}
-                                {competition.gender_mode === 'separate' && ' · Kategori Putra & Putri'}
+            <section className="section">
+                <div className="container detail-grid">
+                    <div>
+                        <div className="prose">
+                            <p>
+                                {competition.description ??
+                                    'Panitia belum menambahkan deskripsi untuk cabang ini. Silakan hubungi panitia untuk informasi lebih lanjut.'}
                             </p>
                         </div>
-                        <span className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-bold ${s.tone}`}>
-                            {s.label}
-                        </span>
+
+                        <div className="stat-grid" style={{ marginTop: '26px' }}>
+                            <div className="stat">
+                                <span className="stat__label">Kuota global</span>
+                                <span className="stat__value">{competition.global_quota}</span>
+                                <span className="stat__note">
+                                    {competition.gender_mode === 'separate'
+                                        ? 'per kategori Putra/Putri'
+                                        : 'seluruh peserta'}
+                                </span>
+                            </div>
+                            <div className="stat">
+                                <span className="stat__label">Terpakai</span>
+                                <span className="stat__value">{competition.used_quota}</span>
+                                <span className="stat__note">
+                                    {competition.gender_mode === 'separate'
+                                        ? `Putra ${competition.used_putra ?? 0} · Putri ${competition.used_putri ?? 0}`
+                                        : 'menunggu verifikasi + disetujui'}
+                                </span>
+                            </div>
+                            <div className="stat">
+                                <span className="stat__label">Tersisa</span>
+                                <span className="stat__value is-free">{competition.remaining_quota}</span>
+                                <span className="stat__note">slot pendaftaran</span>
+                            </div>
+                        </div>
+
+                        <div className="quota" style={{ marginTop: '18px' }}>
+                            <div className="quota__bar">
+                                <div className={`quota__fill${fillTone}`} style={{ width: `${usedPct}%` }} />
+                            </div>
+                        </div>
+
+                        {isGroup && competition.min_group_members && (
+                            <div className="form-note" style={{ marginTop: '26px' }}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 11v5M12 8h.01" />
+                                </svg>
+                                <span>
+                                    Lomba kelompok: satu tim terdiri dari{' '}
+                                    <strong>{competition.min_group_members}</strong>
+                                    {competition.max_group_members &&
+                                    competition.max_group_members !== competition.min_group_members
+                                        ? ` hingga ${competition.max_group_members}`
+                                        : ''}{' '}
+                                    siswa dari sekolah yang sama.
+                                </span>
+                            </div>
+                        )}
+
+                        <div style={{ marginTop: '34px' }}>
+                            <p className="section-title-sm">Ketentuan ringkas</p>
+                            <div className="accordion accordion--tight">
+                                <details open>
+                                    <summary>Format peserta</summary>
+                                    <div className="answer">
+                                        <p>
+                                            {isGroup
+                                                ? 'Lomba beregu: satu pendaftaran mewakili satu tim. Nama tim, guru pendamping, dan seluruh anggota diisi pada formulir.'
+                                                : 'Lomba individu: satu pendaftaran untuk satu peserta. Setiap siswa hanya boleh terdaftar pada satu cabang lomba per edisi.'}
+                                        </p>
+                                    </div>
+                                </details>
+                                <details>
+                                    <summary>Berkas yang disiapkan</summary>
+                                    <div className="answer">
+                                        <p>
+                                            Surat rekomendasi resmi sekolah (JPG, PNG, atau PDF maksimal 5 MB)
+                                            yang memuat nama atau NISN peserta. Berkas diperiksa otomatis, lalu
+                                            diverifikasi panitia.
+                                        </p>
+                                    </div>
+                                </details>
+                                <details>
+                                    <summary>Kuota dan kategori</summary>
+                                    <div className="answer">
+                                        <p>
+                                            Kuota dihitung dari pendaftaran yang menunggu verifikasi dan yang
+                                            sudah disetujui.
+                                            {competition.gender_mode === 'separate'
+                                                ? ' Kategori Putra dan Putri memiliki kuota terpisah.'
+                                                : ' Kuota berlaku untuk seluruh peserta cabang ini.'}
+                                        </p>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
                     </div>
 
-                    <p className="mt-4 text-sm leading-relaxed text-slate-700">
-                        {competition.description ?? 'Panitia belum menambahkan deskripsi untuk cabang ini.'}
-                    </p>
+                    <aside className="side-card">
+                        <span className={`badge ${s.tone}`}>{s.label}</span>
+                        <h2>Daftarkan peserta</h2>
+                        <p className="small">
+                            {user
+                                ? 'Anda sudah masuk. Lanjutkan ke formulir pendaftaran untuk memilih cabang ini.'
+                                : 'Pendaftaran dilakukan oleh sekolah. Klaim akun sekolah dengan NPSN terlebih dahulu.'}
+                        </p>
 
-                    <dl className="mt-6 grid gap-4 border-t border-slate-100 pt-6 sm:grid-cols-3">
-                        <div>
-                            <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">Kuota Global</dt>
-                            <dd className="mt-1 text-2xl font-black text-slate-900">{competition.global_quota}</dd>
-                            {competition.gender_mode === 'separate' && (
-                                <p className="text-[11px] text-slate-400">per kategori Putra/Putri</p>
+                        <Link
+                            className="btn btn--gold"
+                            href={user ? '/daftar' : '/klaim'}
+                        >
+                            {user ? 'Daftar cabang ini' : 'Klaim akun sekolah'}
+                            <ArrowIcon />
+                        </Link>
+
+                        <ul className="info-list">
+                            <li>
+                                <span className="info-list__label">Format</span>
+                                <span className="info-list__value">
+                                    {categoryLabel[competition.category_type] ?? competition.category_type}
+                                </span>
+                            </li>
+                            <li>
+                                <span className="info-list__label">Kategori gender</span>
+                                <span className="info-list__value">
+                                    {competition.gender_mode === 'separate' ? 'Putra & Putri' : 'Campuran'}
+                                </span>
+                            </li>
+                            {isGroup && competition.min_group_members && (
+                                <li>
+                                    <span className="info-list__label">Anggota per tim</span>
+                                    <span className="info-list__value">
+                                        {competition.min_group_members}
+                                        {competition.max_group_members &&
+                                        competition.max_group_members !== competition.min_group_members
+                                            ? `–${competition.max_group_members}`
+                                            : ''}{' '}
+                                        siswa
+                                    </span>
+                                </li>
                             )}
-                        </div>
-                        <div>
-                            <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">Terpakai</dt>
-                            <dd className="mt-1 text-2xl font-black text-slate-900">{competition.used_quota}</dd>
-                            {competition.gender_mode === 'separate' && (
-                                <p className="text-[11px] text-slate-400">
-                                    Putra {competition.used_putra ?? 0} · Putri {competition.used_putri ?? 0}
-                                </p>
-                            )}
-                        </div>
-                        <div>
-                            <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">Tersisa</dt>
-                            <dd className="mt-1 text-2xl font-black text-emerald-600">
-                                {competition.remaining_quota}
-                            </dd>
-                        </div>
-                    </dl>
+                            <li>
+                                <span className="info-list__label">Kuota tersisa</span>
+                                <span className="info-list__value">
+                                    {competition.remaining_quota} dari {competition.global_quota}
+                                </span>
+                            </li>
+                        </ul>
 
-                    <div className="mt-4">
-                        <QuotaBar used={competition.used_quota} total={competition.global_quota} />
-                    </div>
+                        <p className="small" style={{ borderTop: '1px solid var(--line)', paddingTop: '14px' }}>
+                            Pendaftaran tidak dipungut biaya.
+                        </p>
 
-                    {competition.category_type === 'group' && competition.min_group_members && (
-                        <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Lomba Kelompok</p>
-                            <p className="mt-1 text-sm text-blue-900">
-                                Satu tim terdiri dari <strong>{competition.min_group_members}</strong> hingga{' '}
-                                <strong>{competition.max_group_members}</strong> siswa.
-                            </p>
-                        </div>
-                    )}
+                        <Link className="link-more" href="/lomba">
+                            Kembali ke daftar lomba
+                        </Link>
+                    </aside>
                 </div>
-
-                {/* CTA */}
-                <div className="mt-6 flex flex-wrap gap-3">
-                    <Link
-                        href={user ? '/daftar' : '/klaim'}
-                        className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
-                    >
-                        {user ? 'Daftar Lomba Ini' : 'Klaim Akun Sekolah'}
-                    </Link>
-                    <Link
-                        href="/lomba"
-                        className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 transition hover:bg-slate-100"
-                    >
-                        Kembali ke Daftar Lomba
-                    </Link>
-                </div>
-            </div>
+            </section>
         </GuestLayout>
     );
 }

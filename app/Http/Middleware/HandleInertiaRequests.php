@@ -46,6 +46,8 @@ class HandleInertiaRequests extends Middleware
                 'event_name' => $event->event_name,
                 'year' => $event->year,
                 'theme' => $event->theme(),
+                // Dipakai tombol WhatsApp & footer halaman publik.
+                'admin_whatsapp' => optional($event->setting())->admin_whatsapp,
             ] : null,
             // Tema dipakai root blade untuk inject CSS variables.
             'theme' => $event ? $event->theme() : null,

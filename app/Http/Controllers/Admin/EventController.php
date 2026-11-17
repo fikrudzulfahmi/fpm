@@ -87,12 +87,15 @@ class EventController extends Controller
     public function uploadLogo(Request $request, Event $event): RedirectResponse
     {
         $request->validate([
-            'logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $file = $request->file('logo');
+
+        // Ekstensi diambil dari MIME hasil pemeriksaan, bukan nama berkas klien:
+        // berkas gambar bernama "logo.php" tidak boleh tersimpan sebagai .php.
         $filename = 'logo-'.Str::slug($event->year.'-'.$event->id).'-'.Str::random(6)
-            .'.'.$file->getClientOriginalExtension();
+            .'.'.$this->imageExtension($file);
         $file->move(public_path('uploads/branding'), $filename);
 
         $theme = $event->theme_config ?: [];
@@ -128,6 +131,20 @@ class EventController extends Controller
         if (is_file($path)) {
             @unlink($path);
         }
+    }
+
+    /**
+     * Ekstensi aman berdasarkan MIME yang sudah divalidasi aturan `image`.
+     */
+    private function imageExtension(\Illuminate\Http\UploadedFile $file): string
+    {
+        return match ($file->getMimeType()) {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+            'image/avif' => 'avif',
+            default => 'jpg',
+        };
     }
 
     public function destroy(Event $event): RedirectResponse

@@ -82,18 +82,20 @@ class RegistrationController extends Controller
         $nisn = trim($data['nisn']);
         $competition = Competition::where('event_id', $event->id)->findOrFail($data['competition_id']);
 
+        $schoolId = (int) $request->user()->school_id;
+
         // Aturan format + bentrok lintas lomba dalam event yang sama.
-        $batch = $this->guard->checkNisnBatch([$nisn], $event->id);
+        $batch = $this->guard->checkNisnBatch([$nisn], $event->id, null, $schoolId);
 
         $found = Participant::findActiveInEvent($nisn, $event->id);
-
-        $schoolId = (int) $request->user()->school_id;
 
         $gender = $competition->isSeparateGender()
             ? $this->resolveGender($request->query('gender'))
             : null;
 
         $quota = $this->guard->canRegister($competition, $schoolId, $gender);
+
+        $sameSchool = $found && (int) $found->registration?->school_id === $schoolId;
 
         return response()->json([
             'ok' => $batch['ok'] && $quota['allowed'],
@@ -102,7 +104,9 @@ class RegistrationController extends Controller
             'reason' => $quota['reason'],
             'participant' => $found ? [
                 'nisn' => $found->nisn,
-                'full_name' => $found->full_name,
+                // Nama siswa sekolah lain tidak dikirim ke klien.
+                'full_name' => $sameSchool ? $found->full_name : null,
+                'same_school' => $sameSchool,
                 'competition' => $found->registration?->competition?->name,
             ] : null,
             'remaining_global' => $competition->remainingGlobalQuota($gender),
@@ -182,7 +186,7 @@ class RegistrationController extends Controller
             $data['participants']
         );
 
-        $check = $this->guard->checkNisnBatch($nisnList, $event->id);
+        $check = $this->guard->checkNisnBatch($nisnList, $event->id, null, $schoolId);
 
         if (! $check['ok']) {
             $messages = [...$check['errors']];
@@ -210,7 +214,7 @@ class RegistrationController extends Controller
                 ]);
             }
 
-            $nisnRecheck = $this->guard->checkNisnBatch($nisnList, $event->id);
+            $nisnRecheck = $this->guard->checkNisnBatch($nisnList, $event->id, null, $schoolId);
 
             if (! $nisnRecheck['ok']) {
                 $messages = [...$nisnRecheck['errors']];

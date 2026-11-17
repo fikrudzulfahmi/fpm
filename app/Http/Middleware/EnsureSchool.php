@@ -11,7 +11,7 @@ class EnsureSchool
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isSchool() || ! $user->school_id) {
+        if (! $user || ! $user->isSchool() || ! $user->school_id || ! $user->is_active) {
             abort(403, 'Halaman ini khusus akun sekolah.');
         }
 

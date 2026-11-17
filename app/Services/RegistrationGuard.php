@@ -18,9 +18,11 @@ class RegistrationGuard
      * Validasi daftar NISN mentah sebelum apa pun disimpan.
      *
      * @param  array<int,string>  $nisnList
+     * @param  int|null  $viewerSchoolId  Sekolah yang sedang memeriksa; nama siswa
+     *                                    sekolah lain disamarkan agar tidak bocor.
      * @return array{ok:bool, errors:array<int,string>, conflicts:array<int,array{nisn:string,name:string,competition:string}>}
      */
-    public function checkNisnBatch(array $nisnList, int $eventId, ?int $ignoreRegistrationId = null): array
+    public function checkNisnBatch(array $nisnList, int $eventId, ?int $ignoreRegistrationId = null, ?int $viewerSchoolId = null): array
     {
         $errors = [];
         $conflicts = [];
@@ -47,9 +49,12 @@ class RegistrationGuard
             $found = Participant::findActiveInEvent($nisn, $eventId);
 
             if ($found && $found->registration_id !== $ignoreRegistrationId) {
+                $sameSchool = $viewerSchoolId === null
+                    || (int) $found->registration?->school_id === $viewerSchoolId;
+
                 $conflicts[] = [
                     'nisn' => $nisn,
-                    'name' => $found->full_name,
+                    'name' => $sameSchool ? $found->full_name : 'Peserta sekolah lain',
                     'competition' => $found->registration?->competition?->name ?? '-',
                 ];
             }

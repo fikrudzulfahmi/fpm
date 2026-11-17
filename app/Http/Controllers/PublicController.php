@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Competition;
 use App\Models\Event;
+use App\Models\Registration;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,17 +16,15 @@ class PublicController extends Controller
     public function index(): Response
     {
         $event = Event::current();
+        $competitions = $this->competitions($event);
 
         return Inertia::render('Guest/Landing', [
             'event_info' => $this->eventInfo($event),
-            'competitions' => $this->competitions($event),
+            'competitions' => $competitions,
             'totals' => [
-                'competitions' => $event ? $event->competitions()->count() : 0,
-                'open_competitions' => $event
-                    ? $event->competitions()->where('is_open', true)->count()
-                    : 0,
-                'remaining_quota' => $this->competitions($event)
-                    ->sum(fn (array $c) => $c['remaining_quota']),
+                'competitions' => $competitions->count(),
+                'open_competitions' => $competitions->where('is_open', true)->count(),
+                'remaining_quota' => $competitions->sum(fn (array $c) => $c['remaining_quota']),
             ],
         ]);
     }
@@ -43,6 +42,9 @@ class PublicController extends Controller
     public function show(Competition $competition): Response
     {
         $event = Event::current();
+
+        // Jangan tampilkan cabang dari event lain/event lama lewat slug.
+        abort_if(! $event || (int) $competition->event_id !== (int) $event->id, 404);
 
         return Inertia::render('Guest/LombaShow', [
             'event_info' => $this->eventInfo($event),
@@ -87,33 +89,54 @@ class PublicController extends Controller
         ];
     }
 
+    /**
+     * Daftar cabang + hitungan kuota. Hitungan diambil dari satu query
+     * agregat supaya tidak N+1 (3 query per cabang) pada halaman publik.
+     */
     private function competitions(?Event $event)
     {
         if (! $event) {
             return collect();
         }
 
-        return $event->competitions()
+        $competitions = $event->competitions()
             ->orderBy('sort_order')
             ->orderBy('name')
+            ->get();
+
+        $counts = Registration::query()
+            ->where('event_id', $event->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->selectRaw('competition_id, gender, COUNT(*) as total')
+            ->groupBy('competition_id', 'gender')
             ->get()
-            ->map(fn (Competition $c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'slug' => $c->slug,
-                'category_type' => $c->category_type,
-                'gender_mode' => $c->gender_mode,
-                'used_putra' => $c->approvedCount('L'),
-                'used_putri' => $c->approvedCount('P'),
-                'description' => $c->description,
-                'global_quota' => $c->global_quota,
-                'used_quota' => $c->approvedCount(),
-                'remaining_quota' => $c->remainingGlobalQuota(),
-                'min_group_members' => $c->min_group_members,
-                'max_group_members' => $c->max_group_members,
-                'is_open' => (bool) $c->is_open,
-                'is_full' => $c->isFull(),
-            ])
+            ->groupBy('competition_id');
+
+        return $competitions
+            ->map(function (Competition $c) use ($counts) {
+                $rows = $counts->get($c->id, collect());
+                $putra = (int) ($rows->firstWhere('gender', 'L')?->total ?? 0);
+                $putri = (int) ($rows->firstWhere('gender', 'P')?->total ?? 0);
+                $used = (int) $rows->sum('total');
+
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'slug' => $c->slug,
+                    'category_type' => $c->category_type,
+                    'gender_mode' => $c->gender_mode,
+                    'used_putra' => $putra,
+                    'used_putri' => $putri,
+                    'description' => $c->description,
+                    'global_quota' => $c->global_quota,
+                    'used_quota' => $used,
+                    'remaining_quota' => max(0, $c->global_quota - $used),
+                    'min_group_members' => $c->min_group_members,
+                    'max_group_members' => $c->max_group_members,
+                    'is_open' => (bool) $c->is_open,
+                    'is_full' => $used >= $c->global_quota,
+                ];
+            })
             ->values();
     }
 }

@@ -86,6 +86,8 @@ class RegistrationController extends Controller
 
     public function show(Registration $registration): Response
     {
+        $this->ensureCurrentEvent($registration);
+
         $registration->load([
             'competition',
             'school',
@@ -120,6 +122,8 @@ class RegistrationController extends Controller
 
     public function approve(Request $request, Registration $registration): RedirectResponse
     {
+        $this->ensureCurrentEvent($registration);
+
         if ($registration->status !== 'approved') {
             // Kuota dihitung dari pending+approved, jadi pendaftaran yang
             // sempat ditolak bisa di-approve melewati batas kalau tidak dicek.
@@ -155,6 +159,8 @@ class RegistrationController extends Controller
 
     public function reject(Request $request, Registration $registration): RedirectResponse
     {
+        $this->ensureCurrentEvent($registration);
+
         $data = $request->validate([
             'rejection_reason' => ['required', 'string', 'min:5', 'max:500'],
         ]);
@@ -174,6 +180,8 @@ class RegistrationController extends Controller
      */
     public function reverifyAi(Registration $registration, RecommendationVerifier $verifier): RedirectResponse
     {
+        $this->ensureCurrentEvent($registration);
+
         $verifier->verify($registration);
         $registration->refresh();
 
@@ -185,5 +193,20 @@ class RegistrationController extends Controller
         };
 
         return back()->with('success', "Verifikasi AI selesai: {$label}.");
+    }
+
+    /**
+     * Pastikan pendaftaran yang diakses milik event yang sedang aktif. Tanpa
+     * ini, ID lama dari event sebelumnya masih bisa disetujui/ditolak.
+     */
+    private function ensureCurrentEvent(Registration $registration): void
+    {
+        $event = Event::current();
+
+        abort_if(
+            ! $event || (int) $registration->event_id !== (int) $event->id,
+            404,
+            'Pendaftaran ini bukan milik event yang sedang aktif.'
+        );
     }
 }

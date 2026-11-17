@@ -1,5 +1,5 @@
-import { Link, usePage } from '@inertiajs/react';
-import { Head } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
 
 const categoryLabel = {
@@ -7,162 +7,274 @@ const categoryLabel = {
     group: 'Kelompok',
 };
 
-function status(c) {
-    if (!c.is_open) return { label: 'Ditutup', tone: 'bg-slate-100 text-slate-600' };
-    if (c.is_full) return { label: 'Kuota penuh', tone: 'bg-rose-50 text-rose-700' };
-    return { label: 'Buka', tone: 'bg-emerald-50 text-emerald-700' };
+const FILTERS = [
+    { key: 'all', label: 'Semua' },
+    { key: 'individual', label: 'Individu' },
+    { key: 'group', label: 'Kelompok' },
+    { key: 'open', label: 'Masih dibuka' },
+];
+
+function ArrowIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+    );
+}
+
+function statusOf(c) {
+    if (!c.is_open) return { label: 'Ditutup', tone: 'badge--closed' };
+    if (c.is_full) return { label: 'Kuota penuh', tone: 'badge--closed' };
+    return { label: 'Buka', tone: 'badge--open' };
+}
+
+function QuotaBar({ used = 0, total = 0 }) {
+    const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+    const rest = Math.max(0, total - used);
+    const tone = rest === 0 ? ' quota__fill--full' : rest <= Math.max(1, Math.round(total * 0.15)) ? ' quota__fill--low' : '';
+
+    return (
+        <div className="quota">
+            <div className="quota__label">
+                <span>Kuota tersisa</span>
+                <span>
+                    <strong>{rest}</strong> / {total}
+                </span>
+            </div>
+            <div className="quota__bar">
+                <div className={`quota__fill${tone}`} style={{ width: `${pct}%` }} />
+            </div>
+        </div>
+    );
 }
 
 export default function Lomba({ event_info, competitions = [] }) {
     const { auth } = usePage().props;
     const user = auth?.user ?? null;
+    const [filter, setFilter] = useState('all');
+
+    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim';
+    const year = event_info?.year ?? null;
+    const primaryHref = user ? '/daftar' : '/klaim';
+
+    const visible = useMemo(() => {
+        if (filter === 'all') return competitions;
+
+        if (filter === 'open') {
+            return competitions.filter((c) => c.is_open && !c.is_full);
+        }
+
+        return competitions.filter((c) => c.category_type === filter);
+    }, [competitions, filter]);
+
+    const totalQuota = competitions.reduce((sum, c) => sum + (c.remaining_quota ?? 0), 0);
 
     return (
         <GuestLayout title="Cabang Lomba">
             <Head title="Cabang Lomba" />
 
-            <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                    {event_info?.event_name ?? 'Festival Pelajar Muslim'}
-                </p>
-                <h1 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">Cabang Lomba</h1>
-                <p className="mt-2 max-w-2xl text-sm text-slate-500">
-                    Daftar cabang pada {event_info?.tagline ?? 'edisi ini'} beserta kuota yang masih tersedia. Kuota
-                    tersisa = kuota global dikurangi pendaftaran yang menunggu verifikasi dan disetujui.
-                </p>
+            <section className="page-head">
+                <div className="container page-head__inner">
+                    <ol className="crumbs">
+                        <li>
+                            <Link href="/">Beranda</Link>
+                        </li>
+                        <li aria-current="page">Lomba</li>
+                    </ol>
+                    <span className="eyebrow eyebrow--gold">Kompetisi</span>
+                    <h1>Cabang lomba</h1>
+                    <p>
+                        {competitions.length > 0
+                            ? `${competitions.length} cabang pada ${eventName}${year ? ` edisi ${year}` : ''}. Pilih kategori untuk mempersempit daftar, lalu buka ketentuan tiap cabang.`
+                            : `Panitia ${eventName} belum mempublikasikan cabang lomba.`}
+                    </p>
+                </div>
+            </section>
 
-                {competitions.length === 0 ? (
-                    <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-                        Panitia belum mempublikasikan cabang lomba.
-                    </div>
-                ) : (
-                    <>
-                        {/* Tabel desktop */}
-                        <div className="mt-8 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
-                                    <tr>
-                                        <th className="px-4 py-3 font-semibold">Nama Cabang</th>
-                                        <th className="px-4 py-3 font-semibold">Kategori</th>
-                                        <th className="px-4 py-3 font-semibold">Kuota Tersisa</th>
-                                        <th className="px-4 py-3 font-semibold">Status</th>
-                                        <th className="px-4 py-3" />
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {competitions.map((c) => {
-                                        const s = status(c);
+            <section className="section">
+                <div className="container">
+                    {competitions.length === 0 ? (
+                        <div className="empty-state">
+                            Belum ada cabang lomba yang dipublikasikan. Silakan cek kembali nanti.
+                        </div>
+                    ) : (
+                        <>
+                            <div className="filters" role="group" aria-label="Filter cabang lomba">
+                                {FILTERS.map((item) => (
+                                    <button
+                                        key={item.key}
+                                        type="button"
+                                        className="chip"
+                                        aria-pressed={filter === item.key ? 'true' : 'false'}
+                                        onClick={() => setFilter(item.key)}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {visible.length === 0 ? (
+                                <div className="empty-state">Tidak ada cabang lomba pada kategori ini.</div>
+                            ) : (
+                                <div className="cards" data-detail="true">
+                                    {visible.map((c, i) => {
+                                        const s = statusOf(c);
 
                                         return (
-                                            <tr key={c.id} className="align-top hover:bg-slate-50/70">
-                                                <td className="px-4 py-3">
-                                                    <Link
-                                                        href={`/lomba/${c.slug}`}
-                                                        className="font-semibold text-slate-900 hover:underline"
-                                                    >
-                                                        {c.name}
-                                                    </Link>
-                                                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                                                        {c.description ?? '-'}
-                                                    </p>
-                                                </td>
-                                                <td className="px-4 py-3 text-slate-600">
-                                                    {categoryLabel[c.category_type] ?? c.category_type}
-                                                    {c.gender_mode === 'separate' && (
-                                                        <span className="mt-1 block text-xs font-semibold text-indigo-600">
-                                                            Putra &amp; Putri
-                                                        </span>
-                                                    )}
-                                                    {c.category_type === 'group' && c.min_group_members && (
-                                                        <span className="block text-xs text-slate-400">
-                                                            {c.min_group_members}–{c.max_group_members} siswa/tim
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <span className="font-bold text-slate-900">{c.remaining_quota}</span>
-                                                    <span className="text-slate-400"> / {c.global_quota}</span>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${s.tone}`}
-                                                    >
-                                                        {s.label}
+                                            <article
+                                                className="lomba-card reveal"
+                                                key={c.id}
+                                                style={{ '--d': `${(i % 6) * 60}ms` }}
+                                            >
+                                                <div className="lomba-card__top">
+                                                    <span className="lomba-card__num">
+                                                        {String(i + 1).padStart(2, '0')}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <Link
-                                                        href={`/lomba/${c.slug}`}
-                                                        className="text-xs font-semibold underline decoration-2 underline-offset-4"
-                                                        style={{ color: 'var(--primary-color, #0f766e)' }}
-                                                    >
+                                                    <span className={`badge ${s.tone}`}>{s.label}</span>
+                                                </div>
+
+                                                <h3>{c.name}</h3>
+                                                <p className="lomba-card__meta">
+                                                    {categoryLabel[c.category_type] ?? c.category_type}
+                                                    {c.gender_mode === 'separate' ? ' · Putra & Putri' : ''}
+                                                </p>
+                                                <p>
+                                                    {c.description ??
+                                                        'Panitia belum menambahkan deskripsi untuk cabang ini.'}
+                                                </p>
+
+                                                {c.category_type === 'group' && c.min_group_members ? (
+                                                    <details className="lomba-card__more">
+                                                        <summary>Ketentuan peserta</summary>
+                                                        <ul>
+                                                            <li>
+                                                                Satu tim terdiri dari {c.min_group_members}
+                                                                {c.max_group_members && c.max_group_members !== c.min_group_members
+                                                                    ? `–${c.max_group_members}`
+                                                                    : ''}{' '}
+                                                                siswa.
+                                                            </li>
+                                                            <li>Setiap siswa hanya boleh mengikuti satu cabang lomba.</li>
+                                                            <li>
+                                                                Pendaftaran dilakukan oleh sekolah melalui akun
+                                                                sekolah.
+                                                            </li>
+                                                        </ul>
+                                                    </details>
+                                                ) : (
+                                                    <details className="lomba-card__more">
+                                                        <summary>Ketentuan peserta</summary>
+                                                        <ul>
+                                                            <li>
+                                                                Lomba individu: satu peserta untuk satu
+                                                                pendaftaran.
+                                                            </li>
+                                                            {c.gender_mode === 'separate' && (
+                                                                <li>
+                                                                    Kategori Putra dan Putri dipisah dengan kuota
+                                                                    masing-masing.
+                                                                </li>
+                                                            )}
+                                                            <li>Setiap siswa hanya boleh mengikuti satu cabang lomba.</li>
+                                                            <li>
+                                                                Pendaftaran dilakukan oleh sekolah melalui akun
+                                                                sekolah.
+                                                            </li>
+                                                        </ul>
+                                                    </details>
+                                                )}
+
+                                                <QuotaBar used={c.used_quota} total={c.global_quota} />
+
+                                                <div className="lomba-card__foot">
+                                                    <span>{c.remaining_quota} slot tersisa</span>
+                                                    <Link href={`/lomba/${c.slug}`}>
                                                         Detail
+                                                        <ArrowIcon />
                                                     </Link>
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </article>
                                         );
                                     })}
-                                </tbody>
-                            </table>
-                        </div>
+                                </div>
+                            )}
+                        </>
+                    )}
 
-                        {/* Kartu mobile */}
-                        <div className="mt-6 space-y-3 md:hidden">
-                            {competitions.map((c) => {
-                                const s = status(c);
-
-                                return (
-                                    <Link
-                                        key={c.id}
-                                        href={`/lomba/${c.slug}`}
-                                        className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-                                    >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <p className="text-sm font-bold text-slate-900">{c.name}</p>
-                                            <span
-                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${s.tone}`}
-                                            >
-                                                {s.label}
-                                            </span>
-                                        </div>
-                                        <dl className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-500">
-                                            <div>
-                                                <dt className="text-slate-400">Kategori</dt>
-                                                <dd className="font-semibold text-slate-700">
-                                                    {categoryLabel[c.category_type] ?? c.category_type}
-                                                    {c.gender_mode === 'separate' && ' · Putra/Putri'}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-slate-400">Kuota tersisa</dt>
-                                                <dd className="font-semibold text-slate-700">
-                                                    {c.remaining_quota} / {c.global_quota}
-                                                </dd>
-                                            </div>
-                                        </dl>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    </>
-                )}
-
-                <div className="mt-8 flex flex-wrap gap-2">
-                    <Link
-                        href={user ? '/daftar' : '/klaim'}
-                        className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
-                    >
-                        {user ? 'Daftar Lomba' : 'Klaim Akun Sekolah'}
-                    </Link>
-                    <Link
-                        href={user ? '/dashboard' : '/login'}
-                        className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 transition hover:bg-slate-100"
-                    >
-                        {user ? 'Dashboard' : 'Masuk'}
-                    </Link>
+                    <div className="form-note" style={{ marginTop: '30px', maxWidth: '70ch' }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 11v5M12 8h.01" />
+                        </svg>
+                        <span>
+                            Pendaftaran FPM <strong>tidak dipungut biaya</strong>. Kuota setiap cabang
+                            terbatas — saat ini tersisa <strong>{totalQuota}</strong> slot dari seluruh
+                            cabang. Kuota tersisa = kuota global dikurangi pendaftaran yang menunggu
+                            verifikasi dan disetujui.
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </section>
+
+            <section className="section section--paper">
+                <div className="container">
+                    <div className="section-head">
+                        <div>
+                            <span className="eyebrow">Alur pendaftaran</span>
+                            <h2 className="h2">Tiga langkah, selesai.</h2>
+                            <p className="lead">
+                                Pendaftaran dilakukan daring. Tidak perlu datang ke sekolah untuk mengambil
+                                formulir.
+                            </p>
+                        </div>
+                        <Link className="link-more" href={primaryHref}>
+                            {user ? 'Ke formulir pendaftaran' : 'Klaim akun dulu'}
+                            <ArrowIcon />
+                        </Link>
+                    </div>
+
+                    <ol className="steps">
+                        <li>
+                            <span className="steps__date">Langkah 1</span>
+                            <h3>Pilih cabang lomba</h3>
+                            <p>Tentukan cabang dan format peserta (individu atau tim) sesuai ketentuan.</p>
+                        </li>
+                        <li>
+                            <span className="steps__date">Langkah 2</span>
+                            <h3>Isi formulir daring</h3>
+                            <p>Lengkapi NISN, nama peserta, guru pendamping, dan surat rekomendasi.</p>
+                        </li>
+                        <li>
+                            <span className="steps__date">Langkah 3</span>
+                            <h3>Tunggu konfirmasi</h3>
+                            <p>Panitia memverifikasi berkas, lalu mengirim informasi technical meeting.</p>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <section className="section section--tight">
+                <div className="container">
+                    <div className="cta-band reveal">
+                        <div>
+                            <h2>Sudah menemukan cabangnya?</h2>
+                            <p>
+                                Satu akun sekolah untuk semua cabang. Isi data peserta dengan teliti agar
+                                proses verifikasi lebih cepat.
+                            </p>
+                        </div>
+                        <div className="btn-row">
+                            <Link className="btn btn--gold" href={primaryHref}>
+                                {user ? 'Daftar sekarang' : 'Klaim akun sekolah'}
+                                <ArrowIcon />
+                            </Link>
+                            <Link className="btn btn--ghost-light" href="/#faq">
+                                Baca FAQ
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </GuestLayout>
     );
 }

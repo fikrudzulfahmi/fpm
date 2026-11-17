@@ -1,20 +1,68 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
 
+const SCHOOL_NAME = 'SMKS Islam 1 Kota Blitar';
+
 const categoryLabel = {
     individual: 'Individu',
     group: 'Kelompok',
 };
 
-function QuotaBar({ used, total }) {
+const FAQ = [
+    {
+        q: 'Siapa yang boleh mengikuti FPM?',
+        a: 'Pelajar aktif SMP/MTs dan SMA/SMK. Setiap peserta didaftarkan oleh sekolah melalui akun sekolah, bukan mendaftar sendiri.',
+    },
+    {
+        q: 'Apakah pendaftaran dipungut biaya?',
+        a: 'Tidak. Pendaftaran FPM tidak dipungut biaya. Kuota tiap cabang tetap terbatas, jadi daftarkan tim lebih awal.',
+    },
+    {
+        q: 'Bagaimana cara mendapatkan akun sekolah?',
+        a: 'Buka halaman Klaim Akun, masukkan NPSN sekolah (8 digit) yang sudah terdaftar di data panitia, lalu lengkapi data penanggung jawab.',
+    },
+    {
+        q: 'Apa syarat berkas pendaftaran?',
+        a: 'Setiap pendaftaran melampirkan surat rekomendasi resmi sekolah (JPG, PNG, atau PDF maksimal 5 MB). Berkas diperiksa otomatis, lalu diverifikasi panitia.',
+    },
+    {
+        q: 'Bagaimana sertifikat dan piagam diperoleh?',
+        a: 'Setelah panitia membuka sertifikat, akun sekolah dapat mengunduh sertifikat peserta. Piagam juara diterbitkan panitia untuk peserta yang memperoleh peringkat.',
+    },
+];
+
+function ArrowIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+    );
+}
+
+function MetaIcon({ children }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {children}
+        </svg>
+    );
+}
+
+function QuotaBar({ used = 0, total = 0 }) {
     const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+    const rest = Math.max(0, total - used);
+    const tone = rest === 0 ? ' quota__fill--full' : rest <= Math.max(1, Math.round(total * 0.15)) ? ' quota__fill--low' : '';
 
     return (
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-            <div
-                className="h-full rounded-full"
-                style={{ width: `${pct}%`, backgroundColor: 'var(--primary-color, #0f766e)' }}
-            />
+        <div className="quota">
+            <div className="quota__label">
+                <span>Kuota tersisa</span>
+                <span>
+                    <strong>{rest}</strong> / {total}
+                </span>
+            </div>
+            <div className="quota__bar">
+                <div className={`quota__fill${tone}`} style={{ width: `${pct}%` }} />
+            </div>
         </div>
     );
 }
@@ -22,173 +70,424 @@ function QuotaBar({ used, total }) {
 export default function Landing({ event_info, competitions = [], totals = {} }) {
     const { theme, auth } = usePage().props;
     const user = auth?.user ?? null;
+
     const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim';
-    const tagline = event_info?.tagline ?? eventName;
+    const year = event_info?.year ?? null;
+    const tagline = event_info?.tagline ?? null;
+    const logo = theme?.logo_url ?? '/branding/logo-mark.png';
+
+    const lastWord = eventName.trim().split(/\s+/).pop() ?? '';
+    const hasRomanEdition = /^[IVXLC]+$/.test(lastWord);
+    const edition = hasRomanEdition ? lastWord : year ?? 'FPM';
+    const headingText = hasRomanEdition
+        ? eventName.trim().slice(0, -lastWord.length).trim()
+        : eventName;
+
+    const totalCompetitions = totals.competitions ?? competitions.length;
+    const openCompetitions = totals.open_competitions ?? 0;
+    const remainingQuota = totals.remaining_quota ?? 0;
+    const pendaftaranDibuka = openCompetitions > 0;
+    const featured = competitions.slice(0, 6);
+
+    const primaryHref = user ? '/daftar' : '/klaim';
 
     return (
         <GuestLayout title="Beranda">
             <Head title="Beranda" />
 
-            {/* Hero */}
-            <section
-                className="relative overflow-hidden text-white"
-                style={{
-                    backgroundImage:
-                        'linear-gradient(135deg, var(--primary-color, #0f766e) 0%, rgba(15,23,42,0.92) 100%)',
-                }}
-            >
-                <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-                    <p
-                        className="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-900"
-                        style={{ backgroundColor: 'var(--secondary-color, #c9a45c)' }}
-                    >
-                        {event_info?.year ? `Edisi ${event_info.year}` : 'Segera Hadir'}
-                    </p>
+            {/* ============ HERO ============ */}
+            <section className="hero">
+                <div className="container hero__grid">
+                    <div className="hero__copy">
+                        <span className="hero__badge">
+                            <span className="dot" aria-hidden="true" />
+                            {pendaftaranDibuka ? 'Pendaftaran dibuka' : 'Pendaftaran ditutup'}
+                            <span className="hero__free">Gratis</span>
+                        </span>
 
-                    <h1 className="mt-5 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">{eventName}</h1>
-                    <p className="mt-3 max-w-2xl text-base text-white/80 sm:text-lg">{tagline}</p>
+                        <h1>
+                            {headingText}
+                            {hasRomanEdition && (
+                                <>
+                                    {' '}
+                                    <span className="year">{edition}</span>
+                                </>
+                            )}
+                        </h1>
 
-                    <div className="mt-6 flex flex-wrap gap-3 text-sm">
-                        <span className="rounded-lg bg-white/10 px-3 py-1.5 font-semibold ring-1 ring-inset ring-white/20">
-                            {totals.competitions ?? competitions.length} cabang lomba
-                        </span>
-                        <span className="rounded-lg bg-white/10 px-3 py-1.5 font-semibold ring-1 ring-inset ring-white/20">
-                            {totals.open_competitions ?? 0} sedang dibuka
-                        </span>
-                        <span className="rounded-lg bg-white/10 px-3 py-1.5 font-semibold ring-1 ring-inset ring-white/20">
-                            {totals.remaining_quota ?? 0} kuota tersisa
-                        </span>
+                        <p className="hero__lead">
+                            {tagline ??
+                                'Ruang bertemu, berlomba, dan bertumbuh bagi pelajar Muslim. Satu gelaran kompetisi yang santun, meriah, dan bermakna.'}
+                        </p>
+
+                        <ul className="hero__meta">
+                            <li>
+                                <MetaIcon>
+                                    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+                                    <path d="M8 3v4M16 3v4M3.5 10h17" />
+                                </MetaIcon>
+                                <span>{year ? `Edisi ${year}` : 'Segera diumumkan'}</span>
+                            </li>
+                            <li>
+                                <MetaIcon>
+                                    <path d="M20 10c0 5.2-6.3 10.4-7.4 11.3a1 1 0 0 1-1.2 0C10.3 20.4 4 15.2 4 10a8 8 0 1 1 16 0" />
+                                    <circle cx="12" cy="10" r="2.6" />
+                                </MetaIcon>
+                                <span>{SCHOOL_NAME}</span>
+                            </li>
+                            <li>
+                                <MetaIcon>
+                                    <path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19" />
+                                    <circle cx="10" cy="7.5" r="3.2" />
+                                    <path d="M20 19v-1.4a3.4 3.4 0 0 0-2.6-3.3M15.6 4.6a3.2 3.2 0 0 1 0 6" />
+                                </MetaIcon>
+                                <span>SMP/MTs &amp; SMA/SMK</span>
+                            </li>
+                        </ul>
+
+                        <div className="btn-row">
+                            <Link className="btn btn--gold" href={primaryHref}>
+                                {user ? 'Daftarkan tim' : 'Klaim akun sekolah'}
+                                <ArrowIcon />
+                            </Link>
+                            <Link className="btn btn--ghost-light" href="/lomba">
+                                Lihat cabang lomba
+                            </Link>
+                        </div>
                     </div>
 
-                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                        {user ? (
-                            <Link
-                                href="/daftar"
-                                className="inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:opacity-95"
-                                style={{ backgroundColor: 'var(--secondary-color, #c9a45c)' }}
-                            >
-                                Daftar Lomba Sekarang
-                            </Link>
-                        ) : (
-                            <Link
-                                href="/klaim"
-                                className="inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:opacity-95"
-                                style={{ backgroundColor: 'var(--secondary-color, #c9a45c)' }}
-                            >
-                                Klaim Akun Sekolah
-                            </Link>
-                        )}
-                        <Link
-                            href={user ? '/dashboard' : '/login'}
-                            className="inline-flex items-center justify-center rounded-lg bg-white/10 px-5 py-3 text-sm font-bold text-white ring-1 ring-inset ring-white/25 transition hover:bg-white/20"
-                        >
-                            {user ? 'Ke Dashboard' : 'Masuk ke Akun'}
-                        </Link>
-                        <Link
-                            href="/lomba"
-                            className="inline-flex items-center justify-center rounded-lg bg-white/10 px-5 py-3 text-sm font-bold text-white ring-1 ring-inset ring-white/25 transition hover:bg-white/20"
-                        >
-                            Lihat Semua Cabang
-                        </Link>
+                    <div className="hero__art">
+                        <div className="pass-scene">
+                            <div className="pass">
+                                <div className="pass__top">
+                                    <img className="pass__mark" src={logo} alt="" width="34" height="42" />
+                                    <span className="pass__eyebrow">Festival Pelajar Muslim</span>
+                                </div>
+
+                                <div className="pass__title">
+                                    <span>FPM</span>
+                                    <strong>{edition}</strong>
+                                </div>
+                                <p className="pass__sub">{SCHOOL_NAME}</p>
+
+                                <div className="pass__perf" aria-hidden="true" />
+
+                                <dl className="pass__facts">
+                                    <div>
+                                        <dt>Tanggal</dt>
+                                        <dd>{year ? `Edisi ${year}` : 'Segera diumumkan'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Peserta</dt>
+                                        <dd>SMP/MTs &amp; SMA/SMK</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Cabang</dt>
+                                        <dd>{totalCompetitions} lomba</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Biaya</dt>
+                                        <dd className="is-free">Gratis</dd>
+                                    </div>
+                                </dl>
+
+                                <div className="pass__foot">
+                                    <span className="pass__barcode" aria-hidden="true">
+                                        {Array.from({ length: 14 }).map((_, i) => (
+                                            <i key={i} />
+                                        ))}
+                                    </span>
+                                    <span className="pass__code">{year ?? 'FPM'}</span>
+                                </div>
+                            </div>
+
+                            <span className="pass-sticker" aria-hidden="true">
+                                Gratis
+                            </span>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* Ringkasan cabang */}
-            <section className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-                <div className="flex flex-wrap items-end justify-between gap-3">
+            {/* ============ FAKTA RINGKAS ============ */}
+            <div className="facts">
+                <div className="container">
+                    <div className="facts__card">
+                        <div className="fact">
+                            <span className="fact__label">
+                                <MetaIcon>
+                                    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+                                    <path d="M8 3v4M16 3v4M3.5 10h17" />
+                                </MetaIcon>
+                                Edisi
+                            </span>
+                            <span className="fact__value">
+                                {year ?? 'Segera diumumkan'}
+                                <span>Festival tahunan</span>
+                            </span>
+                        </div>
+                        <div className="fact">
+                            <span className="fact__label">
+                                <MetaIcon>
+                                    <path d="M20 10c0 5.2-6.3 10.4-7.4 11.3a1 1 0 0 1-1.2 0C10.3 20.4 4 15.2 4 10a8 8 0 1 1 16 0" />
+                                    <circle cx="12" cy="10" r="2.6" />
+                                </MetaIcon>
+                                Tempat
+                            </span>
+                            <span className="fact__value">
+                                SMKS Islam 1<span>Kota Blitar, Jawa Timur</span>
+                            </span>
+                        </div>
+                        <div className="fact">
+                            <span className="fact__label">
+                                <MetaIcon>
+                                    <path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19" />
+                                    <circle cx="10" cy="7.5" r="3.2" />
+                                    <path d="M20 19v-1.4a3.4 3.4 0 0 0-2.6-3.3" />
+                                </MetaIcon>
+                                Peserta
+                            </span>
+                            <span className="fact__value">
+                                SMP/MTs &amp; SMA/SMK<span>Perwakilan sekolah</span>
+                            </span>
+                        </div>
+                        <div className="fact">
+                            <span className="fact__label">
+                                <MetaIcon>
+                                    <path d="M3.5 8.5A2.5 2.5 0 0 1 6 6h12a2.5 2.5 0 0 1 2.5 2.5v1a2.5 2.5 0 0 0 0 5v1A2.5 2.5 0 0 1 18 18H6a2.5 2.5 0 0 1-2.5-2.5v-1a2.5 2.5 0 0 0 0-5Z" />
+                                    <path d="M12 8v8" strokeDasharray="2.5 2.5" />
+                                </MetaIcon>
+                                Biaya
+                            </span>
+                            <span className="fact__value">
+                                Gratis<span>Tidak dipungut biaya</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ============ TENTANG SINGKAT ============ */}
+            <section className="section" id="tentang">
+                <div className="container grid-2">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Cabang Lomba</h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                            {competitions.length > 0
-                                ? `${competitions.length} cabang diperlombakan pada edisi ini.`
-                                : 'Panitia belum menetapkan cabang lomba.'}
+                        <span className="eyebrow">Tentang festival</span>
+                        <h2 className="h2 reveal">Satu panggung untuk pelajar yang bertumbuh.</h2>
+                        <div className="prose reveal" style={{ '--d': '80ms' }}>
+                            <p>
+                                Festival Pelajar Muslim (FPM) adalah gelaran tahunan {SCHOOL_NAME} yang
+                                mempertemukan pelajar dari berbagai sekolah untuk berlomba, belajar, dan saling
+                                mengenal.
+                            </p>
+                            <p>
+                                Setiap cabang dirancang bukan hanya untuk mencari juara, tetapi untuk melatih
+                                keberanian tampil, ketelitian berkarya, dan adab dalam berkompetisi.
+                            </p>
+                        </div>
+
+                        <div className="stack-sm reveal" style={{ '--d': '140ms', marginTop: '30px' }}>
+                            <div className="point">
+                                <span className="point__num">01</span>
+                                <div>
+                                    <h3 className="h3">Beradab</h3>
+                                    <p>Menang atau kalah, peserta tetap menjaga adab dan sportivitas.</p>
+                                </div>
+                            </div>
+                            <div className="point">
+                                <span className="point__num">02</span>
+                                <div>
+                                    <h3 className="h3">Berkarya</h3>
+                                    <p>Cabang seni dan akademik menjadi ruang menampilkan karya terbaik.</p>
+                                </div>
+                            </div>
+                            <div className="point">
+                                <span className="point__num">03</span>
+                                <div>
+                                    <h3 className="h3">Bersama</h3>
+                                    <p>Festival mempertemukan sekolah-sekolah dalam satu suasana kekeluargaan.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p style={{ marginTop: '28px' }}>
+                            <Link className="link-more" href="/lomba">
+                                Lihat cabang &amp; ketentuan
+                                <ArrowIcon />
+                            </Link>
                         </p>
                     </div>
-                    <Link
-                        href="/lomba"
-                        className="text-sm font-semibold underline decoration-2 underline-offset-4"
-                        style={{ color: 'var(--primary-color, #0f766e)' }}
-                    >
-                        Lihat tabel lengkap
-                    </Link>
-                </div>
 
-                {competitions.length === 0 ? (
-                    <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-                        Belum ada cabang lomba yang dipublikasikan.
+                    <div className="reveal" style={{ '--d': '120ms' }}>
+                        <div className="photo photo--arch" role="img" aria-label={`Logo ${eventName}`}>
+                            <img
+                                src="/branding/logo-mark.png"
+                                alt=""
+                                style={{ width: 'min(58%, 190px)', height: 'auto', margin: '0 auto 4px' }}
+                            />
+                            <span className="photo__label">{eventName}</span>
+                            <span className="photo__note">
+                                {openCompetitions} cabang dibuka · {remainingQuota} kuota tersisa
+                            </span>
+                        </div>
                     </div>
-                ) : (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {competitions.map((c) => {
-                            const closed = !c.is_open || c.is_full;
+                </div>
+            </section>
 
-                            return (
-                                <Link
-                                    key={c.id}
-                                    href={`/lomba/${c.slug}`}
-                                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-                                >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <h3 className="text-sm font-bold text-slate-900 group-hover:underline">
-                                            {c.name}
-                                        </h3>
-                                        <span
-                                            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                                                closed ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'
-                                            }`}
-                                        >
-                                            {closed ? (c.is_full ? 'Kuota penuh' : 'Ditutup') : 'Buka'}
-                                        </span>
-                                    </div>
+            {/* ============ CABANG LOMBA ============ */}
+            <section className="section section--paper" id="lomba">
+                <div className="container">
+                    <div className="section-head">
+                        <div>
+                            <span className="eyebrow">Cabang lomba</span>
+                            <h2 className="h2">Pilih medan kompetisimu.</h2>
+                            <p className="lead">
+                                {competitions.length > 0
+                                    ? `${totalCompetitions} cabang diperlombakan pada edisi ini. Ketentuan lengkap tiap cabang tersedia di halaman lomba.`
+                                    : 'Panitia belum menetapkan cabang lomba pada edisi ini.'}
+                            </p>
+                        </div>
+                        <Link className="link-more" href="/lomba">
+                            Semua cabang &amp; ketentuan
+                            <ArrowIcon />
+                        </Link>
+                    </div>
 
-                                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                        {categoryLabel[c.category_type] ?? c.category_type}
-                                    </p>
+                    {featured.length === 0 ? (
+                        <div className="empty-state">Belum ada cabang lomba yang dipublikasikan.</div>
+                    ) : (
+                        <div className="cards">
+                            {featured.map((c, i) => {
+                                const closed = !c.is_open || c.is_full;
 
-                                    <p className="mt-2 line-clamp-2 text-sm text-slate-500">
-                                        {c.description ?? 'Belum ada deskripsi.'}
-                                    </p>
-
-                                    <div className="mt-auto pt-4">
-                                        <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-slate-600">
-                                            <span>Kuota tersisa</span>
-                                            <span>
-                                                {c.remaining_quota} / {c.global_quota}
+                                return (
+                                    <article className="lomba-card reveal" key={c.id} style={{ '--d': `${i * 60}ms` }}>
+                                        <div className="lomba-card__top">
+                                            <span className="lomba-card__num">
+                                                {String(i + 1).padStart(2, '0')}
+                                            </span>
+                                            <span className={`badge ${closed ? 'badge--closed' : 'badge--open'}`}>
+                                                {!c.is_open ? 'Ditutup' : c.is_full ? 'Kuota penuh' : 'Buka'}
                                             </span>
                                         </div>
+
+                                        <h3>{c.name}</h3>
+                                        <p className="lomba-card__meta">
+                                            {categoryLabel[c.category_type] ?? c.category_type}
+                                            {c.gender_mode === 'separate' ? ' · Putra & Putri' : ''}
+                                        </p>
+                                        <p>{c.description ?? 'Panitia belum menambahkan deskripsi cabang ini.'}</p>
+
                                         <QuotaBar used={c.used_quota} total={c.global_quota} />
-                                    </div>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                )}
+
+                                        <div className="lomba-card__foot">
+                                            <span>{c.remaining_quota} slot tersisa</span>
+                                            <Link href={`/lomba/${c.slug}`}>
+                                                Detail
+                                                <ArrowIcon />
+                                            </Link>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
             </section>
 
-            {/* CTA bawah */}
-            <section className="border-t border-slate-200 bg-slate-50">
-                <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            {/* ============ ALUR ============ */}
+            <section className="section" id="alur">
+                <div className="container">
+                    <div className="section-head">
+                        <div>
+                            <span className="eyebrow">Alur pendaftaran</span>
+                            <h2 className="h2">Dari klaim akun sampai piagam.</h2>
+                            <p className="lead">
+                                Empat tahap utama. Semua dilakukan daring melalui akun sekolah, tanpa perlu
+                                mengambil formulir ke sekolah.
+                            </p>
+                        </div>
+                        <Link className="link-more" href={primaryHref}>
+                            Mulai dari sini
+                            <ArrowIcon />
+                        </Link>
+                    </div>
+
+                    <ol className="steps">
+                        <li className="reveal">
+                            <span className="steps__date">Langkah 1</span>
+                            <h3>Klaim akun sekolah</h3>
+                            <p>Masukkan NPSN 8 digit, lalu lengkapi data penanggung jawab dan kata sandi.</p>
+                        </li>
+                        <li className="reveal" style={{ '--d': '70ms' }}>
+                            <span className="steps__date">Langkah 2</span>
+                            <h3>Isi data peserta</h3>
+                            <p>Pilih cabang lomba, isi NISN dan nama peserta sesuai daftar sekolah.</p>
+                        </li>
+                        <li className="reveal" style={{ '--d': '140ms' }}>
+                            <span className="steps__date">Langkah 3</span>
+                            <h3>Unggah surat rekomendasi</h3>
+                            <p>Surat resmi sekolah diperiksa otomatis, lalu diverifikasi panitia.</p>
+                        </li>
+                        <li className="reveal" style={{ '--d': '210ms' }}>
+                            <span className="steps__date">Langkah 4</span>
+                            <h3>Unduh sertifikat</h3>
+                            <p>Setelah nilai dipublikasikan, sertifikat peserta dan piagam juara bisa diunduh.</p>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            {/* ============ FAQ ============ */}
+            <section className="section section--paper" id="faq">
+                <div className="container grid-2">
                     <div>
-                        <h2 className="text-lg font-bold text-slate-900">Siap mendaftarkan peserta?</h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                            Sekolah mengklaim akun dengan NPSN, lalu mendaftarkan peserta per cabang lomba.
+                        <span className="eyebrow">Pertanyaan umum</span>
+                        <h2 className="h2">Sebelum kamu mendaftar.</h2>
+                        <p className="lead" style={{ marginTop: '14px' }}>
+                            Lima pertanyaan yang paling sering ditanyakan peserta. Masih ada yang ingin
+                            ditanyakan?
+                        </p>
+                        <p style={{ marginTop: '22px' }}>
+                            <Link className="link-more" href={user ? '/dashboard' : '/login'}>
+                                {user ? 'Buka dashboard' : 'Masuk ke akun sekolah'}
+                                <ArrowIcon />
+                            </Link>
                         </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        <Link
-                            href={user ? '/daftar' : '/klaim'}
-                            className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                            style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
-                        >
-                            {user ? 'Daftar Lomba' : 'Klaim Akun Sekolah'}
-                        </Link>
-                        <Link
-                            href={user ? '/dashboard' : '/login'}
-                            className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 transition hover:bg-slate-100"
-                        >
-                            {user ? 'Dashboard' : 'Masuk'}
-                        </Link>
+
+                    <div className="accordion">
+                        {FAQ.map((item, i) => (
+                            <details key={item.q} open={i === 0}>
+                                <summary>{item.q}</summary>
+                                <div className="answer">
+                                    <p>{item.a}</p>
+                                </div>
+                            </details>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ============ CTA ============ */}
+            <section className="section section--tight">
+                <div className="container">
+                    <div className="cta-band reveal">
+                        <div>
+                            <h2>Siap jadi bagian FPM {edition}?</h2>
+                            <p>
+                                Klaim akun sekolahmu, lengkapi data peserta, dan tunggu konfirmasi dari
+                                panitia.
+                            </p>
+                        </div>
+                        <div className="btn-row">
+                            <Link className="btn btn--gold" href={primaryHref}>
+                                {user ? 'Mulai pendaftaran' : 'Klaim akun sekolah'}
+                                <ArrowIcon />
+                            </Link>
+                            <Link className="btn btn--ghost-light" href="/lomba">
+                                Tanya cabang dulu
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </section>
