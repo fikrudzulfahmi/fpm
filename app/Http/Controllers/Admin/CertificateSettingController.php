@@ -96,6 +96,8 @@ class CertificateSettingController extends Controller
             'certificate.accent_color' => self::COLOR_RULE,
             'certificate.signer_name' => ['nullable', 'string', 'max:120'],
             'certificate.signer_title' => ['nullable', 'string', 'max:120'],
+            'certificate.signer2_name' => ['nullable', 'string', 'max:120'],
+            'certificate.signer2_title' => ['nullable', 'string', 'max:120'],
             'certificate.show_signature' => ['sometimes', 'boolean'],
             'certificate.show_logo' => ['sometimes', 'boolean'],
             'certificate.layout' => ['sometimes', 'array'],

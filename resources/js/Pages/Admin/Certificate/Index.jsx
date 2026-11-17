@@ -417,11 +417,13 @@ export default function CertificateIndex({
             title: certificate.title ?? 'Sertifikat Peserta',
             subtitle: certificate.subtitle ?? 'Diberikan kepada',
             footer: certificate.footer ?? '',
-            bg_color: certificate.bg_color ?? '#ffffff',
-            text_color: certificate.text_color ?? '#1e293b',
+            bg_color: certificate.bg_color ?? '#f8f6ec',
+            text_color: certificate.text_color ?? '#0d3029',
             accent_color: certificate.accent_color ?? '#064b3d',
             signer_name: certificate.signer_name ?? '',
             signer_title: certificate.signer_title ?? 'Ketua Panitia',
+            signer2_name: certificate.signer2_name ?? '',
+            signer2_title: certificate.signer2_title ?? 'Sekretaris Panitia',
             show_signature: certificate.show_signature !== false,
             show_logo: certificate.show_logo !== false,
             layout: certificate.layout ?? {},
@@ -559,6 +561,18 @@ export default function CertificateIndex({
                             value={form.data.certificate.signer_title}
                             onChange={(v) => setCert('signer_title', v)}
                         />
+                        <TextField
+                            id="cert-signer2"
+                            label="Nama penandatangan kedua"
+                            value={form.data.certificate.signer2_name}
+                            onChange={(v) => setCert('signer2_name', v)}
+                        />
+                        <TextField
+                            id="cert-signer2-title"
+                            label="Jabatan penandatangan kedua"
+                            value={form.data.certificate.signer2_title}
+                            onChange={(v) => setCert('signer2_title', v)}
+                        />
                         <label className="flex items-center gap-2 self-end text-sm text-slate-700">
                             <input
                                 type="checkbox"
@@ -570,21 +584,22 @@ export default function CertificateIndex({
                         </label>
                     </div>
 
-                    <div className="mt-4">
-                        <LayoutCanvas
-                            type="certificate"
-                            layout={form.data.certificate.layout ?? {}}
-                            defaults={layouts_default.certificate ?? {}}
-                            bgImage={certificate.bg_image_url ?? null}
-                            bgColor={form.data.certificate.bg_color}
-                            accentColor={form.data.certificate.accent_color}
-                            textColor={form.data.certificate.text_color}
-                            logoUrl={logo_url}
-                            sample={sample}
-                            doc={form.data.certificate}
-                            onChange={(next) => setCert('layout', next)}
-                            onReset={(next) => setCert('layout', next)}
-                        />
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-[13px] leading-relaxed text-amber-900">
+                        <p className="font-semibold">Template resmi FPM XII dipakai otomatis.</p>
+                        <p className="mt-1">
+                            Tata letak (bingkai hijau-emas, ornamen sudut, nama besar, dua tanda tangan,
+                            nomor &amp; tanggal) mengikuti desain panitia, jadi posisi elemen tidak lagi
+                            diatur lewat kanvas. Isi teks, nama penandatangan, dan warna tetap bisa diubah
+                            di panel ini.
+                        </p>
+                        <a
+                            href={previewUrl('certificate')}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 font-semibold text-[#064b3d] underline"
+                        >
+                            Lihat pratinjau PDF
+                        </a>
                     </div>
 
                     <div className="mt-4">

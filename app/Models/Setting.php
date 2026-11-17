@@ -46,9 +46,9 @@ class Setting extends Model
         $cfg = $this->certificate_template_config ?: [];
 
         return [
-            'bg_color' => $cfg['bg_color'] ?? '#ffffff',
-            'text_color' => $cfg['text_color'] ?? '#1e293b',
-            'accent_color' => $cfg['accent_color'] ?? '#0f766e',
+            'bg_color' => $cfg['bg_color'] ?? '#f8f6ec',
+            'text_color' => $cfg['text_color'] ?? '#0d3029',
+            'accent_color' => $cfg['accent_color'] ?? '#064b3d',
             'bg_image_url' => $cfg['bg_image_url'] ?? null,
             'show_logo' => $cfg['show_logo'] ?? true,
             'title' => $cfg['title'] ?? 'Sertifikat Peserta',
@@ -56,6 +56,9 @@ class Setting extends Model
             'footer' => $cfg['footer'] ?? null,
             'signer_name' => $cfg['signer_name'] ?? self::defaultSignerName(),
             'signer_title' => $cfg['signer_title'] ?? 'Ketua Panitia',
+            // Blok tanda tangan kedua (kanan) pada template resmi.
+            'signer2_name' => $cfg['signer2_name'] ?? '',
+            'signer2_title' => $cfg['signer2_title'] ?? 'Sekretaris Panitia',
             'show_signature' => $cfg['show_signature'] ?? true,
             'paper' => $cfg['paper'] ?? 'landscape',
             'layout' => array_merge(self::defaultLayout('certificate'), $cfg['layout'] ?? []),
