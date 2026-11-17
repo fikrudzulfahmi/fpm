@@ -49,14 +49,27 @@
     $eventYear = $registrationEvent->year ?? date('Y');
     $schoolName = $school->school_name ?? '-';
     $competitionName = $competition->name ?? '-';
-    $nisnLine = $schoolLineNisn ?? null;
+    // NISN: dari peserta tunggal (sertifikat per anggota) atau peserta pertama regu.
+    $nisnAll = $registration->participants->pluck('nisn')->filter()->unique()->values();
+    if (isset($schoolLineNisn)) {
+        $nisnLine = $schoolLineNisn ?: null;
+    } elseif ($nisnAll->count() === 1) {
+        $nisnLine = $nisnAll->first();
+    } elseif ($nisnAll->count() > 1) {
+        $nisnLine = $nisnAll->first().' dkk';
+    } else {
+        $nisnLine = null;
+    }
 
-    $occasion = config('fpm.occasion') ?? 'Harlah SMKS Islam 1 Kota Blitar';
+    $occasion = config('fpm.occasion_short') ?? 'Harlah SMKS Islam 1 Kota Blitar';
     $venue = config('fpm.venue.name') ?? 'SMKS Islam 1 Kota Blitar';
 
     $footerSuffix = $footerSuffix ?? '';
-    $footerNumber = $config['footer']
-        ?: 'SRF/'.$eventYear.'/'.str_pad((string) $registration->id, 5, '0', STR_PAD_LEFT).$footerSuffix;
+    $defaultNumber = 'SRF/'.$eventYear.'/'.str_pad((string) $registration->id, 5, '0', STR_PAD_LEFT).$footerSuffix;
+    $footerNumber = trim((string) ($config['footer'] ?? ''));
+    if ($footerNumber === '' || ! preg_match('/\d/', $footerNumber)) {
+        $footerNumber = $defaultNumber;
+    }
     $issuedAt = now()->locale('id')->translatedFormat('d F Y');
 
     $signer1Role = $config['signer_title'] ?: 'Ketua Panitia';
@@ -78,7 +91,7 @@
     $pos = function (float $y, float $size, float $width = 1040, float $center = 561.5, string $align = 'center'): string {
         $k = 0.26446;
         $left = $center - $width / 2;
-        $top = $y - $size * 0.78;
+        $top = $y - $size * 1.02;
 
         return sprintf(
             'left:%.3fmm;top:%.3fmm;width:%.3fmm;font-size:%.2fpt;text-align:%s;',
@@ -213,7 +226,7 @@
         <div class="el signame" style="{{ $pos(658, 13, 240, 369.5) }}">{!! $signer1Name ?: '&nbsp;' !!}</div>
 
         <div class="el role" style="{{ $pos(556, 10.5, 240, 753.5) }}">{{ $signer2Role }}</div>
-        <img src="{{ $assetPath('ttd-rohman.png') }}" style="position:absolute;left:174.68mm;top:149.72mm;width:49.2mm;" alt="">
+        <img src="{{ $assetPath('ttd-rohman.png') }}" style="position:absolute;left:168.15mm;top:151.50mm;width:62.30mm;" alt="">
         <div class="el" style="{{ $line(636, 658.5, 848.5, $PALETTE['ink'], 0.29) }}"></div>
         <div class="el signame" style="{{ $pos(658, 13, 240, 753.5) }}">{!! $signer2Name ?: '&nbsp;' !!}</div>
 
