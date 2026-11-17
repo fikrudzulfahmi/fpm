@@ -130,7 +130,7 @@
             position: relative;
             width: 297mm;
             height: 210mm;
-            background: #f8f6ec;
+            background: {{ $config['bg_color'] ?? '#f8f6ec' }};
             overflow: hidden;
             @if ($bgImage)
                 background-image: url('{{ $bgImage }}');
