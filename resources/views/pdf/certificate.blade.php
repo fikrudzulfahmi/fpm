@@ -236,7 +236,7 @@
         <div class="el signame" style="{{ $pos(658, 13, 240, 753.5) }}">{!! $signer2Name ?: '&nbsp;' !!}</div>
 
         @if ($has('stempel.png'))
-            <img src="{{ $assetPath('stempel.png') }}" style="position:absolute;left:215.27mm;top:139.11mm;width:30.68mm;opacity:0.87;" alt="">
+            <img src="{{ $assetPath('stempel.png') }}" style="position:absolute;left:201.00mm;top:141.50mm;width:33.00mm;opacity:0.88;" alt="">
         @endif
     @endif
 

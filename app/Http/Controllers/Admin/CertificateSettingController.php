@@ -113,6 +113,8 @@ class CertificateSettingController extends Controller
             'award.accent_color' => self::COLOR_RULE,
             'award.signer_name' => ['nullable', 'string', 'max:120'],
             'award.signer_title' => ['nullable', 'string', 'max:120'],
+            'award.signer2_name' => ['nullable', 'string', 'max:120'],
+            'award.signer2_title' => ['nullable', 'string', 'max:120'],
             'award.place' => ['nullable', 'string', 'max:80'],
             'award.number_prefix' => ['nullable', 'string', 'max:40'],
             'award.show_logo' => ['sometimes', 'boolean'],

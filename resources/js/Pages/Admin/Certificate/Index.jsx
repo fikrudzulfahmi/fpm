@@ -434,6 +434,8 @@ export default function CertificateIndex({
             accent_color: award.accent_color ?? '#064b3d',
             signer_name: award.signer_name ?? '',
             signer_title: award.signer_title ?? 'Ketua Panitia',
+            signer2_name: award.signer2_name ?? '',
+            signer2_title: award.signer2_title ?? 'Kepala SMKS Islam 1 Kota Blitar',
             place: award.place ?? '',
             number_prefix: award.number_prefix ?? '',
             show_logo: award.show_logo !== false,
@@ -653,6 +655,18 @@ export default function CertificateIndex({
                             onChange={(v) => setAward('signer_title', v)}
                         />
                         <TextField
+                            id="award-signer2"
+                            label="Nama penandatangan kedua"
+                            value={form.data.award.signer2_name}
+                            onChange={(v) => setAward('signer2_name', v)}
+                        />
+                        <TextField
+                            id="award-signer2-title"
+                            label="Jabatan penandatangan kedua"
+                            value={form.data.award.signer2_title}
+                            onChange={(v) => setAward('signer2_title', v)}
+                        />
+                        <TextField
                             id="award-place"
                             label="Kota penerbitan"
                             value={form.data.award.place}
@@ -668,21 +682,13 @@ export default function CertificateIndex({
                         />
                     </div>
 
-                    <div className="mt-4">
-                        <LayoutCanvas
-                            type="award"
-                            layout={form.data.award.layout ?? {}}
-                            defaults={layouts_default.award ?? {}}
-                            bgImage={award.bg_image_url ?? null}
-                            bgColor={form.data.award.bg_color}
-                            accentColor={form.data.award.accent_color}
-                            textColor={form.data.award.text_color}
-                            logoUrl={logo_url}
-                            sample={sample}
-                            doc={form.data.award}
-                            onChange={(next) => setAward('layout', next)}
-                            onReset={(next) => setAward('layout', next)}
-                        />
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-[13px] leading-relaxed text-amber-900">
+                        <p className="font-semibold">Piagam memakai template FPM XII (versi juara).</p>
+                        <p className="mt-1">
+                            Pita gelar juara, deret bintang, bingkai hijau–emas, dua tanda tangan, dan
+                            stempel kepala sekolah tercetak otomatis. Yang bisa diubah: teks, nama/jabatan
+                            penandatangan, warna, dan latar.
+                        </p>
                     </div>
 
                     <div className="mt-4">

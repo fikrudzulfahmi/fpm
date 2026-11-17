@@ -1,19 +1,29 @@
 {{--
-    Piagam juara. Dipanggil dari CertificateController::award().
-    Variabel: $registration, $competition, $school, $score, $event, $theme
+    Piagam juara — template resmi FPM XII versi "meriah".
 
-    Tata letak koordinat persen, sama seperti sertifikat peserta; editor drag-and-drop
-    di admin menyimpan config['layout'].
+    Satu keluarga desain dengan sertifikat peserta (bingkai hijau–emas, ornamen
+    sudut, pola titik, dua tanda tangan + stempel kepala sekolah), ditambah pita
+    gelar juara, deret bintang, dan garis emas ganda agar terasa lebih bergengsi.
+
+    Koordinat mengikuti SVG panitia: px × 0.26446 = mm, px × 0.75 = pt.
+
+    Variabel: $registration, $competition, $school, $score, $event, $theme,
+              $config, $setting
 --}}
 @php
-    $primary = $config['accent_color'] ?? ($theme['primary'] ?? '#0f766e');
-    $secondary = $theme['secondary'] ?? '#c9a45c';
-    $text = $config['text_color'] ?? '#1e293b';
-    $bg = $config['bg_color'] ?? '#ffffff';
+    $k = 0.26446;
+    $PALETTE = [
+        'ink' => '#0d3029',
+        'green' => '#064b3d',
+        'green2' => '#0a5b4a',
+        'gold' => '#c9a227',
+        'gold-light' => '#f3d95b',
+        'gold-dark' => '#8a6b12',
+        'muted' => '#5c6e67',
+        'body' => '#3b4f48',
+    ];
 
     $rank = (int) $score->rank;
-
-    // Juara Harapan diberi nomor urut: peringkat 4 => Harapan I, 5 => Harapan II, dst.
     $hopeRoman = ['I', 'II', 'III', 'IV', 'V', 'VI'][min(5, max(0, $rank - 4))];
 
     $rankLabel = match (true) {
@@ -23,14 +33,13 @@
         default => 'Juara Harapan '.$hopeRoman,
     };
 
-    $rankSuffix = match (true) {
-        $rank === 1 => 'I',
-        $rank === 2 => 'II',
-        $rank === 3 => 'III',
-        default => 'H-'.$hopeRoman,
+    $placeText = match (true) {
+        $rank === 1 => 'JUARA I',
+        $rank === 2 => 'JUARA II',
+        $rank === 3 => 'JUARA III',
+        default => 'JUARA HARAPAN '.$hopeRoman,
     };
 
-    // Cabang lomba dengan kategori terpisah: sebutkan Putra/Putri pada piagam.
     $genderLabel = $competition?->isSeparateGender() && $registration->gender
         ? \App\Models\Competition::genderLabel($registration->gender)
         : null;
@@ -41,42 +50,83 @@
 
     $names = $registration->participants->pluck('full_name')->filter()->values();
     $groupName = $registration->group_name;
-
-    // Lomba beregu: tampilkan nama grup, individu: nama peserta.
     $displayName = $competition?->isGroup() && $groupName
         ? $groupName
         : ($names->first() ?? '-');
 
-    $W = 267.0;
-    $H = 180.0;
-    $layout = $config['layout'] ?? [];
-    $defaults = \App\Models\Setting::defaultLayout('award');
+    $nameLen = mb_strlen($displayName);
+    $namePx = match (true) {
+        $nameLen > 40 => 24,
+        $nameLen > 30 => 29,
+        $nameLen > 22 => 34,
+        default => 42,
+    };
 
-    $box = function (string $key) use ($layout, $defaults, $W, $H): string {
-        $b = array_merge($defaults[$key], $layout[$key] ?? []);
-        $b['x'] = max(0, min(100, (float) $b['x']));
-        $b['y'] = max(0, min(100, (float) $b['y']));
-        $b['w'] = max(3, min(100, (float) $b['w']));
+    // NISN peserta pertama (regu: pertama + dkk).
+    $nisnAll = $registration->participants->pluck('nisn')->filter()->unique()->values();
+    $nisnLine = match (true) {
+        $nisnAll->count() === 1 => $nisnAll->first(),
+        $nisnAll->count() > 1 => $nisnAll->first().' dkk',
+        default => null,
+    };
+
+    $eventName = $event->event_name ?? 'Festival Pelajar Muslim';
+    $eventYear = $event->year ?? date('Y');
+    $schoolName = $school->school_name ?? '-';
+    $competitionName = $competition->name ?? '-';
+    $occasion = config('fpm.occasion_short') ?? 'Harlah SMKS Islam 1 Kota Blitar';
+    $venue = config('fpm.venue.name') ?? 'SMKS Islam 1 Kota Blitar';
+
+    $numberLine = $config['number_prefix'] ?: 'PGM/'.$eventYear.'/'.str_pad((string) $registration->id, 5, '0', STR_PAD_LEFT);
+    if (! preg_match('/\d/', $numberLine)) {
+        $numberLine = 'PGM/'.$eventYear.'/'.str_pad((string) $registration->id, 5, '0', STR_PAD_LEFT);
+    }
+    $issuedAt = now()->locale('id')->translatedFormat('d F Y');
+
+    $signer1Role = $config['signer_title'] ?: 'Ketua Panitia';
+    $signer1Name = $config['signer_name'] ?: '';
+    $signer2Role = $config['signer2_title'] ?: 'Kepala SMKS Islam 1 Kota Blitar';
+    $signer2Name = $config['signer2_name'] ?: '';
+
+    $assetPath = fn (string $file) => str_replace('\\', '/', public_path('branding/certificate/'.$file));
+    $has = fn (string $file) => file_exists($assetPath($file));
+
+    $stripLogo = $has('logo-strip.png') ? $assetPath('logo-strip.png') : null;
+    $logoFpm = $assetPath('logo-fpm.png');
+    $bgImage = $config['bg_image_url'] ?? null;
+    $showLogo = $config['show_logo'] ?? true;
+
+    $sheetBg = $config['bg_color'] ?? null;
+    if (! $sheetBg || in_array(strtolower($sheetBg), ['#ffffff', '#fff'], true)) {
+        $sheetBg = '#f8f6ec';
+    }
+
+    $pos = function (float $y, float $size, float $width = 1040, float $center = 561.5, string $align = 'center'): string {
+        $k = 0.26446;
 
         return sprintf(
-            'left:%.2fmm;top:%.2fmm;width:%.2fmm;text-align:%s;',
-            $b['x'] / 100 * $W,
-            $b['y'] / 100 * $H,
-            $b['w'] / 100 * $W,
-            in_array($b['align'], ['left', 'center', 'right'], true) ? $b['align'] : 'center'
+            'left:%.3fmm;top:%.3fmm;width:%.3fmm;font-size:%.2fpt;text-align:%s;',
+            ($center - $width / 2) * $k,
+            ($y - $size * 1.02) * $k,
+            $width * $k,
+            $size * 0.75,
+            $align
         );
     };
 
-    $font = function (string $key) use ($layout, $defaults): string {
-        $b = array_merge($defaults[$key], $layout[$key] ?? []);
+    $line = function (float $y, float $x1, float $x2, string $color, float $widthMm, float $opacity = 1): string {
+        $k = 0.26446;
 
-        return sprintf('%.2fpt', max(4, min(72, (float) $b['size'])));
+        return sprintf(
+            'left:%.3fmm;top:%.3fmm;width:%.3fmm;border-top:%.3fmm solid %s;opacity:%.2f;',
+            $x1 * $k,
+            $y * $k,
+            ($x2 - $x1) * $k,
+            $widthMm,
+            $color,
+            $opacity
+        );
     };
-
-    $badgeWidth = max(12, min(60, (float) array_merge($defaults['badge'], $layout['badge'] ?? [])['w']));
-    $badgeDiameter = $badgeWidth / 100 * $W;
-    $logoUrl = $theme['logo_url'] ?? null;
-    $numberLine = $config['number_prefix'] ?: 'PGM/'.($event->year ?? date('Y')).'/'.str_pad((string) $registration->id, 5, '0', STR_PAD_LEFT);
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -86,136 +136,139 @@
     <style>
         @page { margin: 0; }
         * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: "DejaVu Sans", sans-serif;
-            color: {{ $text }};
-            background: {{ $bg }};
-        }
+        body { margin: 0; padding: 0; font-family: "DejaVu Sans", sans-serif; color: {{ $PALETTE['ink'] }}; }
         .sheet {
+            position: relative;
             width: 297mm;
             height: 210mm;
-            padding: 10mm;
-            border: 6px double {{ $secondary }};
-            background: {{ $bg }};
-            @if (! empty($config['bg_image_url']))
-                background-image: url('{{ $config['bg_image_url'] }}');
+            background: {{ $sheetBg }};
+            overflow: hidden;
+            @if ($bgImage)
+                background-image: url('{{ $bgImage }}');
                 background-size: cover;
                 background-position: center;
             @endif
         }
-        .inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            border: 2px solid {{ $primary }};
-            padding: 0;
-        }
-        .el { position: absolute; line-height: 1.35; }
-        .el.kicker {
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            color: {{ $primary }};
-        }
-        .el.event { font-weight: bold; color: {{ $text }}; }
-        .el.title {
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            color: {{ $primary }};
-            line-height: 1.15;
-        }
-        .el.competition {
-            font-weight: bold;
-            color: {{ $secondary }};
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .el.given-to { color: {{ $text }}; }
-        .el.name {
-            font-weight: bold;
-            color: {{ $text }};
-            line-height: 1.2;
-            border-bottom: 1px solid {{ $secondary }};
-            padding-bottom: 1.5mm;
-        }
-        .el.school { color: {{ $text }}; }
-        .el.members { color: #475569; }
-        .el.body { color: {{ $text }}; }
-        .el.body strong { color: {{ $primary }}; }
-        .el.meta { color: #64748b; }
-        .el.signature { text-align: center; }
-        .el.signature .space { height: 14mm; }
-        .el.signature .line {
-            border-top: 1px solid {{ $text }};
-            padding-top: 1.5mm;
-        }
-        .el.badge {
-            border: 3px solid {{ $secondary }};
-            border-radius: 50%;
-            font-weight: bold;
-            color: {{ $primary }};
+        .layer { position: absolute; left: 0; top: 0; width: 297mm; height: 210mm; }
+        .dots { background-image: url('{{ $assetPath('dots.png') }}'); background-repeat: repeat; }
+        .f1 { left: 5.82mm; top: 5.82mm; width: 285.3mm; height: 198.3mm; border: 0.79mm solid {{ $PALETTE['green'] }}; }
+        .f2 { left: 8.73mm; top: 8.73mm; width: 279.5mm; height: 192.5mm; border: 0.40mm solid {{ $PALETTE['gold'] }}; }
+        .f3 { left: 10.84mm; top: 10.84mm; width: 275.3mm; height: 188.3mm; border: 0.21mm solid #d8d5c6; }
+        .el { position: absolute; line-height: 1; }
+        .kicker { color: {{ $PALETTE['gold-dark'] }}; font-weight: bold; letter-spacing: 6pt; text-transform: uppercase; }
+        .event { color: {{ $PALETTE['ink'] }}; font-weight: bold; letter-spacing: 0.6pt; }
+        .stars { color: {{ $PALETTE['gold'] }}; letter-spacing: 3.2pt; }
+        .band {
+            position: absolute;
+            background: {{ $PALETTE['green'] }};
+            border: 0.53mm solid {{ $PALETTE['gold'] }};
             text-align: center;
         }
-        .el.logo img { width: 100%; }
+        .band-inner {
+            margin: 0.9mm;
+            border: 0.18mm solid {{ $PALETTE['gold-light'] }};
+            padding-top: 2.1mm;
+            padding-bottom: 2.4mm;
+            color: {{ $PALETTE['gold-light'] }};
+            font-weight: bold;
+            letter-spacing: 2.6pt;
+        }
+        .given { color: {{ $PALETTE['muted'] }}; font-weight: bold; letter-spacing: 1.1pt; }
+        .name { color: {{ $PALETTE['ink'] }}; font-weight: bold; letter-spacing: 0.2pt; }
+        .school { color: {{ $PALETTE['body'] }}; letter-spacing: 0.15pt; }
+        .comp { color: {{ $PALETTE['green2'] }}; font-weight: bold; letter-spacing: 0.9pt; }
+        .body { color: {{ $PALETTE['body'] }}; }
+        .body b { color: {{ $PALETTE['green'] }}; font-weight: bold; }
+        .role { color: {{ $PALETTE['muted'] }}; font-weight: bold; }
+        .signame { color: {{ $PALETTE['ink'] }}; font-weight: bold; }
+        .foot { color: {{ $PALETTE['muted'] }}; }
+        .foots { color: {{ $PALETTE['muted'] }}; }
+        .footb { color: {{ $PALETTE['body'] }}; font-weight: bold; }
+        .logo img { height: 20mm; }
     </style>
 </head>
 <body>
 <div class="sheet">
-    <div class="inner">
-        @if (($config['show_logo'] ?? true) && $logoUrl)
-            <div class="el logo" style="{{ $box('logo') }}font-size:{{ $font('logo') }};">
-                <img src="{{ $logoUrl }}" alt="Logo">
+    @unless ($bgImage)
+        <div class="layer dots"></div>
+        <div class="layer f1"></div>
+        <div class="layer f2"></div>
+        <div class="layer f3"></div>
+
+        <img src="{{ $assetPath('corner-tl.png') }}" style="position:absolute;left:8.73mm;top:8.73mm;width:20.63mm;height:20.63mm;" alt="">
+        <img src="{{ $assetPath('corner-tr.png') }}" style="position:absolute;left:267.64mm;top:8.73mm;width:20.63mm;height:20.63mm;" alt="">
+        <img src="{{ $assetPath('corner-bl.png') }}" style="position:absolute;left:8.73mm;top:180.64mm;width:20.63mm;height:20.63mm;" alt="">
+        <img src="{{ $assetPath('corner-br.png') }}" style="position:absolute;left:267.64mm;top:180.64mm;width:20.63mm;height:20.63mm;" alt="">
+    @endunless
+
+    @if ($showLogo)
+        @if ($stripLogo)
+            <img src="{{ $stripLogo }}" style="position:absolute;left:98.25mm;top:22.22mm;width:100.5mm;" alt="">
+        @else
+            <div class="el logo" style="left:123.0mm;top:17.5mm;width:51mm;text-align:center;">
+                <img src="{{ $logoFpm }}" style="width:51mm;" alt="">
             </div>
         @endif
+        <div class="el" style="{{ $line(164, 516.5, 606.5, $PALETTE['gold'], 0.32, 0.6) }}"></div>
+    @endif
 
-        <div class="el badge" style="{{ $box('badge') }}font-size:{{ $font('badge') }};height:{{ $badgeDiameter }}mm;line-height:{{ $badgeDiameter - 1.5 }}mm;">
-            {{ $rankSuffix }}
-        </div>
+    {{-- Kepala piagam --}}
+    <div class="el kicker" style="{{ $pos(188, 10.5) }}">Piagam Penghargaan</div>
+    <div class="el event" style="{{ $pos(212, 15) }}">{{ $eventName }} &middot; {{ $eventYear }}</div>
 
-        <div class="el kicker" style="{{ $box('kicker') }}font-size:{{ $font('kicker') }};">Piagam Penghargaan</div>
+    <div class="el stars" style="{{ $pos(238, 12) }}">&#9733; &#9733; &#9733; &#9733; &#9733;</div>
 
-        <div class="el event" style="{{ $box('event') }}font-size:{{ $font('event') }};">
-            {{ $event->event_name ?? '' }}@if (! empty($event->year)) &middot; {{ $event->year }}@endif
-        </div>
-
-        <div class="el title" style="{{ $box('title') }}font-size:{{ $font('title') }};">{{ $rankLabel }}</div>
-
-        <div class="el competition" style="{{ $box('competition') }}font-size:{{ $font('competition') }};">
-            {{ $competition->name ?? '-' }}
-        </div>
-
-        <div class="el given-to" style="{{ $box('given_to') }}font-size:{{ $font('given_to') }};">Diberikan kepada:</div>
-
-        <div class="el name" style="{{ $box('name') }}font-size:{{ $font('name') }};">{{ $displayName }}</div>
-
-        <div class="el school" style="{{ $box('school') }}font-size:{{ $font('school') }};">{{ $school->school_name ?? '-' }}</div>
-
-        @if ($competition?->isGroup() && $names->count() > 1)
-            <div class="el members" style="{{ $box('members') }}font-size:{{ $font('members') }};">
-                Anggota: {{ $names->implode(', ') }}
-            </div>
-        @endif
-
-        <div class="el body" style="{{ $box('body') }}font-size:{{ $font('body') }};">
-            Atas prestasinya meraih <strong>{{ $rankLabel }}</strong><br>
-            pada cabang <strong>{{ $competition->name ?? '-' }}</strong>@if ($genderLabel) kategori <strong>{{ $genderLabel }}</strong>@endif<br>
-            dalam kegiatan <strong>{{ $event->event_name ?? '' }}</strong> tahun {{ $event->year ?? date('Y') }}<br>
-            @if ($score->score_value !== null)
-                dengan nilai <strong>{{ rtrim(rtrim(number_format((float) $score->score_value, 2, ',', '.'), '0'), ',') }}</strong>
-            @endif
-        </div>
-
-        <div class="el meta" style="{{ $box('meta') }}font-size:{{ $font('meta') }};">
-            Nomor: {{ $numberLine }}
-        </div>
-
-        <div class="el signature" style="{{ $box('signature') }}font-size:{{ $font('signature') }};">
-            <div>{{ $config['signer_title'] ?? 'Ketua Panitia' }}</div>
-            <div class="space"></div>
-            <div class="line">{{ $config['signer_name'] ?? '&nbsp;' }}</div>
-        </div>
+    {{-- Pita gelar juara --}}
+    <div class="band" style="left:96.5mm;top:66.6mm;width:104mm;height:15.3mm;">
+        <div class="band-inner" style="font-size:22pt;">{{ $placeText }}</div>
     </div>
+    <div class="el" style="{{ $line(252, 291.5, 421.5, $PALETTE['gold'], 0.32, 0.65) }}"></div>
+    <div class="el" style="{{ $line(252, 701.5, 831.5, $PALETTE['gold'], 0.32, 0.65) }}"></div>
+
+    {{-- Data penerima --}}
+    <div class="el given" style="{{ $pos(342, 12.5) }}">Diberikan kepada</div>
+    <div class="el" style="{{ $line(338, 318, 470, $PALETTE['gold'], 0.26, 0.5) }}"></div>
+    <div class="el" style="{{ $line(338, 653, 805, $PALETTE['gold'], 0.26, 0.5) }}"></div>
+
+    <div class="el name" style="{{ $pos(390, $namePx) }}">{{ $displayName }}</div>
+    <div class="el" style="{{ $line(408, 301.5, 821.5, $PALETTE['gold'], 0.32) }}"></div>
+
+    <div class="el school" style="{{ $pos(434, 12.5) }}">
+        @if ($nisnLine) NISN {{ $nisnLine }} &middot; @endif{{ $schoolName }}
+    </div>
+
+    <div class="el comp" style="{{ $pos(468, 19) }}">{{ $competitionName }}</div>
+
+    <div class="el body" style="{{ $pos(500, 12.5) }}">
+        Atas prestasinya sebagai <b>{{ $rankLabel }}</b> pada cabang <b>{{ $competitionName }}</b>
+    </div>
+    <div class="el body" style="{{ $pos(522, 12.5) }}">
+        dalam {{ $eventName }} {{ $eventYear }} yang diselenggarakan dalam rangka {{ $occasion }} di {{ $venue }}.
+    </div>
+
+    {{-- Tanda tangan --}}
+    <div class="el role" style="{{ $pos(562, 10.5, 240, 369.5) }}">{{ $signer1Role }}</div>
+    <img src="{{ $assetPath('ttd-majid.png') }}" style="position:absolute;left:77.9mm;top:150.24mm;width:39.7mm;" alt="">
+    <div class="el" style="{{ $line(640, 274.5, 464.5, $PALETTE['ink'], 0.29) }}"></div>
+    <div class="el signame" style="{{ $pos(662, 13, 240, 369.5) }}">{!! $signer1Name ?: '&nbsp;' !!}</div>
+
+    <div class="el role" style="{{ $pos(562, 10.5, 240, 753.5) }}">{{ $signer2Role }}</div>
+    <img src="{{ $assetPath('ttd-rohman.png') }}" style="position:absolute;left:168.15mm;top:153.10mm;width:62.30mm;" alt="">
+    <div class="el" style="{{ $line(640, 658.5, 848.5, $PALETTE['ink'], 0.29) }}"></div>
+    <div class="el signame" style="{{ $pos(662, 13, 240, 753.5) }}">{!! $signer2Name ?: '&nbsp;' !!}</div>
+
+    @if ($has('stempel.png'))
+        <img src="{{ $assetPath('stempel.png') }}" style="position:absolute;left:201.0mm;top:141.5mm;width:33mm;opacity:0.88;" alt="">
+    @endif
+
+    {{-- Kaki --}}
+    <div class="el" style="{{ $line(686, 62, 1063, $PALETTE['gold'], 0.26, 0.5) }}"></div>
+
+    <div class="el foot" style="{{ $pos(706, 9.5, 420, 272, 'left') }}">Nomor: {{ $numberLine }}</div>
+    <div class="el foots" style="{{ $pos(722, 9, 420, 272, 'left') }}">Diterbitkan {{ $issuedAt }}</div>
+
+    <div class="el foots" style="{{ $pos(706, 9, 420, 851, 'right') }}">Diterbitkan secara elektronik oleh</div>
+    <div class="el footb" style="{{ $pos(722, 9.5, 420, 851, 'right') }}">Panitia {{ $eventName }} {{ $eventYear }}</div>
 </div>
 </body>
 </html>

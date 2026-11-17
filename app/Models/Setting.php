@@ -80,6 +80,9 @@ class Setting extends Model
             'show_logo' => $cfg['show_logo'] ?? true,
             'signer_name' => $cfg['signer_name'] ?? self::defaultSignerName(),
             'signer_title' => $cfg['signer_title'] ?? 'Ketua Panitia',
+            // Blok tanda tangan kedua pada piagam (kepala sekolah).
+            'signer2_name' => $cfg['signer2_name'] ?? '',
+            'signer2_title' => $cfg['signer2_title'] ?? 'Kepala SMKS Islam 1 Kota Blitar',
             'place' => $cfg['place'] ?? null,
             'number_prefix' => $cfg['number_prefix'] ?? null,
             'layout' => array_merge(self::defaultLayout('award'), $cfg['layout'] ?? []),
