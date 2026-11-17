@@ -1,9 +1,10 @@
 {{--
-    Piagam juara — template resmi FPM XII versi "meriah".
+    Piagam juara — template resmi FPM XII (versi penghargaan).
 
-    Satu keluarga desain dengan sertifikat peserta (bingkai hijau–emas, ornamen
-    sudut, pola titik, dua tanda tangan + stempel kepala sekolah), ditambah pita
-    gelar juara, deret bintang, dan garis emas ganda agar terasa lebih bergengsi.
+    Keluarga desain sama dengan sertifikat peserta: bingkai hijau–emas, ornamen
+    sudut, pola titik, kepala logo, dua tanda tangan + stempel kepala sekolah.
+    Gelar juara ditempatkan di plakat krem-keemasan tipis dengan pengapit bintang
+    dan garis emas — bergengsi tanpa terasa seperti spanduk.
 
     Koordinat mengikuti SVG panitia: px × 0.26446 = mm, px × 0.75 = pt.
 
@@ -17,8 +18,8 @@
         'green' => '#064b3d',
         'green2' => '#0a5b4a',
         'gold' => '#c9a227',
-        'gold-light' => '#f3d95b',
         'gold-dark' => '#8a6b12',
+        'gold-soft' => '#faf3da',
         'muted' => '#5c6e67',
         'body' => '#3b4f48',
     ];
@@ -157,21 +158,42 @@
         .el { position: absolute; line-height: 1; }
         .kicker { color: {{ $PALETTE['gold-dark'] }}; font-weight: bold; letter-spacing: 6pt; text-transform: uppercase; }
         .event { color: {{ $PALETTE['ink'] }}; font-weight: bold; letter-spacing: 0.6pt; }
-        .stars { color: {{ $PALETTE['gold'] }}; letter-spacing: 3.2pt; }
-        .band {
+
+        /* Plakat gelar: krem keemasan tipis, bukan pita hijau pekat. */
+        .plaque {
             position: absolute;
-            background: {{ $PALETTE['green'] }};
-            border: 0.53mm solid {{ $PALETTE['gold'] }};
-            text-align: center;
+            left: 98.20mm;
+            top: 61.40mm;
+            width: 100.50mm;
+            height: 22.40mm;
+            background: {{ $PALETTE['gold-soft'] }};
+            border: 0.35mm solid #e2ca86;
         }
-        .band-inner {
-            margin: 0.9mm;
-            border: 0.18mm solid {{ $PALETTE['gold-light'] }};
-            padding-top: 2.1mm;
-            padding-bottom: 2.4mm;
-            color: {{ $PALETTE['gold-light'] }};
+        .plaque-inner {
+            position: absolute;
+            left: 100.05mm;
+            top: 63.20mm;
+            width: 96.80mm;
+            height: 18.80mm;
+            border: 0.18mm solid #eed9a6;
+        }
+        .rank-text {
+            position: absolute;
+            left: 98.20mm;
+            top: 67.70mm;
+            width: 100.50mm;
+            text-align: center;
+            color: {{ $PALETTE['green'] }};
             font-weight: bold;
-            letter-spacing: 2.6pt;
+            font-size: 26pt;
+            letter-spacing: 2.2pt;
+            line-height: 1;
+        }
+        .rank-star {
+            position: absolute;
+            top: 69.50mm;
+            color: {{ $PALETTE['gold'] }};
+            font-size: 11pt;
         }
         .given { color: {{ $PALETTE['muted'] }}; font-weight: bold; letter-spacing: 1.1pt; }
         .name { color: {{ $PALETTE['ink'] }}; font-weight: bold; letter-spacing: 0.2pt; }
@@ -213,62 +235,62 @@
     @endif
 
     {{-- Kepala piagam --}}
-    <div class="el kicker" style="{{ $pos(188, 10.5) }}">Piagam Penghargaan</div>
-    <div class="el event" style="{{ $pos(212, 15) }}">{{ $eventName }} &middot; {{ $eventYear }}</div>
+    <div class="el kicker" style="{{ $pos(196, 10.5) }}">Piagam Penghargaan</div>
+    <div class="el event" style="{{ $pos(222, 15) }}">{{ $eventName }} &middot; {{ $eventYear }}</div>
 
-    <div class="el stars" style="{{ $pos(238, 12) }}">&#9733; &#9733; &#9733; &#9733; &#9733;</div>
+    {{-- Plakat gelar juara --}}
+    <div class="plaque"></div>
+    <div class="plaque-inner"></div>
+    <div class="rank-star" style="left:103.0mm;">&#9733;</div>
+    <div class="rank-star" style="left:188.6mm;">&#9733;</div>
+    <div class="rank-text">{{ $placeText }}</div>
 
-    {{-- Pita gelar juara --}}
-    <div class="band" style="left:96.5mm;top:66.6mm;width:104mm;height:15.3mm;">
-        <div class="band-inner" style="font-size:22pt;">{{ $placeText }}</div>
-    </div>
-    <div class="el" style="{{ $line(252, 291.5, 421.5, $PALETTE['gold'], 0.32, 0.65) }}"></div>
-    <div class="el" style="{{ $line(252, 701.5, 831.5, $PALETTE['gold'], 0.32, 0.65) }}"></div>
+    <div class="el" style="{{ $line(330, 391.5, 731.5, $PALETTE['gold'], 0.32, 0.7) }}"></div>
 
     {{-- Data penerima --}}
-    <div class="el given" style="{{ $pos(342, 12.5) }}">Diberikan kepada</div>
-    <div class="el" style="{{ $line(338, 318, 470, $PALETTE['gold'], 0.26, 0.5) }}"></div>
-    <div class="el" style="{{ $line(338, 653, 805, $PALETTE['gold'], 0.26, 0.5) }}"></div>
+    <div class="el given" style="{{ $pos(368, 12.5) }}">Diberikan kepada</div>
+    <div class="el" style="{{ $line(364, 318, 470, $PALETTE['gold'], 0.26, 0.5) }}"></div>
+    <div class="el" style="{{ $line(364, 653, 805, $PALETTE['gold'], 0.26, 0.5) }}"></div>
 
-    <div class="el name" style="{{ $pos(390, $namePx) }}">{{ $displayName }}</div>
-    <div class="el" style="{{ $line(408, 301.5, 821.5, $PALETTE['gold'], 0.32) }}"></div>
+    <div class="el name" style="{{ $pos(414, $namePx) }}">{{ $displayName }}</div>
+    <div class="el" style="{{ $line(432, 301.5, 821.5, $PALETTE['gold'], 0.32) }}"></div>
 
-    <div class="el school" style="{{ $pos(434, 12.5) }}">
+    <div class="el school" style="{{ $pos(458, 12.5) }}">
         @if ($nisnLine) NISN {{ $nisnLine }} &middot; @endif{{ $schoolName }}
     </div>
 
-    <div class="el comp" style="{{ $pos(468, 19) }}">{{ $competitionName }}</div>
+    <div class="el comp" style="{{ $pos(492, 19) }}">{{ $competitionName }}</div>
 
-    <div class="el body" style="{{ $pos(500, 12.5) }}">
+    <div class="el body" style="{{ $pos(524, 12.5) }}">
         Atas prestasinya sebagai <b>{{ $rankLabel }}</b> pada cabang <b>{{ $competitionName }}</b>
     </div>
-    <div class="el body" style="{{ $pos(522, 12.5) }}">
-        dalam {{ $eventName }} {{ $eventYear }} yang diselenggarakan dalam rangka {{ $occasion }} di {{ $venue }}.
+    <div class="el body" style="{{ $pos(546, 12.5) }}">
+        dalam {{ $eventName }} {{ $eventYear }}, yang diselenggarakan dalam rangka {{ $occasion }} di {{ $venue }}.
     </div>
 
     {{-- Tanda tangan --}}
-    <div class="el role" style="{{ $pos(562, 10.5, 240, 369.5) }}">{{ $signer1Role }}</div>
-    <img src="{{ $assetPath('ttd-majid.png') }}" style="position:absolute;left:77.9mm;top:150.24mm;width:39.7mm;" alt="">
-    <div class="el" style="{{ $line(640, 274.5, 464.5, $PALETTE['ink'], 0.29) }}"></div>
-    <div class="el signame" style="{{ $pos(662, 13, 240, 369.5) }}">{!! $signer1Name ?: '&nbsp;' !!}</div>
+    <div class="el role" style="{{ $pos(586, 10.5, 240, 369.5) }}">{{ $signer1Role }}</div>
+    <img src="{{ $assetPath('ttd-majid.png') }}" style="position:absolute;left:77.9mm;top:155.5mm;width:39.7mm;" alt="">
+    <div class="el" style="{{ $line(660, 274.5, 464.5, $PALETTE['ink'], 0.29) }}"></div>
+    <div class="el signame" style="{{ $pos(682, 13, 240, 369.5) }}">{!! $signer1Name ?: '&nbsp;' !!}</div>
 
-    <div class="el role" style="{{ $pos(562, 10.5, 240, 753.5) }}">{{ $signer2Role }}</div>
-    <img src="{{ $assetPath('ttd-rohman.png') }}" style="position:absolute;left:168.15mm;top:153.10mm;width:62.30mm;" alt="">
-    <div class="el" style="{{ $line(640, 658.5, 848.5, $PALETTE['ink'], 0.29) }}"></div>
-    <div class="el signame" style="{{ $pos(662, 13, 240, 753.5) }}">{!! $signer2Name ?: '&nbsp;' !!}</div>
+    <div class="el role" style="{{ $pos(586, 10.5, 240, 753.5) }}">{{ $signer2Role }}</div>
+    <img src="{{ $assetPath('ttd-rohman.png') }}" style="position:absolute;left:168.15mm;top:158.0mm;width:62.30mm;" alt="">
+    <div class="el" style="{{ $line(660, 658.5, 848.5, $PALETTE['ink'], 0.29) }}"></div>
+    <div class="el signame" style="{{ $pos(682, 13, 240, 753.5) }}">{!! $signer2Name ?: '&nbsp;' !!}</div>
 
     @if ($has('stempel.png'))
-        <img src="{{ $assetPath('stempel.png') }}" style="position:absolute;left:201.0mm;top:141.5mm;width:33mm;opacity:0.88;" alt="">
+        <img src="{{ $assetPath('stempel.png') }}" style="position:absolute;left:201.0mm;top:152.0mm;width:33mm;opacity:0.88;" alt="">
     @endif
 
     {{-- Kaki --}}
-    <div class="el" style="{{ $line(686, 62, 1063, $PALETTE['gold'], 0.26, 0.5) }}"></div>
+    <div class="el" style="{{ $line(702, 62, 1063, $PALETTE['gold'], 0.26, 0.5) }}"></div>
 
-    <div class="el foot" style="{{ $pos(706, 9.5, 420, 272, 'left') }}">Nomor: {{ $numberLine }}</div>
-    <div class="el foots" style="{{ $pos(722, 9, 420, 272, 'left') }}">Diterbitkan {{ $issuedAt }}</div>
+    <div class="el foot" style="{{ $pos(722, 9.5, 420, 272, 'left') }}">Nomor: {{ $numberLine }}</div>
+    <div class="el foots" style="{{ $pos(738, 9, 420, 272, 'left') }}">Diterbitkan {{ $issuedAt }}</div>
 
-    <div class="el foots" style="{{ $pos(706, 9, 420, 851, 'right') }}">Diterbitkan secara elektronik oleh</div>
-    <div class="el footb" style="{{ $pos(722, 9.5, 420, 851, 'right') }}">Panitia {{ $eventName }} {{ $eventYear }}</div>
+    <div class="el foots" style="{{ $pos(722, 9, 420, 851, 'right') }}">Diterbitkan secara elektronik oleh</div>
+    <div class="el footb" style="{{ $pos(738, 9.5, 420, 851, 'right') }}">Panitia {{ $eventName }} {{ $eventYear }}</div>
 </div>
 </body>
 </html>
