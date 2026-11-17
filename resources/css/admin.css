@@ -830,3 +830,23 @@
 
 .flow__text { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
 .flow__text strong { display: block; font-family: var(--H); font-size: 12.5px; color: var(--ink); }
+
+/* ---------- Mobile: drawer di atas bottom bar, ciutkan diabaikan ---------- */
+@media (max-width: 1023px) {
+    .admin-side { z-index: 55; }
+    .admin-overlay { z-index: 50; }
+
+    .admin-shell.is-collapsed .admin-side { width: 268px; }
+    .admin-shell.is-collapsed .admin-main { margin-inline-start: 0; }
+    .admin-shell.is-collapsed .admin-brand { justify-content: flex-start; padding: 18px 20px; }
+    .admin-shell.is-collapsed .admin-brand__text,
+    .admin-shell.is-collapsed .admin-user__text { display: block; }
+    .admin-shell.is-collapsed .admin-nav { padding: 12px; }
+    .admin-shell.is-collapsed .admin-nav__label { display: block; }
+    .admin-shell.is-collapsed .admin-nav__link { justify-content: flex-start; padding: 10px 12px; }
+    .admin-shell.is-collapsed .admin-nav__text,
+    .admin-shell.is-collapsed .admin-logout__text { display: inline; }
+    .admin-shell.is-collapsed .admin-user { justify-content: flex-start; }
+    .admin-shell.is-collapsed .admin-logout { justify-content: flex-start; padding: 9px 12px; }
+    .admin-shell.is-collapsed .admin-side__foot { padding: 14px; }
+}
