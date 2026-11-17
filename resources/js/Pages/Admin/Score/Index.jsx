@@ -309,9 +309,32 @@ export default function ScoreIndex({
         };
 
         if (criteria.length > 0) {
-            body.criterion_values = Object.fromEntries(
-                Object.entries(adjustValues).map(([key, value]) => [key, value === '' ? null : Number(value)]),
-            );
+            const changes = {};
+
+            criteria.forEach((criterion) => {
+                const key = String(criterion.id);
+                const raw = Number(adjusting?.values?.[key] ?? adjusting?.values?.[criterion.id] ?? 0);
+                const current = adjusting?.adjustments?.[key] ?? adjusting?.adjustments?.[criterion.id] ?? null;
+                const proposedRaw = adjustValues[criterion.id];
+                const proposed = proposedRaw === '' || proposedRaw === undefined ? null : Number(proposedRaw);
+
+                if (proposed === null) {
+                    if (current) changes[key] = null;
+                    return;
+                }
+
+                if (!current && proposed === raw) return;
+                if (current && proposed === Number(current.value)) return;
+
+                changes[key] = proposed;
+            });
+
+            if (Object.keys(changes).length === 0) {
+                setAdjustError('Tidak ada nilai yang diubah.');
+                return;
+            }
+
+            body.criterion_values = changes;
         } else {
             body.adjusted_value = adjustValues.__single === '' || adjustValues.__single === undefined ? null : Number(adjustValues.__single);
         }
