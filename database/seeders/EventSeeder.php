@@ -10,14 +10,14 @@ class EventSeeder extends Seeder
     public function run(): void
     {
         $event = Event::updateOrCreate(
-            ['event_name' => 'Festival Pelajar Muslim', 'year' => 2026],
+            ['event_name' => 'Festival Pelajar Muslim XII', 'year' => 2026],
             [
                 'is_active' => true,
                 'theme_config' => [
-                    'primary' => '#0f766e',
-                    'secondary' => '#c9a45c',
+                    'primary' => '#064b3d',
+                    'secondary' => '#f3d95b',
                     'logo_url' => null,
-                    'edition_title' => 'FPM XIV 2026',
+                    'edition_title' => 'FPM XII 2026',
                 ],
             ],
         );
@@ -28,11 +28,11 @@ class EventSeeder extends Seeder
         $event->setting()->updateOrCreate([], [
             'publish_scores' => false,
             'enable_certificates' => false,
-            'admin_whatsapp' => '081234567890',
+            'admin_whatsapp' => '0857-5548-1643',
             'certificate_template_config' => [
                 'bg_color' => '#ffffff',
                 'text_color' => '#1e293b',
-                'accent_color' => '#0f766e',
+                'accent_color' => '#064b3d',
                 'bg_image_url' => null,
                 'show_logo' => true,
                 'title' => 'Sertifikat Peserta',
