@@ -95,6 +95,9 @@ export default function GuestLayout({ title, children }) {
 
         return list;
     })();
+
+    // Tautan utama untuk footer (kontak pertama / nomor panitia).
+    const wa = waContacts.length > 0 ? waLink(waContacts[0].phone, 'Halo panitia FPM, saya ingin bertanya.') : null;
     const user = auth?.user ?? null;
     const isAdmin = user?.role === 'admin';
 
