@@ -850,3 +850,217 @@
     .admin-shell.is-collapsed .admin-logout { justify-content: flex-start; padding: 9px 12px; }
     .admin-shell.is-collapsed .admin-side__foot { padding: 14px; }
 }
+
+/* ---------- Topbar brand & menu pengguna ---------- */
+.admin-top__brand { display: none; align-items: center; gap: 10px; min-width: 0; text-decoration: none; }
+.admin-top__brand img { flex: none; }
+.admin-top__brandtext {
+    font-family: var(--H);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+}
+
+.admin-userdd { position: relative; flex: none; }
+
+.admin-userdd__btn {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--paper);
+    cursor: pointer;
+}
+
+.admin-userdd__avatar {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--green-900);
+    color: var(--cream);
+    font-family: var(--H);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.admin-userdd__panel {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: calc(100% + 8px);
+    z-index: 45;
+    width: 224px;
+    padding: 6px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 24px 48px -28px rgba(5, 35, 30, 0.55);
+}
+
+.admin-userdd__head {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 4px;
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--line);
+}
+
+.admin-userdd__head strong {
+    font-family: var(--H);
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--ink);
+}
+
+.admin-userdd__head span { font-size: 11px; color: var(--ink-3); }
+
+.admin-userdd__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--ink-2);
+    font-family: var(--H);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-userdd__item svg { width: 16px; height: 16px; flex: none; }
+.admin-userdd__item:hover { background: rgba(13, 48, 41, 0.06); color: var(--ink); }
+.admin-userdd__item--danger { color: #a03030; }
+.admin-userdd__item--danger:hover { background: #fdeceb; color: #8c2626; }
+
+/* ---------- Bottom sheet menu (mobile) ---------- */
+.admin-sheet { display: none; }
+
+@media (max-width: 1023px) {
+    /* Sidebar tidak dipakai di ponsel — diganti bottom bar + sheet. */
+    .admin-side { display: none !important; }
+    .admin-top__brand { display: flex; }
+    .admin-top__titles { display: none; }
+
+    .admin-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .admin-sheet__backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        padding: 0;
+        background: rgba(5, 35, 30, 0.5);
+        backdrop-filter: blur(3px);
+        animation: modalFade 0.18s ease both;
+    }
+
+    .admin-sheet__panel {
+        position: relative;
+        width: 100%;
+        max-height: 84vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 8px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+        background: #fffdf7;
+        border-radius: 22px 22px 0 0;
+        box-shadow: 0 -30px 60px -30px rgba(5, 35, 30, 0.5);
+        animation: sheetUp 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .admin-sheet__grab {
+        display: block;
+        width: 44px;
+        height: 5px;
+        margin: 2px auto 10px;
+        border-radius: 999px;
+        background: var(--line-strong);
+    }
+
+    .admin-sheet__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .admin-sheet__title { font-family: var(--H); font-size: 15px; font-weight: 800; color: var(--ink); }
+    .admin-sheet__sub { margin-top: 2px; font-size: 11.5px; color: var(--ink-3); }
+
+    .admin-sheet__close {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        flex: none;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: transparent;
+        color: var(--ink-3);
+        cursor: pointer;
+    }
+
+    .admin-sheet__close svg { width: 15px; height: 15px; }
+
+    .admin-sheet__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .admin-sheet__item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--paper);
+        color: var(--ink-2);
+        font-family: var(--H);
+        font-size: 12.5px;
+        font-weight: 600;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .admin-sheet__item svg { width: 18px; height: 18px; flex: none; color: var(--green-800); }
+    .admin-sheet__item.is-active { background: var(--green-900); border-color: var(--green-900); color: var(--cream); }
+    .admin-sheet__item.is-active svg { color: var(--cream); }
+
+    .admin-sheet__foot {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+    }
+
+    .admin-sheet__item--danger { color: #a03030; }
+    .admin-sheet__item--danger svg { color: #a03030; }
+}
+
+@keyframes sheetUp {
+    from { transform: translateY(24px); opacity: 0.6; }
+}

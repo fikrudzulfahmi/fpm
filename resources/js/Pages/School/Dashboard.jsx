@@ -211,7 +211,7 @@ export default function SchoolDashboard({ registrations = [], enable_certificate
                     </Link>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="mt-6 space-y-4">
                     {registrations.map((registration) => (
                         <RegistrationCard
                             key={registration.id}

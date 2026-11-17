@@ -19,27 +19,41 @@ export default function Modal({
     labelledBy,
 }) {
     const cardRef = useRef(null);
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
 
     useEffect(() => {
         if (!open) return undefined;
 
         const onKey = (e) => {
-            if (e.key === 'Escape') onClose?.();
+            if (e.key === 'Escape') onCloseRef.current?.();
         };
 
         document.addEventListener('keydown', onKey);
         const previous = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
 
-        // Fokuskan dialog supaya pembaca layar langsung berada di dalamnya.
-        const timer = window.setTimeout(() => cardRef.current?.focus(), 30);
-
         return () => {
             document.removeEventListener('keydown', onKey);
             document.body.style.overflow = previous;
-            window.clearTimeout(timer);
         };
-    }, [open, onClose]);
+    }, [open]);
+
+    // Fokus awal hanya saat dialog dibuka, bukan setiap render. Kalau dipanggil
+    // ulang tiap render, input kehilangan fokus setelah satu ketikan.
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const timer = window.setTimeout(() => {
+            const card = cardRef.current;
+
+            if (card && !card.contains(document.activeElement)) {
+                card.focus({ preventScroll: true });
+            }
+        }, 40);
+
+        return () => window.clearTimeout(timer);
+    }, [open]);
 
     if (!open || typeof document === 'undefined') return null;
 

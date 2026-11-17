@@ -32,21 +32,24 @@ const icons = {
     menu: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5',
     chevronLeft: 'M15.75 19.5L8.25 12l7.5-7.5',
     chevronRight: 'M8.25 4.5l7.5 7.5-7.5 7.5',
+    external: 'M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25',
 };
 
 /**
  * Kerangka panel panitia & sekolah dengan tema FPM XII.
- * Permukaan: krem–putih, aksen hijau tua + emas; kartu tanpa shadow dasar.
  *
- * - Desktop: sidebar bisa diciutkan (pilihan tersimpan di localStorage).
- * - Mobile: drawer penuh + bottom bar navigasi cepat.
+ * - Desktop: sidebar statis yang bisa diciutkan (localStorage).
+ * - Mobile: tanpa sidebar. Topbar berisi brand + menu pengguna (dropdown), dan
+ *   bottom bar dengan tombol "Menu" yang membuka bottom sheet selebar layar
+ *   berisi seluruh menu.
  */
 export default function AppLayout({ title, children }) {
     const { auth, event, theme } = usePage().props;
     const user = auth?.user ?? null;
     const { url } = usePage();
-    const [open, setOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
+    const [sheet, setSheet] = useState(false);
+    const [userMenu, setUserMenu] = useState(false);
 
     useEffect(() => {
         try {
@@ -71,32 +74,49 @@ export default function AppLayout({ title, children }) {
     };
 
     useEffect(() => {
-        setOpen(false);
+        setSheet(false);
+        setUserMenu(false);
     }, [url]);
 
     useEffect(() => {
-        document.body.style.overflow = open ? 'hidden' : '';
+        document.body.style.overflow = sheet ? 'hidden' : '';
 
         return () => {
             document.body.style.overflow = '';
         };
-    }, [open]);
+    }, [sheet]);
 
     useEffect(() => {
-        if (!open) return undefined;
-
         const onKey = (e) => {
-            if (e.key === 'Escape') setOpen(false);
+            if (e.key === 'Escape') {
+                setSheet(false);
+                setUserMenu(false);
+            }
         };
+
         window.addEventListener('keydown', onKey);
 
         return () => window.removeEventListener('keydown', onKey);
-    }, [open]);
+    }, []);
+
+    useEffect(() => {
+        if (!userMenu) return undefined;
+
+        const onClick = (e) => {
+            if (!e.target.closest('[data-user-menu]')) setUserMenu(false);
+        };
+
+        document.addEventListener('pointerdown', onClick);
+
+        return () => document.removeEventListener('pointerdown', onClick);
+    }, [userMenu]);
 
     const isAdmin = user?.role === 'admin';
     const eventName = event?.event_name ?? 'Festival Pelajar Muslim';
     const year = event?.year;
+    const logo = theme?.logo_url ?? '/branding/logo-mark.png';
     const roleLabel = isAdmin ? (user?.access_level === 'juri' ? 'Juri' : 'Panitia') : 'Akun Sekolah';
+    const identity = isAdmin ? roleLabel : user?.school?.school_name ?? roleLabel;
     const initials = (user?.name ?? 'FPM')
         .trim()
         .split(/\s+/)
@@ -123,7 +143,7 @@ export default function AppLayout({ title, children }) {
 
     const current = (href) => url === href || url.startsWith(`${href}/`) || url.startsWith(`${href}?`);
 
-    // Bottom bar: menu utama + tombol "Menu" untuk membuka drawer lengkap.
+    // Bottom bar: menu utama + tombol "Menu" yang membuka bottom sheet.
     const bottomItems = (isAdmin
         ? [
               { href: '/dashboard', label: 'Dashboard', icon: icons.home },
@@ -136,93 +156,69 @@ export default function AppLayout({ title, children }) {
           ]
     ).concat([{ action: true, label: 'Menu', icon: icons.menu }]);
 
-    const sidebar = (
-        <>
-            <Link href="/dashboard" className="admin-brand" aria-label={eventName}>
-                <img
-                    className="admin-brand__mark"
-                    src={theme?.logo_url ?? '/branding/logo-mark.png'}
-                    alt=""
-                    width="38"
-                    height="43"
-                />
-                <span className="admin-brand__text min-w-0">
-                    <span className="admin-brand__name block truncate">{eventName}</span>
-                    <span className="admin-brand__sub block truncate">{year ? `Edisi ${year}` : 'FPM'}</span>
-                </span>
-            </Link>
-
-            <nav className="admin-nav" aria-label="Navigasi panel">
-                <span className="admin-nav__label">{isAdmin ? 'Menu panitia' : 'Menu sekolah'}</span>
-                {nav.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`admin-nav__link${current(item.href) ? ' is-active' : ''}`}
-                        aria-current={current(item.href) ? 'page' : undefined}
-                        title={collapsed ? item.label : undefined}
-                    >
-                        <Icon path={item.icon} />
-                        <span className="admin-nav__text truncate">{item.label}</span>
-                    </Link>
-                ))}
-            </nav>
-
-            <div className="admin-side__foot">
-                <div className="admin-user">
-                    <span className="admin-user__avatar" aria-hidden="true">
-                        {initials}
-                    </span>
-                    <div className="admin-user__text min-w-0">
-                        <p className="admin-user__name truncate">{user?.name ?? 'Pengguna'}</p>
-                        <p className="admin-user__role truncate">
-                            {isAdmin ? roleLabel : user?.school?.school_name ?? roleLabel}
-                        </p>
-                    </div>
-                </div>
-                <Link
-                    href="/logout"
-                    method="post"
-                    as="button"
-                    className="admin-logout"
-                    title={collapsed ? 'Keluar' : undefined}
-                >
-                    <Icon path={icons.logout} />
-                    <span className="admin-logout__text">Keluar</span>
-                </Link>
-            </div>
-        </>
-    );
-
     return (
         <div className="fpm-admin">
             <ToastProvider>
                 <ConfirmProvider>
                     <div className={`admin-shell${collapsed ? ' is-collapsed' : ''}`}>
-                        <aside className={`admin-side${open ? ' is-open' : ''}`} aria-label="Menu panel">
-                            {sidebar}
-                        </aside>
+                        <aside className="admin-side" aria-label="Menu panel">
+                            <Link href="/dashboard" className="admin-brand" aria-label={eventName}>
+                                <img className="admin-brand__mark" src={logo} alt="" width="38" height="43" />
+                                <span className="admin-brand__text min-w-0">
+                                    <span className="admin-brand__name block truncate">{eventName}</span>
+                                    <span className="admin-brand__sub block truncate">
+                                        {year ? `Edisi ${year}` : 'FPM'}
+                                    </span>
+                                </span>
+                            </Link>
 
-                        {open && (
-                            <button
-                                type="button"
-                                className="admin-overlay"
-                                aria-label="Tutup menu"
-                                onClick={() => setOpen(false)}
-                            />
-                        )}
+                            <nav className="admin-nav" aria-label="Navigasi panel">
+                                <span className="admin-nav__label">{isAdmin ? 'Menu panitia' : 'Menu sekolah'}</span>
+                                {nav.map((item) => (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`admin-nav__link${current(item.href) ? ' is-active' : ''}`}
+                                        aria-current={current(item.href) ? 'page' : undefined}
+                                        title={collapsed ? item.label : undefined}
+                                    >
+                                        <Icon path={item.icon} />
+                                        <span className="admin-nav__text truncate">{item.label}</span>
+                                    </Link>
+                                ))}
+                            </nav>
+
+                            <div className="admin-side__foot">
+                                <div className="admin-user">
+                                    <span className="admin-user__avatar" aria-hidden="true">
+                                        {initials}
+                                    </span>
+                                    <div className="admin-user__text min-w-0">
+                                        <p className="admin-user__name truncate">{user?.name ?? 'Pengguna'}</p>
+                                        <p className="admin-user__role truncate">{identity}</p>
+                                    </div>
+                                </div>
+                                <Link
+                                    href="/logout"
+                                    method="post"
+                                    as="button"
+                                    className="admin-logout"
+                                    title={collapsed ? 'Keluar' : undefined}
+                                >
+                                    <Icon path={icons.logout} />
+                                    <span className="admin-logout__text">Keluar</span>
+                                </Link>
+                            </div>
+                        </aside>
 
                         <div className="admin-main">
                             <header className="admin-top">
-                                <button
-                                    type="button"
-                                    className="admin-menu-btn"
-                                    onClick={() => setOpen(true)}
-                                    aria-label="Buka menu"
-                                    aria-expanded={open ? 'true' : 'false'}
-                                >
-                                    <Icon path={icons.menu} />
-                                </button>
+                                <Link href="/dashboard" className="admin-top__brand" aria-label={eventName}>
+                                    <img src={logo} alt="" width="30" height="34" />
+                                    <span className="admin-top__brandtext truncate">
+                                        {theme?.edition_title ?? eventName}
+                                    </span>
+                                </Link>
 
                                 <button
                                     type="button"
@@ -235,7 +231,7 @@ export default function AppLayout({ title, children }) {
                                     <Icon path={collapsed ? icons.chevronRight : icons.chevronLeft} />
                                 </button>
 
-                                <div className="min-w-0 flex-1">
+                                <div className="admin-top__titles min-w-0 flex-1">
                                     <p className="admin-top__event truncate">
                                         {eventName}
                                         {theme?.edition_title && theme.edition_title !== eventName
@@ -251,6 +247,42 @@ export default function AppLayout({ title, children }) {
                                     </Link>
                                     <span className="admin-chip">{roleLabel}</span>
                                 </div>
+
+                                <div className="admin-userdd" data-user-menu>
+                                    <button
+                                        type="button"
+                                        className="admin-userdd__btn"
+                                        onClick={() => setUserMenu((v) => !v)}
+                                        aria-haspopup="menu"
+                                        aria-expanded={userMenu ? 'true' : 'false'}
+                                        aria-label="Menu pengguna"
+                                    >
+                                        <span className="admin-userdd__avatar">{initials}</span>
+                                    </button>
+
+                                    {userMenu && (
+                                        <div className="admin-userdd__panel" role="menu">
+                                            <div className="admin-userdd__head">
+                                                <strong>{user?.name ?? 'Pengguna'}</strong>
+                                                <span>{identity}</span>
+                                            </div>
+                                            <Link href="/" className="admin-userdd__item" role="menuitem">
+                                                <Icon path={icons.external} />
+                                                Lihat situs
+                                            </Link>
+                                            <Link
+                                                href="/logout"
+                                                method="post"
+                                                as="button"
+                                                className="admin-userdd__item admin-userdd__item--danger"
+                                                role="menuitem"
+                                            >
+                                                <Icon path={icons.logout} />
+                                                Keluar
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
                             </header>
 
                             <main className="admin-content">{children}</main>
@@ -261,8 +293,9 @@ export default function AppLayout({ title, children }) {
                                         <button
                                             key="menu"
                                             type="button"
-                                            className="admin-bottomnav__item"
-                                            onClick={() => setOpen(true)}
+                                            className={`admin-bottomnav__item${sheet ? ' is-active' : ''}`}
+                                            onClick={() => setSheet(true)}
+                                            aria-expanded={sheet ? 'true' : 'false'}
                                         >
                                             <Icon path={item.icon} />
                                             <span>{item.label}</span>
@@ -282,6 +315,72 @@ export default function AppLayout({ title, children }) {
                             </nav>
                         </div>
                     </div>
+
+                    {sheet && (
+                        <div className="admin-sheet" role="dialog" aria-modal="true" aria-label="Menu panel">
+                            <button
+                                type="button"
+                                className="admin-sheet__backdrop"
+                                aria-label="Tutup menu"
+                                onClick={() => setSheet(false)}
+                            />
+
+                            <div className="admin-sheet__panel">
+                                <span className="admin-sheet__grab" aria-hidden="true" />
+
+                                <div className="admin-sheet__head">
+                                    <div className="min-w-0">
+                                        <p className="admin-sheet__title">{isAdmin ? 'Menu panitia' : 'Menu sekolah'}</p>
+                                        <p className="admin-sheet__sub truncate">
+                                            {eventName}
+                                            {year ? ` · ${year}` : ''}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="admin-sheet__close"
+                                        onClick={() => setSheet(false)}
+                                        aria-label="Tutup"
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                                            <path d="M6 6l12 12M18 6L6 18" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className="admin-sheet__grid">
+                                    {nav.map((item) => (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={`admin-sheet__item${current(item.href) ? ' is-active' : ''}`}
+                                            aria-current={current(item.href) ? 'page' : undefined}
+                                            onClick={() => setSheet(false)}
+                                        >
+                                            <Icon path={item.icon} />
+                                            <span>{item.label}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+
+                                <div className="admin-sheet__foot">
+                                    <Link href="/" className="admin-sheet__item" onClick={() => setSheet(false)}>
+                                        <Icon path={icons.external} />
+                                        <span>Lihat situs</span>
+                                    </Link>
+                                    <Link
+                                        href="/logout"
+                                        method="post"
+                                        as="button"
+                                        className="admin-sheet__item admin-sheet__item--danger"
+                                    >
+                                        <Icon path={icons.logout} />
+                                        <span>Keluar</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </ConfirmProvider>
             </ToastProvider>
         </div>
