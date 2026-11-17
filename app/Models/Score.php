@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Score extends Model
 {
@@ -41,6 +42,14 @@ class Score extends Model
     public function adjustedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'adjusted_by');
+    }
+
+    /**
+     * Nilai per kriteria (kosong bila cabang belum punya kriteria).
+     */
+    public function criterionValues(): HasMany
+    {
+        return $this->hasMany(ScoreCriterionValue::class);
     }
 
     public function competition(): BelongsTo

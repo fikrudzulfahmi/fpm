@@ -32,6 +32,16 @@ class Competition extends Model
         return $this->hasMany(Registration::class);
     }
 
+    /**
+     * Kriteria penilaian cabang ini (disusun panitia).
+     */
+    public function criteria(): HasMany
+    {
+        return $this->hasMany(ScoreCriterion::class, 'competition_id')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
     public function isGroup(): bool
     {
         return $this->category_type === 'group';

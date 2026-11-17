@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CertificateSettingController;
 use App\Http\Controllers\Admin\CompetitionController;
+use App\Http\Controllers\Admin\CriterionController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\Admin\SchoolController;
@@ -192,4 +193,8 @@ Route::middleware(['auth', 'admin', 'full-admin'])
 
         // Koreksi nilai akhir (katrol) — hanya panitia penuh.
         Route::post('/nilai/koreksi', [ScoreController::class, 'adjust'])->name('nilai.adjust');
+
+        // Kriteria penilaian per cabang lomba.
+        Route::put('/lomba/{competition}/kriteria', [CriterionController::class, 'sync'])
+            ->name('lomba.kriteria');
     });

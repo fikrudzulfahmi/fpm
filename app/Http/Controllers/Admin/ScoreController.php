@@ -7,8 +7,10 @@ use App\Models\Competition;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\Score;
+use App\Models\ScoreCriterion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -17,7 +19,7 @@ use Inertia\Response;
 class ScoreController extends Controller
 {
     /**
-     * Daftar pendaftaran disetujui untuk satu cabang lomba + nilainya.
+     * Daftar pendaftaran disetujui untuk satu cabang lomba + nilai per kriteria.
      *
      * PJ Lomba hanya melihat cabang lombanya sendiri dan tidak melihat nilai
      * hasil koreksi panitia (katrol) — angka itu wewenang panitia penuh.
@@ -53,11 +55,26 @@ class ScoreController extends Controller
         $active = $competitions->firstWhere('id', $competitionId);
         $separate = ($active->gender_mode ?? 'mixed') === 'separate';
 
+        $criteria = $competitionId
+            ? ScoreCriterion::where('competition_id', $competitionId)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get(['id', 'name', 'weight', 'max_value'])
+                ->map(fn (ScoreCriterion $c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'weight' => (float) $c->weight,
+                    'max_value' => (float) $c->max_value,
+                ])
+                ->values()
+            : collect();
+
         $rows = collect();
 
         if ($competitionId) {
             $rows = Registration::with([
                 'participants:id,registration_id,full_name,nisn',
+                'score.criterionValues',
                 'score.adjustedBy:id,name',
                 'school:id,school_name',
             ])
@@ -78,6 +95,11 @@ class ScoreController extends Controller
                     'final_value' => $r->score?->finalValue(),
                     'rank' => $r->score?->rank,
                     'is_published' => (bool) $r->score?->is_published,
+                    'values' => $r->score
+                        ? $r->score->criterionValues->mapWithKeys(
+                            fn ($v) => [(string) $v->criterion_id => (float) $v->value]
+                        )
+                        : (object) [],
                     // Data koreksi hanya untuk panitia penuh.
                     'adjusted_value' => $canAdjust ? $r->score?->adjusted_value : null,
                     'adjust_reason' => $canAdjust ? $r->score?->adjust_reason : null,
@@ -97,6 +119,7 @@ class ScoreController extends Controller
         return Inertia::render('Admin/Score/Index', [
             'competitions' => $competitions,
             'competition_id' => $competitionId,
+            'criteria' => $criteria,
             'registrations' => $rows,
             'publish_scores' => (bool) $setting->publish_scores,
             'gender_mode' => $separate ? 'separate' : 'mixed',
@@ -106,14 +129,17 @@ class ScoreController extends Controller
     }
 
     /**
-     * Simpan/ubah nilai input (PJ Lomba / panitia) lalu hitung ulang peringkat.
+     * Simpan/ubah nilai (PJ Lomba / panitia). Bisa per kriteria atau nilai
+     * tunggal bila cabang belum punya kriteria. Dipakai autosave di klien.
      */
     public function upsert(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'competition_id' => ['required', 'integer', 'exists:competitions,id'],
             'registration_id' => ['required', 'integer', 'exists:registrations,id'],
-            'score_value' => ['required', 'numeric', 'min:0', 'max:100'],
+            'score_value' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'criterion_values' => ['nullable', 'array'],
+            'criterion_values.*' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -144,23 +170,52 @@ class ScoreController extends Controller
             ]);
         }
 
+        $criteria = $competition->criteria()->get();
+        $values = collect($data['criterion_values'] ?? [])
+            ->mapWithKeys(fn ($value, $key) => [(int) $key => (float) $value]);
+
+        if ($criteria->isEmpty() && ! isset($data['score_value'])) {
+            throw ValidationException::withMessages([
+                'score_value' => 'Isi nilai untuk cabang ini.',
+            ]);
+        }
+
+        $scoreValue = $criteria->isNotEmpty()
+            ? $this->weightedScore($criteria, $values)
+            : (float) $data['score_value'];
+
         $publishScores = (bool) $event->setting()->publish_scores;
 
-        DB::transaction(function () use ($data, $competition, $publishScores) {
-            Score::updateOrCreate(
+        DB::transaction(function () use ($data, $competition, $criteria, $values, $scoreValue, $publishScores) {
+            $score = Score::updateOrCreate(
                 ['registration_id' => $data['registration_id']],
                 [
                     'competition_id' => $competition->id,
-                    'score_value' => $data['score_value'],
+                    'score_value' => $scoreValue,
                     'notes' => $data['notes'] ?? null,
                     'is_published' => $publishScores,
                 ]
             );
 
+            if ($criteria->isNotEmpty()) {
+                foreach ($criteria as $criterion) {
+                    $value = max(0, min((float) ($values[$criterion->id] ?? 0), $criterion->safeMax()));
+
+                    $score->criterionValues()->updateOrCreate(
+                        ['criterion_id' => $criterion->id],
+                        ['value' => $value]
+                    );
+                }
+
+                $score->criterionValues()
+                    ->whereNotIn('criterion_id', $criteria->pluck('id'))
+                    ->delete();
+            }
+
             $this->recalculateRanks($competition, $publishScores);
         });
 
-        return back()->with('success', 'Nilai tersimpan dan peringkat diperbarui.');
+        return back();
     }
 
     /**
@@ -246,6 +301,28 @@ class ScoreController extends Controller
             'success',
             $next ? 'Nilai cabang lomba ini dipublikasikan.' : 'Publikasi nilai cabang lomba ini ditutup.'
         );
+    }
+
+    /**
+     * Nilai akhir berbobot: Σ((nilai/max) × bobot) / Σbobot × 100.
+     */
+    private function weightedScore(Collection $criteria, Collection $values): float
+    {
+        $totalWeight = (float) $criteria->sum(fn (ScoreCriterion $c) => $c->weight > 0 ? $c->weight : 1);
+
+        if ($totalWeight <= 0) {
+            return 0.0;
+        }
+
+        $accumulated = 0.0;
+
+        foreach ($criteria as $criterion) {
+            $weight = $criterion->weight > 0 ? (float) $criterion->weight : 1.0;
+            $value = max(0, min((float) ($values[$criterion->id] ?? 0), $criterion->safeMax()));
+            $accumulated += ($value / $criterion->safeMax()) * $weight;
+        }
+
+        return round(($accumulated / $totalWeight) * 100, 2);
     }
 
     /**
