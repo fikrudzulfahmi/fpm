@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
-import StatusBadge, { AiStatusBadge } from '../../../Components/StatusBadge';
+import StatusBadge, { DocumentStatusBadge } from '../../../Components/StatusBadge';
 import { formatDate } from '../../../lib/format';
 import TablePagination from '../../../Components/TablePagination';
 
@@ -174,7 +174,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
                                 <th className="px-3 py-3 font-semibold">Lomba</th>
                                 <th className="px-3 py-3 font-semibold">Peserta</th>
                                 <th className="px-3 py-3 font-semibold">Status</th>
-                                <th className="px-3 py-3 font-semibold">AI</th>
+                                <th className="px-3 py-3 font-semibold">Dokumen</th>
                                 <th className="px-3 py-3 font-semibold">Tanggal</th>
                                 <th className="px-5 py-3" />
                             </tr>
@@ -191,7 +191,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
                                         <StatusBadge status={r.status} />
                                     </td>
                                     <td className="px-3 py-3">
-                                        <AiStatusBadge status={r.ai_status} />
+                                        <DocumentStatusBadge status={r.ai_status} />
                                     </td>
                                     <td className="px-3 py-3 whitespace-nowrap text-slate-500">{formatDate(r.created_at)}</td>
                                     <td className="px-5 py-3 text-right">

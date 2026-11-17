@@ -255,19 +255,6 @@ export default function ScoreIndex({
         });
     };
 
-    const drawOrder = async () => {
-        if (!competitionId) return;
-        const ok = await confirm({
-            title: 'Acak ulang nomor tampil?',
-            message: 'Urutan tampil peserta pada cabang ini akan diacak ulang. Penilaian yang sudah ada tidak berubah.',
-            confirmLabel: 'Acak ulang',
-            tone: 'primary',
-        });
-        if (!ok) return;
-
-        router.post(`/admin/lomba/${competitionId}/undian`, {}, { preserveScroll: true });
-    };
-
     const togglePublish = () => {
         router.post(
             '/admin/nilai/publikasi',
@@ -461,14 +448,6 @@ export default function ScoreIndex({
                                 className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
                             >
                                 Atur kriteria
-                            </button>
-                            <button
-                                type="button"
-                                onClick={drawOrder}
-                                disabled={!competitionId}
-                                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-                            >
-                                Undian urutan
                             </button>
                             <button
                                 type="button"

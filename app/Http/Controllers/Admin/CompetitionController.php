@@ -7,7 +7,6 @@ use App\Models\Competition;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -166,57 +165,6 @@ class CompetitionController extends Controller
 
         return redirect()->route('admin.competitions.index')
             ->with('success', 'Cabang lomba dihapus.');
-    }
-
-    /**
-     * Undian urutan tampil. Peserta disetujui diacak, lalu diberi nomor:
-     * kategori terpisah memakai nomor ganjil untuk Putra dan genap untuk Putri;
-     * kategori campuran memakai 1..n. Nomor disimpan di registrations.
-     */
-    public function drawOrder(Competition $competition): RedirectResponse
-    {
-        $event = Event::current();
-        abort_if(! $event || (int) $competition->event_id !== (int) $event->id, 404);
-
-        $registrations = $competition->registrations()
-            ->where('status', 'approved')
-            ->get(['id', 'gender']);
-
-        if ($registrations->isEmpty()) {
-            abort(422, 'Belum ada pendaftaran disetujui untuk diundi.');
-        }
-
-        if ($competition->isSeparateGender() && $registrations->contains(fn ($r) => blank($r->gender))) {
-            abort(422, 'Ada pendaftaran tanpa data gender; lengkapi dulu sebelum undian.');
-        }
-
-        DB::transaction(function () use ($competition, $registrations) {
-            $competition->registrations()->update(['performance_number' => null]);
-
-            if ($competition->isSeparateGender()) {
-                $putra = $registrations->where('gender', 'L')->shuffle()->values();
-                $putri = $registrations->where('gender', 'P')->shuffle()->values();
-
-                foreach ($putra as $i => $registration) {
-                    $registration->forceFill(['performance_number' => $i * 2 + 1])->save();
-                }
-
-                foreach ($putri as $i => $registration) {
-                    $registration->forceFill(['performance_number' => $i * 2 + 2])->save();
-                }
-
-                return;
-            }
-
-            foreach ($registrations->shuffle()->values() as $i => $registration) {
-                $registration->forceFill(['performance_number' => $i + 1])->save();
-            }
-        });
-
-        return back()->with(
-            'success',
-            "Urutan tampil {$competition->name} diundi ulang (".$registrations->count().' peserta).'
-        );
     }
 
     /**

@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import StatusBadge, { AiStatusBadge } from '../../Components/StatusBadge';
+import StatusBadge, { DocumentStatusBadge } from '../../Components/StatusBadge';
 import { formatDate, formatDateTime } from '../../lib/format';
 
 function Info({ label, children }) {
@@ -36,7 +36,7 @@ export default function RegistrationDetail({ registration, enable_certificates, 
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={r.status} />
-                    <AiStatusBadge status={r.ai_status} />
+                    <DocumentStatusBadge status={r.ai_status} />
                 </div>
             </div>
 
@@ -89,10 +89,10 @@ export default function RegistrationDetail({ registration, enable_certificates, 
 
                     <section className="panel panel--pad">
                         <h3 className="panel__title mb-3">
-                            Hasil Verifikasi AI
+                            Hasil Pemeriksaan Dokumen
                         </h3>
                         <div className="flex flex-wrap items-center gap-2">
-                            <AiStatusBadge status={r.ai_status} />
+                            <DocumentStatusBadge status={r.ai_status} />
                             {r.verified_at && (
                                 <span className="text-xs text-slate-500">
                                     dicek {formatDateTime(r.verified_at)}
@@ -100,7 +100,7 @@ export default function RegistrationDetail({ registration, enable_certificates, 
                             )}
                         </div>
                         <p className="mt-3 whitespace-pre-line rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                            {r.ai_notes || 'Belum ada catatan dari verifikasi AI.'}
+                            {r.ai_notes || 'Belum ada catatan dari pemeriksaan dokumen.'}
                         </p>
                     </section>
                 </div>

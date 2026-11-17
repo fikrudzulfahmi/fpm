@@ -192,7 +192,7 @@ class RegistrationController extends Controller
             default => $registration->ai_status,
         };
 
-        return back()->with('success', "Verifikasi AI selesai: {$label}.");
+        return back()->with('success', "Pemeriksaan dokumen selesai: {$label}.");
     }
 
     /**

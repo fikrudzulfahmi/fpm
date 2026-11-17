@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
-import StatusBadge, { AiStatusBadge } from '../../../Components/StatusBadge';
+import StatusBadge, { DocumentStatusBadge } from '../../../Components/StatusBadge';
 import Modal from '../../../Components/Modal';
 import { formatDate, formatDateTime, waLink } from '../../../lib/format';
 
@@ -57,7 +57,7 @@ export default function RegistrationShow({ registration }) {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={r.status} />
-                    <AiStatusBadge status={r.ai_status} />
+                    <DocumentStatusBadge status={r.ai_status} />
                 </div>
             </div>
 
@@ -109,11 +109,11 @@ export default function RegistrationShow({ registration }) {
 
                     <section className="panel panel--pad">
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="panel__title">Verifikasi AI</h3>
-                            <AiStatusBadge status={r.ai_status} />
+                            <h3 className="panel__title">Pemeriksaan Dokumen</h3>
+                            <DocumentStatusBadge status={r.ai_status} />
                         </div>
                         <p className="whitespace-pre-line rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                            {r.ai_notes || 'Belum ada catatan dari verifikasi AI.'}
+                            {r.ai_notes || 'Belum ada catatan dari pemeriksaan dokumen.'}
                         </p>
                         {r.verified_at && (
                             <p className="mt-2 text-xs text-slate-500">Diverifikasi {formatDateTime(r.verified_at)}</p>
@@ -139,7 +139,7 @@ export default function RegistrationShow({ registration }) {
                                 disabled={reverifyForm.processing}
                                 className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 disabled:opacity-50"
                             >
-                                {reverifyForm.processing ? 'Memeriksa…' : 'Cek Ulang AI'}
+                                {reverifyForm.processing ? 'Memeriksa…' : 'Periksa Ulang'}
                             </button>
 
                             <button

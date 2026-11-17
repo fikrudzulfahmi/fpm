@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CertificateSettingController;
 use App\Http\Controllers\Admin\CompetitionController;
+use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\CriterionController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
@@ -139,6 +140,14 @@ Route::middleware(['auth', 'admin', 'full-admin'])
         Route::get('/pendaftaran/{registration}/surat', [LetterController::class, 'show'])
             ->name('pendaftaran.surat-unduh');
 
+        // Peserta per cabang lomba (daftar + undian nomor tampil)
+        Route::get('/peserta-lomba', [ParticipantController::class, 'index'])
+            ->name('peserta.index');
+        Route::get('/peserta-lomba/{competition}', [ParticipantController::class, 'show'])
+            ->name('peserta.show');
+        Route::post('/peserta-lomba/{competition}/undian', [ParticipantController::class, 'draw'])
+            ->name('peserta.draw');
+
         // Master sekolah
         Route::get('/sekolah', [SchoolController::class, 'index'])->name('sekolah.index');
         Route::post('/sekolah', [SchoolController::class, 'store'])->name('sekolah.store');
@@ -179,8 +188,6 @@ Route::middleware(['auth', 'admin', 'full-admin'])
             ->name('competitions.status');
         Route::post('/lomba/{competition}/pj-akun', [CompetitionController::class, 'createPjAccount'])
             ->name('competitions.pj');
-        Route::post('/lomba/{competition}/undian', [CompetitionController::class, 'drawOrder'])
-            ->name('competitions.draw');
         Route::delete('/lomba/{competition}', [CompetitionController::class, 'destroy'])
             ->name('competitions.destroy');
 

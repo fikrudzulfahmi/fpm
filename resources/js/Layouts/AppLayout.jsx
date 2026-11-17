@@ -135,6 +135,7 @@ export default function AppLayout({ title, children }) {
             ? [
                   { href: '/dashboard', label: 'Dashboard', icon: icons.home },
                   { href: '/admin/pendaftaran', label: 'Verifikasi Pendaftaran', icon: icons.list },
+                  { href: '/admin/peserta-lomba', label: 'Peserta Lomba', icon: icons.flag },
                   { href: '/admin/nilai', label: 'Penilaian', icon: icons.trophy },
                   { href: '/admin/event', label: 'Event & Lomba', icon: icons.calendar },
                   { href: '/admin/lomba', label: 'Manajemen Lomba', icon: icons.flag },

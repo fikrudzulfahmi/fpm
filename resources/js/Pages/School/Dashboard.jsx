@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import StatusBadge, { AiStatusBadge } from '../../Components/StatusBadge';
+import StatusBadge, { DocumentStatusBadge } from '../../Components/StatusBadge';
 import { formatDate } from '../../lib/format';
 
 function Stat({ label, value, hint }) {
@@ -33,7 +33,7 @@ function RegistrationCard({ registration, enableCertificates, publishScores }) {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={status} />
-                    <AiStatusBadge status={ai_status} />
+                    <DocumentStatusBadge status={ai_status} />
                 </div>
             </div>
 

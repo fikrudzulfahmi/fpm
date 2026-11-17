@@ -25,14 +25,14 @@ const aiStyles = {
     mismatch: 'badge--rejected',
 };
 
-export function AiStatusBadge({ status }) {
+export function DocumentStatusBadge({ status }) {
     if (!status) return null;
 
     const labels = {
-        pending: 'AI: menunggu',
-        valid: 'AI: cocok',
-        warning: 'AI: perlu dicek',
-        mismatch: 'AI: tidak cocok',
+        pending: 'Menunggu pemeriksaan',
+        valid: 'Dokumen Sesuai',
+        warning: 'Perlu dicek',
+        mismatch: 'Dokumen Tidak Sesuai',
     };
 
     return (
@@ -41,3 +41,6 @@ export function AiStatusBadge({ status }) {
         </span>
     );
 }
+
+// Nama lama tetap diekspor agar pemakaian lain tidak rusak.
+export const AiStatusBadge = DocumentStatusBadge;

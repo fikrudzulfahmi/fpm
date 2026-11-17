@@ -1,0 +1,133 @@
+import { Head, Link, router } from '@inertiajs/react';
+import AppLayout from '../../../Layouts/AppLayout';
+import DataTable from '../../../Components/DataTable';
+import { useConfirm } from '../../../Components/ConfirmProvider';
+
+export default function ParticipantIndex({ event, competitions = [], totals = {} }) {
+    const confirm = useConfirm();
+
+    const draw = async (competition) => {
+        const ok = await confirm({
+            title: `Undi urutan ${competition.name}?`,
+            message:
+                'Nomor tampil seluruh peserta yang sudah disetujui akan diacak ulang. Nilai yang sudah diinput tidak berubah.',
+            confirmLabel: 'Undi sekarang',
+            tone: 'primary',
+        });
+
+        if (!ok) return;
+
+        router.post(`/admin/peserta-lomba/${competition.id}/undian`, {}, { preserveScroll: true });
+    };
+
+    return (
+        <AppLayout title="Peserta Lomba">
+            <Head title="Peserta Lomba" />
+
+            <div className="page-head-row">
+                <div>
+                    <h1 className="page-title">Peserta Lomba</h1>
+                    <p className="page-sub">
+                        Daftar peserta per cabang {event?.event_name ?? ''} {event?.year ?? ''} beserta nomor urut tampil.
+                    </p>
+                </div>
+                <Link
+                    href="/admin/pendaftaran"
+                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                    Verifikasi pendaftaran
+                </Link>
+            </div>
+
+            <div className="stat-grid">
+                <div className="stat-card">
+                    <p className="stat-card__label">Cabang lomba</p>
+                    <p className="stat-card__value">{totals.competitions ?? competitions.length}</p>
+                </div>
+                <div className="stat-card">
+                    <p className="stat-card__label">Total pendaftar</p>
+                    <p className="stat-card__value">{totals.registrations ?? 0}</p>
+                </div>
+                <div className="stat-card">
+                    <p className="stat-card__label">Disetujui</p>
+                    <p className="stat-card__value text-[#0a5b4a]">{totals.approved ?? 0}</p>
+                </div>
+                <div className="stat-card">
+                    <p className="stat-card__label">Menunggu verifikasi</p>
+                    <p className="stat-card__value text-[#b45309]">{totals.pending ?? 0}</p>
+                </div>
+            </div>
+
+            <DataTable
+                className="mt-6"
+                title="Peserta per cabang"
+                subtitle="Klik Detail untuk melihat daftar peserta dan mengundi nomor tampil."
+                columns={[
+                    {
+                        key: 'name',
+                        label: 'Cabang lomba',
+                        render: (c) => (
+                            <>
+                                <p className="font-semibold text-slate-900">{c.name}</p>
+                                <p className="text-xs text-slate-500">
+                                    {c.category_type === 'group' ? 'Kelompok' : 'Individu'}
+                                    {c.gender_mode === 'separate' ? ' · Putra & Putri' : ''}
+                                    {' · kuota '}
+                                    {c.global_quota}
+                                </p>
+                            </>
+                        ),
+                    },
+                    {
+                        key: 'approved',
+                        label: 'Disetujui',
+                        align: 'center',
+                        render: (c) => <span className="font-semibold">{c.approved}</span>,
+                    },
+                    { key: 'pending', label: 'Menunggu', align: 'center' },
+                    { key: 'rejected', label: 'Ditolak', align: 'center' },
+                    {
+                        key: 'drawn',
+                        label: 'Nomor undian',
+                        render: (c) =>
+                            c.approved === 0 ? (
+                                <span className="text-xs text-slate-400">Belum ada peserta</span>
+                            ) : c.has_order ? (
+                                <span className="badge--status badge--approved">
+                                    Sudah diundi ({c.drawn}/{c.approved})
+                                </span>
+                            ) : (
+                                <span className="badge--status badge--pending">Belum diundi</span>
+                            ),
+                    },
+                    {
+                        key: 'actions',
+                        label: 'Aksi',
+                        align: 'right',
+                        render: (c) => (
+                            <div className="flex flex-wrap justify-end gap-2">
+                                <Link
+                                    href={`/admin/peserta-lomba/${c.id}`}
+                                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    Detail
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() => draw(c)}
+                                    disabled={c.approved === 0}
+                                    className="rounded-lg bg-[#064b3d] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#0a5b4a] disabled:opacity-40"
+                                >
+                                    Undi urutan
+                                </button>
+                            </div>
+                        ),
+                    },
+                ]}
+                rows={competitions}
+                rowKey={(c) => c.id}
+                empty="Belum ada cabang lomba pada event ini."
+            />
+        </AppLayout>
+    );
+}
