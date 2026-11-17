@@ -59,7 +59,7 @@ class ScoreController extends Controller
             ? ScoreCriterion::where('competition_id', $competitionId)
                 ->orderBy('sort_order')
                 ->orderBy('id')
-                ->get(['id', 'name', 'weight', 'max_value'])
+                ->get()
                 ->map(fn (ScoreCriterion $c) => [
                     'id' => $c->id,
                     'name' => $c->name,
@@ -74,7 +74,7 @@ class ScoreController extends Controller
         if ($competitionId) {
             $rows = Registration::with([
                 'participants:id,registration_id,full_name,nisn',
-                'score.criterionValues',
+                'score.criterionValues.adjustedBy:id,name',
                 'score.adjustedBy:id,name',
                 'school:id,school_name',
             ])
@@ -82,30 +82,51 @@ class ScoreController extends Controller
                 ->where('competition_id', $competitionId)
                 ->where('status', 'approved')
                 ->get()
-                ->map(fn (Registration $r) => [
-                    'id' => $r->id,
-                    'display_name' => $r->displayName(),
-                    'group_name' => $r->group_name,
-                    'school' => $r->school?->school_name,
-                    'participants' => $r->participants->pluck('full_name')->values(),
-                    'gender' => $r->gender,
-                    'gender_label' => $r->genderLabel(),
-                    'performance_number' => $r->performance_number,
-                    'score_value' => $r->score?->score_value,
-                    'final_value' => $r->score?->finalValue(),
-                    'rank' => $r->score?->rank,
-                    'is_published' => (bool) $r->score?->is_published,
-                    'values' => $r->score
-                        ? $r->score->criterionValues->mapWithKeys(
-                            fn ($v) => [(string) $v->criterion_id => (float) $v->value]
-                        )
-                        : (object) [],
-                    // Data koreksi hanya untuk panitia penuh.
-                    'adjusted_value' => $canAdjust ? $r->score?->adjusted_value : null,
-                    'adjust_reason' => $canAdjust ? $r->score?->adjust_reason : null,
-                    'adjusted_by' => $canAdjust ? $r->score?->adjustedBy?->name : null,
-                    'adjusted_at' => $canAdjust ? $r->score?->adjusted_at?->toIso8601String() : null,
-                ])
+                ->map(function (Registration $r) use ($criteria, $canAdjust) {
+                    $values = $r->score
+                        ? $r->score->criterionValues->mapWithKeys(fn ($v) => [(string) $v->criterion_id => (float) $v->value])
+                        : collect();
+
+                    $finals = $r->score
+                        ? $r->score->criterionValues->mapWithKeys(fn ($v) => [(string) $v->criterion_id => $v->finalValue()])
+                        : collect();
+
+                    $adjustments = $canAdjust && $r->score
+                        ? $r->score->criterionValues
+                            ->filter(fn ($v) => $v->isAdjusted())
+                            ->mapWithKeys(fn ($v) => [
+                                (string) $v->criterion_id => [
+                                    'value' => (float) $v->adjusted_value,
+                                    'reason' => $v->adjust_reason,
+                                    'by' => $v->adjustedBy?->name,
+                                ],
+                            ])
+                        : collect();
+
+                    return [
+                        'id' => $r->id,
+                        'display_name' => $r->displayName(),
+                        'group_name' => $r->group_name,
+                        'school' => $r->school?->school_name,
+                        'participants' => $r->participants->pluck('full_name')->values(),
+                        'gender' => $r->gender,
+                        'gender_label' => $r->genderLabel(),
+                        'performance_number' => $r->performance_number,
+                        'score_value' => $r->score?->score_value,
+                        'final_value' => $criteria->isNotEmpty()
+                            ? $r->score?->score_value
+                            : $r->score?->finalValue(),
+                        'rank' => $r->score?->rank,
+                        'is_published' => (bool) $r->score?->is_published,
+                        'values' => $values,
+                        'finals' => $finals,
+                        'adjustments' => $adjustments,
+                        // Koreksi nilai akhir (legacy) hanya untuk cabang tanpa kriteria.
+                        'adjusted_value' => $canAdjust && $criteria->isEmpty() ? $r->score?->adjusted_value : null,
+                        'adjust_reason' => $canAdjust && $criteria->isEmpty() ? $r->score?->adjust_reason : null,
+                        'adjusted_by' => $canAdjust && $criteria->isEmpty() ? $r->score?->adjustedBy?->name : null,
+                    ];
+                })
                 ->sortBy(fn ($row) => [
                     $separate ? ($row['gender'] === 'P' ? 1 : 0) : 0,
                     $row['rank'] ?? PHP_INT_MAX,
@@ -129,7 +150,7 @@ class ScoreController extends Controller
     }
 
     /**
-     * Simpan/ubah nilai (PJ Lomba / panitia). Bisa per kriteria atau nilai
+     * Simpan/ubah nilai input (PJ Lomba / panitia). Bisa per kriteria atau nilai
      * tunggal bila cabang belum punya kriteria. Dipakai autosave di klien.
      */
     public function upsert(Request $request): RedirectResponse
@@ -180,18 +201,13 @@ class ScoreController extends Controller
             ]);
         }
 
-        $scoreValue = $criteria->isNotEmpty()
-            ? $this->weightedScore($criteria, $values)
-            : (float) $data['score_value'];
-
         $publishScores = (bool) $event->setting()->publish_scores;
 
-        DB::transaction(function () use ($data, $competition, $criteria, $values, $scoreValue, $publishScores) {
+        DB::transaction(function () use ($data, $competition, $criteria, $values, $publishScores) {
             $score = Score::updateOrCreate(
                 ['registration_id' => $data['registration_id']],
                 [
                     'competition_id' => $competition->id,
-                    'score_value' => $scoreValue,
                     'notes' => $data['notes'] ?? null,
                     'is_published' => $publishScores,
                 ]
@@ -210,6 +226,10 @@ class ScoreController extends Controller
                 $score->criterionValues()
                     ->whereNotIn('criterion_id', $criteria->pluck('id'))
                     ->delete();
+
+                $score->forceFill(['score_value' => $this->scoreFromCriteria($score->fresh(), $criteria)])->save();
+            } else {
+                $score->forceFill(['score_value' => (float) $data['score_value']])->save();
             }
 
             $this->recalculateRanks($competition, $publishScores);
@@ -219,8 +239,9 @@ class ScoreController extends Controller
     }
 
     /**
-     * Koreksi nilai akhir oleh panitia penuh (mis. penyesuaian promosi sekolah).
-     * Wajib menyertakan alasan; jejak koreksi disimpan untuk audit.
+     * Koreksi nilai per kriteria oleh panitia penuh. Nilai akhir dihitung ulang
+     * dari kriteria yang sudah dikoreksi, jadi rincian yang dipublikasikan tetap
+     * konsisten. Untuk cabang tanpa kriteria, koreksi berlaku pada nilai tunggal.
      */
     public function adjust(Request $request): RedirectResponse
     {
@@ -229,8 +250,10 @@ class ScoreController extends Controller
         $data = $request->validate([
             'competition_id' => ['required', 'integer', 'exists:competitions,id'],
             'registration_id' => ['required', 'integer', 'exists:registrations,id'],
+            'criterion_values' => ['nullable', 'array'],
+            'criterion_values.*' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             'adjusted_value' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'adjust_reason' => ['nullable', 'string', 'min:5', 'max:500', 'required_with:adjusted_value'],
+            'adjust_reason' => ['nullable', 'string', 'min:5', 'max:500'],
         ]);
 
         $event = Event::current();
@@ -251,23 +274,68 @@ class ScoreController extends Controller
         $score = Score::firstWhere('registration_id', $registration->id);
         abort_if(! $score, 422, 'Isi nilai dasar terlebih dahulu sebelum mengoreksi.');
 
-        $hasAdjustment = filled($data['adjusted_value'] ?? null);
+        $criteria = $competition->criteria()->get();
+        $incoming = collect($data['criterion_values'] ?? []);
 
-        DB::transaction(function () use ($score, $data, $hasAdjustment, $competition) {
-            $score->forceFill([
-                'adjusted_value' => $hasAdjustment ? $data['adjusted_value'] : null,
-                'adjust_reason' => $hasAdjustment ? $data['adjust_reason'] : null,
-                'adjusted_by' => $hasAdjustment ? auth()->id() : null,
-                'adjusted_at' => $hasAdjustment ? now() : null,
-            ])->save();
+        if ($criteria->isNotEmpty()) {
+            $changed = $incoming->contains(fn ($value) => filled($value));
+
+            if ($changed && blank($data['adjust_reason'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'adjust_reason' => 'Alasan koreksi wajib diisi.',
+                ]);
+            }
+        } else {
+            $hasAdjustment = filled($data['adjusted_value'] ?? null);
+
+            if ($hasAdjustment && blank($data['adjust_reason'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'adjust_reason' => 'Alasan koreksi wajib diisi.',
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($score, $criteria, $incoming, $data, $competition) {
+            if ($criteria->isNotEmpty()) {
+                foreach ($criteria as $criterion) {
+                    $key = (string) $criterion->id;
+
+                    if (! $incoming->has($key) && ! $incoming->has($criterion->id)) {
+                        continue;
+                    }
+
+                    $raw = $incoming->get($key, $incoming->get($criterion->id));
+                    $has = filled($raw);
+
+                    $row = $score->criterionValues()->firstOrCreate(
+                        ['criterion_id' => $criterion->id],
+                        ['value' => 0]
+                    );
+
+                    $row->forceFill([
+                        'adjusted_value' => $has ? max(0, min((float) $raw, $criterion->safeMax())) : null,
+                        'adjust_reason' => $has ? $data['adjust_reason'] : null,
+                        'adjusted_by' => $has ? auth()->id() : null,
+                        'adjusted_at' => $has ? now() : null,
+                    ])->save();
+                }
+
+                $score->forceFill(['score_value' => $this->scoreFromCriteria($score->fresh(), $criteria)])->save();
+            } else {
+                $hasAdjustment = filled($data['adjusted_value'] ?? null);
+
+                $score->forceFill([
+                    'adjusted_value' => $hasAdjustment ? $data['adjusted_value'] : null,
+                    'adjust_reason' => $hasAdjustment ? $data['adjust_reason'] : null,
+                    'adjusted_by' => $hasAdjustment ? auth()->id() : null,
+                    'adjusted_at' => $hasAdjustment ? now() : null,
+                ])->save();
+            }
 
             $this->recalculateRanks($competition, (bool) $competition->event?->setting()->publish_scores);
         });
 
-        return back()->with(
-            'success',
-            $hasAdjustment ? 'Nilai akhir dikoreksi dan peringkat dihitung ulang.' : 'Koreksi nilai dibatalkan.'
-        );
+        return back()->with('success', 'Koreksi nilai disimpan dan peringkat dihitung ulang.');
     }
 
     /**
@@ -304,10 +372,11 @@ class ScoreController extends Controller
     }
 
     /**
-     * Nilai akhir berbobot: Σ((nilai/max) × bobot) / Σbobot × 100.
+     * Hitung nilai akhir dari nilai per kriteria (koreksi dipakai bila ada).
      */
-    private function weightedScore(Collection $criteria, Collection $values): float
+    public function scoreFromCriteria(Score $score, Collection $criteria): float
     {
+        $rows = $score->criterionValues()->get()->keyBy('criterion_id');
         $totalWeight = (float) $criteria->sum(fn (ScoreCriterion $c) => $c->weight > 0 ? $c->weight : 1);
 
         if ($totalWeight <= 0) {
@@ -317,8 +386,11 @@ class ScoreController extends Controller
         $accumulated = 0.0;
 
         foreach ($criteria as $criterion) {
+            $row = $rows->get($criterion->id);
+            $value = $row ? $row->finalValue() : 0.0;
+            $value = max(0, min($value, $criterion->safeMax()));
             $weight = $criterion->weight > 0 ? (float) $criterion->weight : 1.0;
-            $value = max(0, min((float) ($values[$criterion->id] ?? 0), $criterion->safeMax()));
+
             $accumulated += ($value / $criterion->safeMax()) * $weight;
         }
 
@@ -326,17 +398,24 @@ class ScoreController extends Controller
     }
 
     /**
-     * Peringkat 1..n berdasarkan nilai akhir (koreksi bila ada) tertinggi.
+     * Peringkat 1..n berdasarkan nilai akhir tertinggi.
      */
     private function recalculateRanks(Competition $competition, bool $publishScores): void
     {
+        // Bila cabang punya kriteria, nilai akhir = score_value (hasil hitung
+        // kriteria). Koreksi nilai akhir tunggal (legacy) diabaikan.
+        $hasCriteria = $competition->criteria()->exists();
+
         $scores = Score::where('competition_id', $competition->id)
             ->with('registration:id,gender')
             ->orderByRaw('COALESCE(adjusted_value, score_value) DESC')
             ->orderBy('registration_id')
             ->get();
 
-        // Kategori terpisah (Putra/Putri) punya peringkat sendiri-sendiri.
+        $valueOf = fn (Score $score) => $hasCriteria
+            ? (float) $score->score_value
+            : (float) ($score->finalValue() ?? 0);
+
         $groups = $competition->isSeparateGender()
             ? $scores->groupBy(fn (Score $score) => $score->registration?->gender ?? '-')
             : collect(['all' => $scores]);
@@ -347,13 +426,13 @@ class ScoreController extends Controller
             $position = 0;
 
             $sorted = $group->sortBy([
-                fn (Score $a, Score $b) => ($b->finalValue() ?? 0) <=> ($a->finalValue() ?? 0),
+                fn (Score $a, Score $b) => $valueOf($b) <=> $valueOf($a),
                 fn (Score $a, Score $b) => $a->registration_id <=> $b->registration_id,
             ]);
 
             foreach ($sorted as $score) {
                 $position++;
-                $value = $score->finalValue();
+                $value = $valueOf($score);
 
                 if ($previous === null || $value < $previous) {
                     $rank = $position;

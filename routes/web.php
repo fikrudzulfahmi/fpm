@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PublicController::class, 'index'])->name('home');
 Route::get('/lomba', [PublicController::class, 'lomba'])->name('lomba.index');
 Route::get('/lomba/{competition:slug}', [PublicController::class, 'show'])->name('lomba.show');
+Route::get('/hasil', [PublicController::class, 'hasil'])->name('hasil');
 
 /*
 |--------------------------------------------------------------------------

@@ -22,12 +22,9 @@ function initialValues(row, criteria) {
     return values;
 }
 
-/**
- * Satu baris peserta. Nilai disimpan otomatis (debounce + blur), tanpa tombol simpan.
- */
 function ScoreRow({ row, criteria, competitionId, separate, canAdjust, onAdjust }) {
     const [values, setValues] = useState(() => initialValues(row, criteria));
-    const [status, setStatus] = useState('idle'); // idle | saving | saved | error
+    const [status, setStatus] = useState('idle');
     const timer = useRef(null);
     const sent = useRef(null);
 
@@ -98,6 +95,8 @@ function ScoreRow({ row, criteria, competitionId, separate, canAdjust, onAdjust 
     const inputClass =
         'w-20 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100';
 
+    const adjustmentFor = (criterionId) => row.adjustments?.[criterionId] ?? row.adjustments?.[String(criterionId)] ?? null;
+
     return (
         <tr className="hover:bg-slate-50/70">
             <td className="px-3 py-2 text-center font-mono text-sm font-semibold text-slate-600">
@@ -126,23 +125,35 @@ function ScoreRow({ row, criteria, competitionId, separate, canAdjust, onAdjust 
             <td className="px-3 py-2 text-slate-600">{row.school ?? '-'}</td>
 
             {criteria.length > 0 ? (
-                criteria.map((criterion) => (
-                    <td key={criterion.id} className="px-2 py-2">
-                        <input
-                            type="number"
-                            min="0"
-                            max={criterion.max_value}
-                            step="0.01"
-                            inputMode="decimal"
-                            value={values[criterion.id] ?? ''}
-                            onChange={(e) => change(criterion.id, e.target.value)}
-                            onBlur={flush}
-                            className={inputClass}
-                            aria-label={`${criterion.name} — ${row.display_name}`}
-                            placeholder={`0-${criterion.max_value}`}
-                        />
-                    </td>
-                ))
+                criteria.map((criterion) => {
+                    const adjustment = adjustmentFor(criterion.id);
+
+                    return (
+                        <td key={criterion.id} className="px-2 py-2">
+                            <input
+                                type="number"
+                                min="0"
+                                max={criterion.max_value}
+                                step="0.01"
+                                inputMode="decimal"
+                                value={values[criterion.id] ?? ''}
+                                onChange={(e) => change(criterion.id, e.target.value)}
+                                onBlur={flush}
+                                className={inputClass}
+                                aria-label={`${criterion.name} — ${row.display_name}`}
+                                placeholder={`0-${criterion.max_value}`}
+                            />
+                            {canAdjust && adjustment && (
+                                <span
+                                    className="mt-1 block w-fit rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800"
+                                    title={adjustment.reason ?? 'Dikoreksi panitia'}
+                                >
+                                    akhir {adjustment.value}
+                                </span>
+                            )}
+                        </td>
+                    );
+                })
             ) : (
                 <td className="px-2 py-2">
                     <input
@@ -164,7 +175,7 @@ function ScoreRow({ row, criteria, competitionId, separate, canAdjust, onAdjust 
             <td className="px-3 py-2">
                 <div className="flex flex-col gap-1">
                     <span className="font-semibold text-slate-900">{row.final_value ?? '—'}</span>
-                    {canAdjust && row.adjusted_value !== null && row.adjusted_value !== undefined && (
+                    {canAdjust && criteria.length === 0 && row.adjusted_value !== null && row.adjusted_value !== undefined && (
                         <span className="inline-flex w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-semibold text-amber-800">
                             Dikoreksi dari {row.score_value}
                         </span>
@@ -221,21 +232,15 @@ export default function ScoreIndex({
     const separate = gender_mode === 'separate';
     const [competitionId, setCompetitionId] = useState(String(competition_id ?? ''));
     const [adjusting, setAdjusting] = useState(null);
+    const [adjustValues, setAdjustValues] = useState({});
+    const [adjustReason, setAdjustReason] = useState('');
+    const [adjustError, setAdjustError] = useState(null);
     const [criteriaOpen, setCriteriaOpen] = useState(false);
     const [criteriaRows, setCriteriaRows] = useState([]);
     const [criteriaBusy, setCriteriaBusy] = useState(false);
     const rows = registrations ?? [];
     const activeCompetition = competitions.find((c) => String(c.id) === String(competitionId));
     const totalWeight = criteria.reduce((sum, c) => sum + (Number(c.weight) || 0), 0);
-
-    const adjustFormState = useState({
-        competition_id: competitionId,
-        registration_id: '',
-        adjusted_value: '',
-        adjust_reason: '',
-    });
-    const [adjustData, setAdjustData] = adjustFormState;
-    const [adjustError, setAdjustError] = useState(null);
 
     useEffect(() => {
         setCompetitionId(String(competition_id ?? ''));
@@ -271,47 +276,70 @@ export default function ScoreIndex({
     };
 
     const openAdjust = (row) => {
-        setAdjustData({
-            competition_id: competitionId,
-            registration_id: row.id,
-            adjusted_value: row.adjusted_value ?? '',
-            adjust_reason: row.adjust_reason ?? '',
+        const next = {};
+
+        criteria.forEach((criterion) => {
+            const adjusted = row.adjustments?.[criterion.id] ?? row.adjustments?.[String(criterion.id)];
+            const final = row.finals?.[criterion.id] ?? row.finals?.[String(criterion.id)];
+            const raw = row.values?.[criterion.id] ?? row.values?.[String(criterion.id)];
+
+            next[criterion.id] = adjusted ? String(adjusted.value) : String(final ?? raw ?? '');
         });
+
+        setAdjustValues(next);
+        setAdjustReason('');
         setAdjustError(null);
         setAdjusting(row);
     };
 
     const closeAdjust = () => {
         setAdjusting(null);
-        setAdjustData({
-            competition_id: competitionId,
-            registration_id: '',
-            adjusted_value: '',
-            adjust_reason: '',
-        });
+        setAdjustValues({});
+        setAdjustReason('');
         setAdjustError(null);
     };
 
     const submitAdjust = (e) => {
         e.preventDefault();
-        router.post('/admin/nilai/koreksi', adjustData, {
+
+        const body = {
+            competition_id: competitionId,
+            registration_id: adjusting?.id,
+            adjust_reason: adjustReason || null,
+        };
+
+        if (criteria.length > 0) {
+            body.criterion_values = Object.fromEntries(
+                Object.entries(adjustValues).map(([key, value]) => [key, value === '' ? null : Number(value)]),
+            );
+        } else {
+            body.adjusted_value = adjustValues.__single === '' || adjustValues.__single === undefined ? null : Number(adjustValues.__single);
+        }
+
+        router.post('/admin/nilai/koreksi', body, {
             preserveScroll: true,
             onSuccess: () => closeAdjust(),
-            onError: (errors) => setAdjustError(errors.adjust_reason ?? errors.adjusted_value ?? 'Gagal menyimpan koreksi.'),
+            onError: (errors) => setAdjustError(errors.adjust_reason ?? 'Gagal menyimpan koreksi.'),
         });
     };
 
-    const removeAdjustment = () => {
-        router.post(
-            '/admin/nilai/koreksi',
-            {
-                competition_id: competitionId,
-                registration_id: adjusting?.id,
-                adjusted_value: null,
-                adjust_reason: null,
-            },
-            { preserveScroll: true, onSuccess: () => closeAdjust() },
-        );
+    const resetAllAdjustments = () => {
+        const body = {
+            competition_id: competitionId,
+            registration_id: adjusting?.id,
+            adjust_reason: null,
+        };
+
+        if (criteria.length > 0) {
+            body.criterion_values = Object.fromEntries(criteria.map((criterion) => [criterion.id, null]));
+        } else {
+            body.adjusted_value = null;
+        }
+
+        router.post('/admin/nilai/koreksi', body, {
+            preserveScroll: true,
+            onSuccess: () => closeAdjust(),
+        });
     };
 
     const openCriteria = () => {
@@ -361,6 +389,9 @@ export default function ScoreIndex({
     };
 
     const criteriaWeightSum = criteriaRows.reduce((sum, row) => sum + (Number(row.weight) || 0), 0);
+    const hasAnyAdjustment = criteria.length > 0
+        ? Object.keys(adjusting?.adjustments ?? {}).length > 0
+        : adjusting?.adjusted_value !== null && adjusting?.adjusted_value !== undefined;
 
     return (
         <AppLayout title="Penilaian">
@@ -373,8 +404,8 @@ export default function ScoreIndex({
                         {is_pj
                             ? `Anda PJ Lomba ${activeCompetition?.name ?? '—'}. Masukkan nilai tiap kriteria dari kertas penilaian juri — tersimpan otomatis.`
                             : criteria.length > 0
-                              ? `Nilai tiap kriteria tersimpan otomatis. Nilai akhir = rata-rata berbobot (total bobot ${totalWeight}).`
-                              : 'Cabang ini belum punya kriteria; isi satu nilai 0–100 (tersimpan otomatis).' }
+                              ? `Nilai tiap kriteria tersimpan otomatis. Nilai akhir = rata-rata berbobot (total bobot ${totalWeight}). Hasil publik memakai angka kriteria ini.`
+                              : 'Cabang ini belum punya kriteria; isi satu nilai 0–100 (tersimpan otomatis).'}
                     </p>
                 </div>
 
@@ -443,6 +474,9 @@ export default function ScoreIndex({
                             bobot {criterion.weight} · maks {criterion.max_value}
                         </span>
                     ))}
+                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[12px] text-emerald-800">
+                        Tampil di publik: seluruh nilai kriteria ini
+                    </span>
                 </div>
             )}
 
@@ -503,16 +537,16 @@ export default function ScoreIndex({
                 </div>
             </div>
 
-            {/* Koreksi nilai akhir — panitia penuh */}
+            {/* Koreksi nilai per kriteria — panitia penuh */}
             <Modal
                 open={Boolean(adjusting)}
                 onClose={closeAdjust}
-                title="Koreksi nilai akhir"
+                title="Koreksi nilai kriteria"
                 subtitle={adjusting ? `${adjusting.display_name} · ${adjusting.school ?? '-'}` : undefined}
                 footer={
                     <>
-                        {adjusting?.adjusted_value !== null && adjusting?.adjusted_value !== undefined && (
-                            <button type="button" className="btn btn--ghost btn--sm" onClick={removeAdjustment}>
+                        {hasAnyAdjustment && (
+                            <button type="button" className="btn btn--ghost btn--sm" onClick={resetAllAdjustments}>
                                 Hapus koreksi
                             </button>
                         )}
@@ -526,50 +560,76 @@ export default function ScoreIndex({
                 }
             >
                 <form id="adjust-score-form" onSubmit={submitAdjust} className="grid gap-3">
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900">
-                        Nilai dari kriteria: <strong>{adjusting?.score_value ?? '—'}</strong>. Nilai akhir dipakai
-                        untuk peringkat dan sertifikat.
-                    </div>
+                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900">
+                        Koreksi di tingkat kriteria supaya rincian yang tampil di halaman publik tetap konsisten
+                        dengan nilai akhir. Kosongkan input untuk memakai nilai asli PJ.
+                    </p>
 
-                    <div>
-                        <label htmlFor="adjusted_value" className="mb-1 block text-xs font-medium text-slate-600">
-                            Nilai akhir (0–100)
-                        </label>
-                        <input
-                            id="adjusted_value"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            value={adjustData.adjusted_value}
-                            onChange={(e) => setAdjustData({ ...adjustData, adjusted_value: e.target.value })}
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                    </div>
+                    {criteria.length > 0 ? (
+                        <div className="grid gap-2">
+                            {criteria.map((criterion) => (
+                                <div key={criterion.id} className="grid grid-cols-12 items-end gap-2">
+                                    <div className="col-span-7">
+                                        <label className="mb-1 block text-xs font-medium text-slate-600">
+                                            {criterion.name}
+                                            <span className="ml-1 text-[11px] text-slate-400">
+                                                (PJ: {adjusting?.values?.[criterion.id] ?? adjusting?.values?.[String(criterion.id)] ?? '0'}, maks{' '}
+                                                {criterion.max_value}, bobot {criterion.weight})
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={criterion.max_value}
+                                            step="0.01"
+                                            value={adjustValues[criterion.id] ?? ''}
+                                            onChange={(e) => setAdjustValues({ ...adjustValues, [criterion.id]: e.target.value })}
+                                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div className="col-span-5 text-[11.5px] text-slate-500">
+                                        Nilai akhir kriteria dipakai untuk peringkat & publikasi.
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div>
+                            <label htmlFor="adjusted_value" className="mb-1 block text-xs font-medium text-slate-600">
+                                Nilai akhir (0–100)
+                            </label>
+                            <input
+                                id="adjusted_value"
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                value={adjustValues.__single ?? ''}
+                                onChange={(e) => setAdjustValues({ ...adjustValues, __single: e.target.value })}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            />
+                            <p className="mt-1 text-[11.5px] text-slate-500">
+                                Cabang ini belum punya kriteria, jadi koreksi berlaku pada nilai tunggal.
+                            </p>
+                        </div>
+                    )}
 
                     <div>
                         <label htmlFor="adjust_reason" className="mb-1 block text-xs font-medium text-slate-600">
-                            Alasan koreksi (dicatat untuk audit)
+                            Alasan koreksi (wajib bila nilai diubah)
                         </label>
                         <textarea
                             id="adjust_reason"
                             rows={3}
                             maxLength={500}
-                            value={adjustData.adjust_reason}
-                            onChange={(e) => setAdjustData({ ...adjustData, adjust_reason: e.target.value })}
-                            placeholder="Mis. penyesuaian promosi sekolah mitra, hasil rapat panitia tanggal …"
+                            value={adjustReason}
+                            onChange={(e) => setAdjustReason(e.target.value)}
+                            placeholder="Mis. hasil rapat dewan juri: penyesuaian skor penampilan."
                             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                         />
                     </div>
 
                     {adjustError && <p className="text-xs text-rose-600">{adjustError}</p>}
-
-                    {adjusting?.adjust_reason && (
-                        <p className="text-[11.5px] text-slate-500">
-                            Koreksi terakhir: {adjusting.adjust_reason}
-                            {adjusting.adjusted_by ? ` (${adjusting.adjusted_by})` : ''}
-                        </p>
-                    )}
                 </form>
             </Modal>
 
@@ -593,8 +653,8 @@ export default function ScoreIndex({
             >
                 <form id="criteria-form" onSubmit={submitCriteria} className="grid gap-3">
                     <p className="text-[12.5px] text-slate-500">
-                        Nilai akhir dihitung: Σ((nilai ÷ maks) × bobot) ÷ Σbobot × 100. Contoh: dua kriteria bobot
-                        30 dan 70 → kriteria kedua lebih menentukan.
+                        Nilai akhir dihitung: Σ((nilai ÷ maks) × bobot) ÷ Σbobot × 100. Nilai tiap kriteria juga
+                        tampil di halaman publik <strong>Hasil</strong>.
                     </p>
 
                     <div className="grid gap-2">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Competition;
 use App\Models\Event;
+use App\Models\Score;
 use App\Models\ScoreCriterion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,20 @@ class CriterionController extends Controller
 
             // Hapus kriteria yang tidak lagi ada di daftar (nilai terkait ikut hilang).
             $competition->criteria()->whereNotIn('id', $keep)->delete();
+
+            // Nilai akhir dihitung ulang dari kriteria. Koreksi nilai tunggal
+            // (legacy) tidak dihapus, hanya tidak dipakai selama cabang punya
+            // kriteria — jadi menghapus kriteria mengembalikan kondisi semula.
+            if (! empty($keep)) {
+                $criteria = $competition->criteria()->get();
+                $controller = app(ScoreController::class);
+
+                Score::where('competition_id', $competition->id)->get()->each(function (Score $score) use ($criteria, $controller) {
+                    $score->forceFill([
+                        'score_value' => $controller->scoreFromCriteria($score, $criteria),
+                    ])->save();
+                });
+            }
         });
 
         return back()->with('success', 'Kriteria penilaian disimpan.');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Competition;
 use App\Models\Event;
 use App\Models\Registration;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,7 +46,6 @@ class PublicController extends Controller
 
         // Jangan tampilkan cabang dari event lain/event lama lewat slug.
         abort_if(! $event || (int) $competition->event_id !== (int) $event->id, 404);
-
         return Inertia::render('Guest/LombaShow', [
             'event_info' => $this->eventInfo($event),
             'competition' => [
@@ -65,6 +65,82 @@ class PublicController extends Controller
                 'is_open' => (bool) $competition->is_open,
                 'is_full' => $competition->isFull(),
             ],
+        ]);
+    }
+
+    /**
+     * Halaman publik hasil lomba: peringkat + rincian nilai per kriteria.
+     * Hanya menampilkan data bila panitia sudah mempublikasikan nilai.
+     */
+    public function hasil(Request $request): Response
+    {
+        $event = Event::current();
+
+        if (! $event) {
+            return Inertia::render('Guest/Hasil', [
+                'event_info' => $this->eventInfo(null),
+                'published' => false,
+                'competitions' => [],
+                'active_slug' => null,
+                'active_name' => null,
+                'criteria' => [],
+                'results' => [],
+            ]);
+        }
+
+        $published = (bool) $event->setting()->publish_scores;
+
+        $competitions = $event->competitions()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'category_type', 'gender_mode']);
+
+        $active = $competitions->firstWhere('slug', $request->query('cabang'))
+            ?? $competitions->first();
+
+        $criteria = $active
+            ? $active->criteria()->get(['id', 'name', 'weight', 'max_value'])
+            : collect();
+
+        $results = collect();
+
+        if ($published && $active) {
+            $results = Registration::with(['score.criterionValues', 'school:id,school_name'])
+                ->where('event_id', $event->id)
+                ->where('competition_id', $active->id)
+                ->where('status', 'approved')
+                ->whereHas('score')
+                ->get()
+                ->map(fn (Registration $r) => [
+                    'id' => $r->id,
+                    'name' => $r->displayName(),
+                    'school' => $r->school?->school_name,
+                    'gender_label' => $r->gender ? $r->genderLabel() : null,
+                    'rank' => $r->score?->rank,
+                    'total' => $r->score?->score_value,
+                    'values' => $r->score
+                        ? $r->score->criterionValues->mapWithKeys(
+                            fn ($v) => [(string) $v->criterion_id => $v->finalValue()]
+                        )
+                        : (object) [],
+                ])
+                ->sortBy(fn ($row) => [$row['rank'] ?? PHP_INT_MAX, $row['id']])
+                ->values();
+        }
+
+        return Inertia::render('Guest/Hasil', [
+            'event_info' => $this->eventInfo($event),
+            'published' => $published,
+            'competitions' => $competitions,
+            'active_slug' => $active?->slug,
+            'active_name' => $active?->name,
+            'criteria' => $criteria->map(fn ($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'weight' => (float) $c->weight,
+                'max_value' => (float) $c->max_value,
+            ])->values(),
+            'results' => $results,
         ]);
     }
 

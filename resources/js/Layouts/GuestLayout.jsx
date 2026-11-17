@@ -51,6 +51,7 @@ function IgIcon({ className = '' }) {
 const NAV = [
     { href: '/', hash: '', label: 'Beranda' },
     { href: '/lomba', hash: '', label: 'Cabang Lomba' },
+    { href: '/hasil', hash: '', label: 'Hasil' },
     { href: '/', hash: '#jadwal', label: 'Jadwal' },
     { href: '/', hash: '#alur', label: 'Alur' },
     { href: '/', hash: '#faq', label: 'FAQ' },
