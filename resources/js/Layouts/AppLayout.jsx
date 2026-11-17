@@ -29,17 +29,46 @@ const icons = {
     users: 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z',
     flag: 'M3 3v18m0-13.5h9.75l1.5 3h6v9h-6l-1.5-3H3',
     certificate: 'M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.746 3.746 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z',
+    menu: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5',
+    chevronLeft: 'M15.75 19.5L8.25 12l7.5-7.5',
+    chevronRight: 'M8.25 4.5l7.5 7.5-7.5 7.5',
 };
 
 /**
  * Kerangka panel panitia & sekolah dengan tema FPM XII.
  * Permukaan: krem–putih, aksen hijau tua + emas; kartu tanpa shadow dasar.
+ *
+ * - Desktop: sidebar bisa diciutkan (pilihan tersimpan di localStorage).
+ * - Mobile: drawer penuh + bottom bar navigasi cepat.
  */
 export default function AppLayout({ title, children }) {
     const { auth, event, theme } = usePage().props;
     const user = auth?.user ?? null;
     const { url } = usePage();
     const [open, setOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
+
+    useEffect(() => {
+        try {
+            setCollapsed(window.localStorage.getItem('fpm-admin-collapsed') === '1');
+        } catch {
+            /* localStorage bisa diblokir di mode privat */
+        }
+    }, []);
+
+    const toggleCollapsed = () => {
+        setCollapsed((value) => {
+            const next = !value;
+
+            try {
+                window.localStorage.setItem('fpm-admin-collapsed', next ? '1' : '0');
+            } catch {
+                /* abaikan */
+            }
+
+            return next;
+        });
+    };
 
     useEffect(() => {
         setOpen(false);
@@ -94,9 +123,22 @@ export default function AppLayout({ title, children }) {
 
     const current = (href) => url === href || url.startsWith(`${href}/`) || url.startsWith(`${href}?`);
 
+    // Bottom bar: menu utama + tombol "Menu" untuk membuka drawer lengkap.
+    const bottomItems = (isAdmin
+        ? [
+              { href: '/dashboard', label: 'Dashboard', icon: icons.home },
+              { href: '/admin/pendaftaran', label: 'Verifikasi', icon: icons.list },
+              { href: '/admin/nilai', label: 'Nilai', icon: icons.trophy },
+          ]
+        : [
+              { href: '/dashboard', label: 'Dashboard', icon: icons.home },
+              { href: '/daftar', label: 'Daftar', icon: icons.plus },
+          ]
+    ).concat([{ action: true, label: 'Menu', icon: icons.menu }]);
+
     const sidebar = (
         <>
-            <Link href="/dashboard" className="admin-brand">
+            <Link href="/dashboard" className="admin-brand" aria-label={eventName}>
                 <img
                     className="admin-brand__mark"
                     src={theme?.logo_url ?? '/branding/logo-mark.png'}
@@ -104,11 +146,9 @@ export default function AppLayout({ title, children }) {
                     width="38"
                     height="43"
                 />
-                <span className="min-w-0">
+                <span className="admin-brand__text min-w-0">
                     <span className="admin-brand__name block truncate">{eventName}</span>
-                    <span className="admin-brand__sub block truncate">
-                        {year ? `Edisi ${year}` : 'FPM'}
-                    </span>
+                    <span className="admin-brand__sub block truncate">{year ? `Edisi ${year}` : 'FPM'}</span>
                 </span>
             </Link>
 
@@ -120,9 +160,10 @@ export default function AppLayout({ title, children }) {
                         href={item.href}
                         className={`admin-nav__link${current(item.href) ? ' is-active' : ''}`}
                         aria-current={current(item.href) ? 'page' : undefined}
+                        title={collapsed ? item.label : undefined}
                     >
                         <Icon path={item.icon} />
-                        <span className="truncate">{item.label}</span>
+                        <span className="admin-nav__text truncate">{item.label}</span>
                     </Link>
                 ))}
             </nav>
@@ -132,16 +173,22 @@ export default function AppLayout({ title, children }) {
                     <span className="admin-user__avatar" aria-hidden="true">
                         {initials}
                     </span>
-                    <div className="min-w-0">
+                    <div className="admin-user__text min-w-0">
                         <p className="admin-user__name truncate">{user?.name ?? 'Pengguna'}</p>
                         <p className="admin-user__role truncate">
                             {isAdmin ? roleLabel : user?.school?.school_name ?? roleLabel}
                         </p>
                     </div>
                 </div>
-                <Link href="/logout" method="post" as="button" className="admin-logout">
+                <Link
+                    href="/logout"
+                    method="post"
+                    as="button"
+                    className="admin-logout"
+                    title={collapsed ? 'Keluar' : undefined}
+                >
                     <Icon path={icons.logout} />
-                    Keluar
+                    <span className="admin-logout__text">Keluar</span>
                 </Link>
             </div>
         </>
@@ -151,55 +198,90 @@ export default function AppLayout({ title, children }) {
         <div className="fpm-admin">
             <ToastProvider>
                 <ConfirmProvider>
-                <div className="admin-shell">
-                <aside className={`admin-side${open ? ' is-open' : ''}`} aria-label="Menu panel">
-                    {sidebar}
-                </aside>
+                    <div className={`admin-shell${collapsed ? ' is-collapsed' : ''}`}>
+                        <aside className={`admin-side${open ? ' is-open' : ''}`} aria-label="Menu panel">
+                            {sidebar}
+                        </aside>
 
-                {open && (
-                    <button
-                        type="button"
-                        className="admin-overlay"
-                        aria-label="Tutup menu"
-                        onClick={() => setOpen(false)}
-                    />
-                )}
+                        {open && (
+                            <button
+                                type="button"
+                                className="admin-overlay"
+                                aria-label="Tutup menu"
+                                onClick={() => setOpen(false)}
+                            />
+                        )}
 
-                <div className="admin-main">
-                    <header className="admin-top">
-                        <button
-                            type="button"
-                            className="admin-menu-btn"
-                            onClick={() => setOpen(true)}
-                            aria-label="Buka menu"
-                            aria-expanded={open ? 'true' : 'false'}
-                        >
-                            <Icon path="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" className="h-5 w-5" />
-                        </button>
+                        <div className="admin-main">
+                            <header className="admin-top">
+                                <button
+                                    type="button"
+                                    className="admin-menu-btn"
+                                    onClick={() => setOpen(true)}
+                                    aria-label="Buka menu"
+                                    aria-expanded={open ? 'true' : 'false'}
+                                >
+                                    <Icon path={icons.menu} />
+                                </button>
 
-                        <div className="min-w-0 flex-1">
-                            <p className="admin-top__event truncate">
-                                {eventName}
-                                {theme?.edition_title && theme.edition_title !== eventName
-                                    ? ` · ${theme.edition_title}`
-                                    : ''}
-                            </p>
-                            <h1 className="admin-top__title truncate">{title}</h1>
+                                <button
+                                    type="button"
+                                    className="admin-collapse-btn"
+                                    onClick={toggleCollapsed}
+                                    aria-label={collapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
+                                    aria-pressed={collapsed ? 'true' : 'false'}
+                                    title={collapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
+                                >
+                                    <Icon path={collapsed ? icons.chevronRight : icons.chevronLeft} />
+                                </button>
+
+                                <div className="min-w-0 flex-1">
+                                    <p className="admin-top__event truncate">
+                                        {eventName}
+                                        {theme?.edition_title && theme.edition_title !== eventName
+                                            ? ` · ${theme.edition_title}`
+                                            : ''}
+                                    </p>
+                                    <h1 className="admin-top__title truncate">{title}</h1>
+                                </div>
+
+                                <div className="hidden items-center gap-2 sm:flex">
+                                    <Link href="/" className="admin-link-soft">
+                                        Lihat situs
+                                    </Link>
+                                    <span className="admin-chip">{roleLabel}</span>
+                                </div>
+                            </header>
+
+                            <main className="admin-content">{children}</main>
+
+                            <nav className="admin-bottomnav" aria-label="Navigasi cepat">
+                                {bottomItems.map((item) =>
+                                    item.action ? (
+                                        <button
+                                            key="menu"
+                                            type="button"
+                                            className="admin-bottomnav__item"
+                                            onClick={() => setOpen(true)}
+                                        >
+                                            <Icon path={item.icon} />
+                                            <span>{item.label}</span>
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={`admin-bottomnav__item${current(item.href) ? ' is-active' : ''}`}
+                                            aria-current={current(item.href) ? 'page' : undefined}
+                                        >
+                                            <Icon path={item.icon} />
+                                            <span>{item.label}</span>
+                                        </Link>
+                                    ),
+                                )}
+                            </nav>
                         </div>
-
-                        <div className="hidden items-center gap-2 sm:flex">
-                            <Link href="/" className="admin-link-soft">
-                                Lihat situs
-                            </Link>
-                            <span className="admin-chip">{roleLabel}</span>
-                        </div>
-                    </header>
-
-                    <main className="admin-content">
-                        {children}
-                    </main>
-                </div>
-                </div>
+                    </div>
                 </ConfirmProvider>
             </ToastProvider>
         </div>

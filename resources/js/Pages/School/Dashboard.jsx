@@ -3,11 +3,12 @@ import AppLayout from '../../Layouts/AppLayout';
 import StatusBadge, { AiStatusBadge } from '../../Components/StatusBadge';
 import { formatDate } from '../../lib/format';
 
-function Stat({ label, value }) {
+function Stat({ label, value, hint }) {
     return (
-        <div className="panel px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
+        <div className="stat-card">
+            <span className="stat-card__label">{label}</span>
+            <span className="stat-card__value">{value}</span>
+            {hint && <span className="stat-card__hint">{hint}</span>}
         </div>
     );
 }
@@ -115,7 +116,7 @@ function RegistrationCard({ registration, enableCertificates, publishScores }) {
 }
 
 export default function SchoolDashboard({ registrations = [], enable_certificates, publish_scores }) {
-    const { auth } = usePage().props;
+    const { auth, site } = usePage().props;
     const school = auth?.user?.school;
 
     const total = registrations.length;
@@ -126,33 +127,67 @@ export default function SchoolDashboard({ registrations = [], enable_certificate
         <AppLayout title="Dashboard Sekolah">
             <Head title="Dashboard Sekolah" />
 
-            <div className="page-head-row">
-                <div>
-                    <p className="text-sm text-slate-500">{school?.school_name ?? 'Sekolah'}</p>
-                    <h2 className="page-title">Pendaftaran Peserta</h2>
+            <section className="dash-hero">
+                <div className="dash-hero__grid">
+                    <div>
+                        <span className="dash-hero__eyebrow">Akun sekolah · FPM XII</span>
+                        <h2 className="dash-hero__title">{school?.school_name ?? 'Sekolah Anda'}</h2>
+                        <p className="dash-hero__lead">
+                            {site?.registration?.window_label
+                                ? `Pendaftaran peserta dibuka ${site.registration.window_label}.`
+                                : 'Kelola pendaftaran peserta sekolah Anda di satu tempat.'}
+                        </p>
+
+                        <div className="dash-hero__actions">
+                            <Link href="/daftar" className="btn btn--gold">
+                                Daftarkan peserta
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                            </Link>
+                            <Link href="/lomba" className="dash-hero__ghost">
+                                Lihat cabang lomba
+                            </Link>
+                        </div>
+
+                        {site && (
+                            <div className="dash-hero__meta">
+                                {school?.npsn && (
+                                    <span className="dash-chip">
+                                        <span>NPSN</span>
+                                        <strong>{school.npsn}</strong>
+                                    </span>
+                                )}
+                                <span className="dash-chip">
+                                    <span>Technical meeting</span>
+                                    <strong>{site.technical_meeting?.label}</strong>
+                                </span>
+                                <span className="dash-chip">
+                                    <span>Pelaksanaan</span>
+                                    <strong>{site.event_date?.label}</strong>
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="dash-spotlight">
+                        <p className="dash-spotlight__label">Pendaftaran Anda</p>
+                        <p className="dash-spotlight__num">{total}</p>
+                        <p className="dash-spotlight__hint">
+                            {approved} disetujui · {pending} menunggu
+                        </p>
+                    </div>
                 </div>
-                <Link
-                    href="/daftar"
-                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
-                >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Daftar Sekarang
-                </Link>
+            </section>
+
+            <div className="mt-4 grid grid-cols-3 gap-3">
+                <Stat label="Total" value={total} hint="Semua peserta" />
+                <Stat label="Disetujui" value={approved} hint="Siap bertanding" />
+                <Stat label="Menunggu" value={pending} hint="Belum diverifikasi" />
             </div>
 
-            {total > 0 && (
-                <div className="mb-6 grid grid-cols-3 gap-3">
-                    <Stat label="Total" value={total} />
-                    <Stat label="Disetujui" value={approved} />
-                    <Stat label="Menunggu" value={pending} />
-                </div>
-            )}
-
             {total === 0 ? (
-                <div className="empty-state">
+                <div className="empty-state mt-4">
                     <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                         <svg className="h-7 w-7 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                             <path
