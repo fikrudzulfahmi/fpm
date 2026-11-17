@@ -120,7 +120,7 @@ class CertificateSettingController extends Controller
             'award.layout.*.x' => ['numeric', 'min:0', 'max:100'],
             'award.layout.*.y' => ['numeric', 'min:0', 'max:100'],
             'award.layout.*.w' => ['numeric', 'min:3', 'max:100'],
-            'award.layout.*.size' => ['numeric', 'min:4', 'max:72'],
+            'award.layout.*.size' => ['numeric', 'min:0', 'max:72'],
             'award.layout.*.align' => ['in:left,center,right'],
         ]);
 
