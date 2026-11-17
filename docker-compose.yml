@@ -1,0 +1,54 @@
+services:
+  app:
+    image: staging-fpm-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: staging-fpm
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    networks:
+      - staging_net
+      - core_net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  queue:
+    container_name: staging-fpm-queue
+    restart: unless-stopped
+    working_dir: /app
+    image: staging-fpm-app
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=2", "--max-time=3600"]
+    healthcheck:
+      disable: true
+    depends_on:
+      - app
+    networks:
+      - staging_net
+      - core_net
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+networks:
+  staging_net:
+    external: true
+  core_net:
+    external: true
