@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
+import CompetitionFacts from '../../Components/CompetitionFacts';
 
 const categoryLabel = {
     individual: 'Individu',
@@ -35,6 +36,26 @@ export default function LombaShow({ event_info, competition }) {
         competition.global_quota > 0
             ? Math.min(100, Math.round((competition.used_quota / competition.global_quota) * 100))
             : 0;
+    const rules = competition.rules?.length
+        ? competition.rules
+        : isGroup
+          ? [
+                `Satu pendaftaran mewakili satu tim (${competition.min_group_members ?? 1}${
+                    competition.max_group_members ? `–${competition.max_group_members}` : ''
+                } siswa).`,
+                'Setiap siswa hanya terdaftar pada satu cabang lomba per edisi.',
+                'Pendaftaran dilakukan oleh sekolah melalui akun sekolah.',
+            ]
+          : [
+                'Satu pendaftaran untuk satu peserta.',
+                'Setiap siswa hanya terdaftar pada satu cabang lomba per edisi.',
+                'Pendaftaran dilakukan oleh sekolah melalui akun sekolah.',
+            ];
+
+    const criteria = competition.criteria ?? [];
+    const maxWeight = Math.max(1, ...criteria.map((k) => Number(k.weight) || 0));
+    const weightLabel = (w) => (Number.isInteger(Number(w)) ? String(Number(w)) : Number(w).toFixed(1));
+
     const fillTone =
         competition.remaining_quota === 0
             ? ' quota__fill--full'
@@ -69,21 +90,62 @@ export default function LombaShow({ event_info, competition }) {
             <section className="section">
                 <div className="container detail-grid">
                     <div>
-                        <div className="prose">
+                        <div className="detail-lead">
                             <p>
                                 {competition.description ??
-                                    'Panitia belum menambahkan deskripsi untuk cabang ini. Silakan hubungi panitia untuk informasi lebih lanjut.'}
+                                    'Panitia belum menambahkan ringkasan untuk cabang ini. Hubungi panitia untuk informasi lanjutan.'}
                             </p>
                         </div>
 
-                        <div className="stat-grid" style={{ marginTop: '26px' }}>
+                        <CompetitionFacts competition={competition} />
+
+                        <div className="info-block">
+                            <p className="section-title-sm">Ketentuan lomba</p>
+                            <ul className="rules">
+                                {rules.map((rule) => (
+                                    <li key={rule}>{rule}</li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="info-block">
+                            <p className="section-title-sm">Kriteria penilaian</p>
+                            {criteria.length ? (
+                                <ul className="criteria">
+                                    {criteria.map((k) => (
+                                        <li key={k.name}>
+                                            <span className="criteria__name">{k.name}</span>
+                                            <span className="criteria__bar">
+                                                <span
+                                                    style={{
+                                                        width: `${Math.max(10, Math.round((Number(k.weight) / maxWeight) * 100))}%`,
+                                                    }}
+                                                />
+                                            </span>
+                                            <span className="criteria__weight">bobot {weightLabel(k.weight)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="small">
+                                    Penilaian memakai satu nilai akhir 0–100 dari dewan juri.
+                                </p>
+                            )}
+                        </div>
+
+                        {competition.prize_note && (
+                            <div className="note-card">
+                                <span className="note-card__label">Penghargaan</span>
+                                <p>{competition.prize_note}</p>
+                            </div>
+                        )}
+
+                        <div className="stat-grid" style={{ marginTop: '28px' }}>
                             <div className="stat">
                                 <span className="stat__label">Kuota global</span>
                                 <span className="stat__value">{competition.global_quota}</span>
                                 <span className="stat__note">
-                                    {competition.gender_mode === 'separate'
-                                        ? 'per kategori Putra/Putri'
-                                        : 'seluruh peserta'}
+                                    {competition.gender_mode === 'separate' ? 'per kategori Putra/Putri' : 'seluruh peserta'}
                                 </span>
                             </div>
                             <div className="stat">
@@ -108,26 +170,8 @@ export default function LombaShow({ event_info, competition }) {
                             </div>
                         </div>
 
-                        {isGroup && competition.min_group_members && (
-                            <div className="form-note" style={{ marginTop: '26px' }}>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="9" />
-                                    <path d="M12 11v5M12 8h.01" />
-                                </svg>
-                                <span>
-                                    Lomba kelompok: satu tim terdiri dari{' '}
-                                    <strong>{competition.min_group_members}</strong>
-                                    {competition.max_group_members &&
-                                    competition.max_group_members !== competition.min_group_members
-                                        ? ` hingga ${competition.max_group_members}`
-                                        : ''}{' '}
-                                    siswa dari sekolah yang sama.
-                                </span>
-                            </div>
-                        )}
-
                         <div style={{ marginTop: '34px' }}>
-                            <p className="section-title-sm">Ketentuan ringkas</p>
+                            <p className="section-title-sm">Pendaftaran & verifikasi</p>
                             <div className="accordion accordion--tight">
                                 <details open>
                                     <summary>Format peserta</summary>
@@ -143,8 +187,8 @@ export default function LombaShow({ event_info, competition }) {
                                     <summary>Berkas yang disiapkan</summary>
                                     <div className="answer">
                                         <p>
-                                            Surat rekomendasi resmi sekolah (JPG, PNG, atau PDF maksimal 5 MB)
-                                            yang memuat nama atau NISN peserta. Berkas diperiksa otomatis, lalu
+                                            Surat rekomendasi resmi sekolah (JPG, PNG, atau PDF maksimal 5 MB) yang
+                                            memuat nama atau NISN peserta. Berkas diperiksa otomatis, lalu
                                             diverifikasi panitia.
                                         </p>
                                     </div>
@@ -153,8 +197,11 @@ export default function LombaShow({ event_info, competition }) {
                                     <summary>Kuota dan kategori</summary>
                                     <div className="answer">
                                         <p>
-                                            Kuota dihitung dari pendaftaran yang menunggu verifikasi dan yang
-                                            sudah disetujui.
+                                            Kuota dihitung dari pendaftaran yang menunggu verifikasi dan yang sudah
+                                            disetujui.
+                                            {competition.school_quota
+                                                ? ` Maksimal ${competition.school_quota} pendaftaran per sekolah.`
+                                                : ''}
                                             {competition.gender_mode === 'separate'
                                                 ? ' Kategori Putra dan Putri memiliki kuota terpisah.'
                                                 : ' Kuota berlaku untuk seluruh peserta cabang ini.'}

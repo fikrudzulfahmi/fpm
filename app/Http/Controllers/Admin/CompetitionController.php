@@ -45,6 +45,8 @@ class CompetitionController extends Controller
                 'is_open' => (bool) $c->is_open,
                 'sort_order' => $c->sort_order,
                 'description' => $c->description,
+                'rules' => $c->rules ?? [],
+                'prize_note' => $c->prize_note,
                 'used_slots' => $c->used_slots,
                 'used_putra' => $c->registrations()->whereIn('status', ['pending', 'approved'])->where('gender', 'L')->count(),
                 'used_putri' => $c->registrations()->whereIn('status', ['pending', 'approved'])->where('gender', 'P')->count(),
@@ -236,7 +238,10 @@ class CompetitionController extends Controller
             'max_group_members' => ['nullable', 'integer', 'min:1', 'gte:min_group_members'],
             'is_open' => ['sometimes', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
-            'description' => ['nullable', 'string', 'max:2000'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'rules' => ['nullable', 'array', 'max:12'],
+            'rules.*' => ['nullable', 'string', 'max:200'],
+            'prize_note' => ['nullable', 'string', 'max:160'],
         ], [
             'slug.alpha_dash' => 'Slug hanya boleh huruf, angka, tanda hubung, dan garis bawah.',
             'max_group_members.gte' => 'Anggota maksimal tidak boleh kurang dari anggota minimal.',
@@ -247,6 +252,13 @@ class CompetitionController extends Controller
                 'gender_mode' => 'Kategori Putra/Putri terpisah hanya untuk lomba individu.',
             ]);
         }
+
+        // Buang poin ketentuan yang kosong (textarea satu poin per baris).
+        $data['rules'] = array_values(array_filter(
+            array_map(fn ($rule) => trim((string) $rule), $data['rules'] ?? []),
+            fn ($rule) => $rule !== ''
+        ));
+        $data['rules'] = $data['rules'] === [] ? null : $data['rules'];
 
         if ($data['category_type'] === 'individual') {
             $data['min_group_members'] = null;

@@ -23,7 +23,16 @@ const empty = {
     is_open: true,
     sort_order: 0,
     description: '',
+    rulesText: '',
+    prize_note: '',
 };
+
+function splitRules(text) {
+    return String(text ?? '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+}
 
 function StatCard({ label, value, accent }) {
     return (
@@ -222,10 +231,39 @@ function CompetitionForm({ open, formId, title, subtitle, form, onSubmit, onCanc
                 </label>
                 <textarea
                     id={`${formId}-desc`}
-                    rows={3}
+                    rows={2}
                     value={form.data.description ?? ''}
                     onChange={(e) => form.setData('description', e.target.value)}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    placeholder="Ringkasan satu kalimat untuk kartu lomba."
+                />
+            </div>
+
+            <div className="sm:col-span-3">
+                <label htmlFor={`${formId}-rules`} className="mb-1 block text-xs font-medium text-slate-600">
+                    Ketentuan lomba <span className="text-slate-400">(satu poin per baris)</span>
+                </label>
+                <textarea
+                    id={`${formId}-rules`}
+                    rows={4}
+                    value={form.data.rulesText ?? ''}
+                    onChange={(e) => form.setData('rulesText', e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    placeholder={'Maksimal 15 orang dan 1 grup per sekolah.\nDurasi tampil 10 menit.'}
+                />
+            </div>
+
+            <div className="sm:col-span-3">
+                <label htmlFor={`${formId}-prize`} className="mb-1 block text-xs font-medium text-slate-600">
+                    Penghargaan
+                </label>
+                <input
+                    id={`${formId}-prize`}
+                    type="text"
+                    value={form.data.prize_note ?? ''}
+                    onChange={(e) => form.setData('prize_note', e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    placeholder="Juara I–III, Harapan I–III, Best Vocal."
                 />
             </div>
 
@@ -264,6 +302,7 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
 
     const submitCreate = (e) => {
         e.preventDefault();
+        createForm.transform((data) => ({ ...data, rules: splitRules(data.rulesText) }));
         createForm.post('/admin/lomba', {
             preserveScroll: true,
             onSuccess: () => {
@@ -287,6 +326,8 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
             is_open: Boolean(competition.is_open),
             sort_order: competition.sort_order ?? 0,
             description: competition.description ?? '',
+            rulesText: (competition.rules ?? []).join('\n'),
+            prize_note: competition.prize_note ?? '',
         });
         editForm.clearErrors();
         setPanel('edit');
@@ -294,6 +335,7 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
 
     const submitEdit = (e) => {
         e.preventDefault();
+        editForm.transform((data) => ({ ...data, rules: splitRules(data.rulesText) }));
         editForm.put(`/admin/lomba/${editing.id}`, {
             preserveScroll: true,
             onSuccess: () => {

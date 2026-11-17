@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
+import CompetitionFacts from '../../Components/CompetitionFacts';
 
 const categoryLabel = {
     individual: 'Individu',
@@ -143,10 +144,11 @@ export default function Lomba({ event_info, competitions = [] }) {
                                                     {categoryLabel[c.category_type] ?? c.category_type}
                                                     {c.gender_mode === 'separate' ? ' · Putra & Putri' : ''}
                                                 </p>
-                                                <p>
+                                                <p className="lomba-card__lead">
                                                     {c.description ??
-                                                        'Panitia belum menambahkan deskripsi untuk cabang ini.'}
+                                                        'Panitia belum menambahkan ringkasan untuk cabang ini.'}
                                                 </p>
+                                                <CompetitionFacts competition={c} />
 
                                                 {c.category_type === 'group' && c.min_group_members ? (
                                                     <details className="lomba-card__more">

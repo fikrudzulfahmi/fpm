@@ -11,7 +11,7 @@ class Competition extends Model
     protected $fillable = [
         'event_id', 'name', 'slug', 'category_type', 'gender_mode', 'global_quota',
         'school_quota', 'min_group_members', 'max_group_members',
-        'is_open', 'sort_order', 'description',
+        'is_open', 'sort_order', 'description', 'rules', 'prize_note',
     ];
 
     protected $casts = [
@@ -20,6 +20,7 @@ class Competition extends Model
         'min_group_members' => 'integer',
         'max_group_members' => 'integer',
         'is_open' => 'boolean',
+        'rules' => 'array',
     ];
 
     public function event(): BelongsTo

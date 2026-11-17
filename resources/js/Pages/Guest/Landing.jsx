@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
+import CompetitionFacts from '../../Components/CompetitionFacts';
 
 const FAQ = [
     {
@@ -392,7 +393,10 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                             {c.category_type === 'group' ? 'Kelompok' : 'Individu'}
                                             {c.gender_mode === 'separate' ? ' · Putra & Putri' : ''}
                                         </p>
-                                        <p>{c.description ?? 'Panitia belum menambahkan deskripsi cabang ini.'}</p>
+                                        <p className="lomba-card__lead">
+                                            {c.description ?? 'Panitia belum menambahkan ringkasan cabang ini.'}
+                                        </p>
+                                        <CompetitionFacts competition={c} />
 
                                         <QuotaBar used={c.used_quota} total={c.global_quota} />
 

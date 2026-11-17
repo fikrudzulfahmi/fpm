@@ -2151,3 +2151,108 @@ html {
 @media (max-width: 560px) {
   .wa-menu { width: min(286px, calc(100vw - 32px)); }
 }
+
+/* ============================================================
+   Informasi cabang lomba — fakta ringkas, ketentuan, kriteria
+   ============================================================ */
+.facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.fact {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 148px;
+    padding: 10px 14px;
+    background: #fffdf7;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+.fact__label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.fact__value { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+
+.detail-lead { max-width: 66ch; }
+.detail-lead p { margin: 0; font-size: 15.5px; line-height: 1.7; color: var(--ink-2); }
+
+.info-block { margin-top: 30px; }
+
+.rules { display: grid; gap: 10px; margin: 14px 0 0; padding: 0; list-style: none; }
+
+.rules li {
+    position: relative;
+    padding-left: 24px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--ink-2);
+}
+
+.rules li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--gold-600);
+}
+
+.criteria { display: grid; gap: 12px; margin: 14px 0 0; padding: 0; list-style: none; }
+
+.criteria li {
+    display: grid;
+    grid-template-columns: minmax(130px, 1.1fr) 2fr auto;
+    align-items: center;
+    gap: 14px;
+    font-size: 13.5px;
+}
+
+.criteria__name { font-weight: 600; color: var(--ink); }
+.criteria__bar { display: block; height: 8px; border-radius: 99px; background: #efe8d4; overflow: hidden; }
+.criteria__bar > span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #c9a72c, var(--gold-600)); }
+.criteria__weight { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+
+.note-card {
+    margin-top: 26px;
+    padding: 16px 18px;
+    background: rgba(243, 217, 91, 0.14);
+    border: 1px dashed var(--gold-600);
+    border-radius: 14px;
+}
+
+.note-card__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.note-card p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+
+.lomba-card .facts { margin-top: 14px; }
+.lomba-card .fact { min-width: 0; padding: 8px 10px; border-radius: 10px; }
+.lomba-card .fact__label { font-size: 9.5px; }
+.lomba-card .fact__value { font-size: 12px; }
+
+@media (max-width: 640px) {
+    .criteria li { grid-template-columns: 1fr auto; gap: 6px 12px; }
+    .criteria__bar { grid-column: 1 / -1; }
+    .fact { flex: 1 1 140px; }
+}

@@ -180,6 +180,14 @@ class PublicController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Kriteria penilaian tiap cabang (dipakai halaman detail).
+        $criteria = \App\Models\ScoreCriterion::query()
+            ->whereIn('competition_id', $competitions->pluck('id'))
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['competition_id', 'name', 'weight', 'max_value'])
+            ->groupBy('competition_id');
+
         $counts = Registration::query()
             ->where('event_id', $event->id)
             ->whereIn('status', ['pending', 'approved'])
@@ -189,7 +197,7 @@ class PublicController extends Controller
             ->groupBy('competition_id');
 
         return $competitions
-            ->map(function (Competition $c) use ($counts) {
+            ->map(function (Competition $c) use ($counts, $criteria) {
                 $rows = $counts->get($c->id, collect());
                 $putra = (int) ($rows->firstWhere('gender', 'L')?->total ?? 0);
                 $putri = (int) ($rows->firstWhere('gender', 'P')?->total ?? 0);
@@ -204,6 +212,16 @@ class PublicController extends Controller
                     'used_putra' => $putra,
                     'used_putri' => $putri,
                     'description' => $c->description,
+                    'rules' => $c->rules ?? [],
+                    'prize_note' => $c->prize_note,
+                    'school_quota' => $c->school_quota,
+                    'criteria' => $criteria->get($c->id, collect())
+                        ->map(fn ($k) => [
+                            'name' => $k->name,
+                            'weight' => (float) $k->weight,
+                            'max' => (float) $k->max_value,
+                        ])
+                        ->values(),
                     'global_quota' => $c->global_quota,
                     'used_quota' => $used,
                     'remaining_quota' => max(0, $c->global_quota - $used),
