@@ -19,7 +19,7 @@ class CompetitionSeeder extends Seeder
         ['name' => 'Da\'i Muda', 'slug' => 'dai-muda', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Pidato dakwah bertema moderasi beragama.'],
         ['name' => 'Pop Religi', 'slug' => 'pop-religi', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Lomba menyanyi lagu bernuansa religi.'],
         ['name' => 'Musabaqah Tilawatil Qur\'an', 'slug' => 'musabaqah-tilawatil-quran', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Seni baca Al-Quran dengan lagu mujawwad.'],
-        ['name' => 'Olimpiade Matematika & IPA', 'slug' => 'olimpiade-matematika-ipa', 'type' => 'group', 'global' => 20, 'school' => 1, 'min' => 3, 'max' => 3, 'desc' => 'Satu tim 3 siswa: matematika dan IPA.'],
+        ['name' => 'Olimpiade Matematika & IPA', 'slug' => 'olimpiade-matematika-ipa', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Olimpiade matematika dan IPA perwakilan sekolah.'],
     ];
 
     public function run(): void

@@ -35,7 +35,7 @@ return new class extends Migration
         ['slug' => 'dai-muda', 'name' => "Da'i Muda", 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Pidato dakwah bertema moderasi beragama.'],
         ['slug' => 'pop-religi', 'name' => 'Pop Religi', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Lomba menyanyi lagu bernuansa religi.'],
         ['slug' => 'musabaqah-tilawatil-quran', 'name' => "Musabaqah Tilawatil Qur'an", 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Seni baca Al-Quran dengan lagu mujawwad.'],
-        ['slug' => 'olimpiade-matematika-ipa', 'name' => 'Olimpiade Matematika & IPA', 'type' => 'group', 'global' => 20, 'school' => 1, 'min' => 3, 'max' => 3, 'desc' => 'Satu tim 3 siswa: matematika dan IPA.'],
+        ['slug' => 'olimpiade-matematika-ipa', 'name' => 'Olimpiade Matematika & IPA', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Olimpiade matematika dan IPA perwakilan sekolah.'],
     ];
 
     /** Padanan slug lama → slug resmi (menjaga pendaftaran tetap menempel). */
