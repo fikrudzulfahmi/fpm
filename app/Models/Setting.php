@@ -71,6 +71,8 @@ class Setting extends Model
     public function awardConfig(): array
     {
         $cfg = $this->award_config ?: [];
+        // Penandatangan kedua piagam mengikuti sertifikat bila belum diisi sendiri.
+        $certificate = $this->certificateConfig();
 
         return [
             'bg_color' => $cfg['bg_color'] ?? '#ffffff',
@@ -81,8 +83,8 @@ class Setting extends Model
             'signer_name' => $cfg['signer_name'] ?? self::defaultSignerName(),
             'signer_title' => $cfg['signer_title'] ?? 'Ketua Panitia',
             // Blok tanda tangan kedua pada piagam (kepala sekolah).
-            'signer2_name' => $cfg['signer2_name'] ?? '',
-            'signer2_title' => $cfg['signer2_title'] ?? 'Kepala SMKS Islam 1 Kota Blitar',
+            'signer2_name' => $cfg['signer2_name'] ?? $certificate['signer2_name'],
+            'signer2_title' => $cfg['signer2_title'] ?? $certificate['signer2_title'],
             'place' => $cfg['place'] ?? null,
             'number_prefix' => $cfg['number_prefix'] ?? null,
             'layout' => array_merge(self::defaultLayout('award'), $cfg['layout'] ?? []),
