@@ -57,6 +57,19 @@ class PublicController extends Controller
                 'used_putra' => $competition->approvedCount('L'),
                 'used_putri' => $competition->approvedCount('P'),
                 'description' => $competition->description,
+                'rules' => $competition->rules ?? [],
+                'prize_note' => $competition->prize_note,
+                'school_quota' => $competition->school_quota,
+                'criteria' => $competition->criteria()
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->get(['name', 'weight', 'max_value'])
+                    ->map(fn ($k) => [
+                        'name' => $k->name,
+                        'weight' => (float) $k->weight,
+                        'max' => (float) $k->max_value,
+                    ])
+                    ->values(),
                 'global_quota' => $competition->global_quota,
                 'used_quota' => $competition->approvedCount(),
                 'remaining_quota' => $competition->remainingGlobalQuota(),
