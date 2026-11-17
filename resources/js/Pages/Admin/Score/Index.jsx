@@ -128,9 +128,9 @@ export default function ScoreIndex({
         <AppLayout title="Penilaian">
             <Head title="Penilaian" />
 
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div className="page-head-row">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900">Input Nilai</h2>
+                    <h2 className="page-title">Input Nilai</h2>
                     <p className="text-sm text-slate-500">
                         Nilai 0–100 per pendaftaran. Peringkat dihitung otomatis dari nilai tertinggi
                         {separate ? ' — dipisah peringkat Putra dan Putri.' : '.'}
@@ -188,11 +188,11 @@ export default function ScoreIndex({
                     : 'Nilai belum dipublikasikan — hanya panitia yang melihat angka ini.'}
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="panel panel--flush">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
+                    <table className="data-table">
                         <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <tr className="data-table__head">
                                 <th className="px-3 py-3 text-center font-semibold">No.</th>
                                 <th className="px-4 py-3 text-center font-semibold">Rank</th>
                                 <th className="px-3 py-3 font-semibold">Peserta / Grup</th>
@@ -201,7 +201,7 @@ export default function ScoreIndex({
                                 <th className="px-3 py-3 font-semibold">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="data-table__body">
                             {rows.map((row) => (
                                 <ScoreRow
                                     key={`${row.id}-${competitionId}`}

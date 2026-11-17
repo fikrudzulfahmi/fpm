@@ -29,7 +29,7 @@ function Badge({ children, tone = 'slate' }) {
 
 function AccountForm({ title, form, onSubmit, onCancel, withPassword }) {
     return (
-        <form onSubmit={onSubmit} className="mb-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+        <form onSubmit={onSubmit} className="panel panel--pad-sm mb-5 grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-3 flex items-center justify-between">
                 <p className="text-sm font-semibold text-slate-700">{title}</p>
                 {onCancel && (
@@ -111,7 +111,7 @@ function AccountForm({ title, form, onSubmit, onCancel, withPassword }) {
                     type="submit"
                     disabled={form.processing}
                     className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                 >
                     {form.processing ? 'Menyimpan…' : 'Simpan'}
                 </button>
@@ -183,9 +183,9 @@ export default function UserIndex({ users = [], filters = {} }) {
         <AppLayout title="Akun Panitia & Juri">
             <Head title="Akun Panitia & Juri" />
 
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div className="page-head-row">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900">Akun Panitia & Juri</h2>
+                    <h2 className="page-title">Akun Panitia & Juri</h2>
                     <p className="text-sm text-slate-500">
                         Juri hanya melihat menu penilaian; panitia penuh mengelola seluruh data.
                     </p>
@@ -194,7 +194,7 @@ export default function UserIndex({ users = [], filters = {} }) {
                     type="button"
                     onClick={() => setPanel(panel === 'create' ? null : 'create')}
                     className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
-                    style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                 >
                     Tambah akun
                 </button>
@@ -285,9 +285,9 @@ export default function UserIndex({ users = [], filters = {} }) {
                 </button>
             </form>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="panel panel--flush">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
+                    <table className="data-table">
                         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                             <tr>
                                 <th className="px-4 py-2 font-semibold">Akun</th>
@@ -296,7 +296,7 @@ export default function UserIndex({ users = [], filters = {} }) {
                                 <th className="px-4 py-2 font-semibold">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="data-table__body">
                             {users.map((user) => {
                                 const isEditing = panel === 'edit' && editing?.id === user.id;
 

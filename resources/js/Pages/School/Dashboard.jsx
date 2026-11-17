@@ -5,7 +5,7 @@ import { formatDate } from '../../lib/format';
 
 function Stat({ label, value }) {
     return (
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+        <div className="panel px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
         </div>
@@ -20,7 +20,7 @@ function RegistrationCard({ registration, enableCertificates, publishScores }) {
     const canDownload = enableCertificates && isApproved;
 
     return (
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article className="panel panel--pad">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -97,7 +97,7 @@ function RegistrationCard({ registration, enableCertificates, publishScores }) {
                     <a
                         href={`/sertifikat/${id}`}
                         className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                        style={{ backgroundColor: 'var(--secondary-color, #c9a45c)' }}
+                        style={{ backgroundColor: 'var(--secondary-color, #f3d95b)' }}
                     >
                         Unduh Sertifikat
                     </a>
@@ -126,15 +126,15 @@ export default function SchoolDashboard({ registrations = [], enable_certificate
         <AppLayout title="Dashboard Sekolah">
             <Head title="Dashboard Sekolah" />
 
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div className="page-head-row">
                 <div>
                     <p className="text-sm text-slate-500">{school?.school_name ?? 'Sekolah'}</p>
-                    <h2 className="text-xl font-bold text-slate-900">Pendaftaran Peserta</h2>
+                    <h2 className="page-title">Pendaftaran Peserta</h2>
                 </div>
                 <Link
                     href="/daftar"
                     className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                    style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                 >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -152,7 +152,7 @@ export default function SchoolDashboard({ registrations = [], enable_certificate
             )}
 
             {total === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+                <div className="empty-state">
                     <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                         <svg className="h-7 w-7 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                             <path
@@ -170,7 +170,7 @@ export default function SchoolDashboard({ registrations = [], enable_certificate
                     <Link
                         href="/daftar"
                         className="mt-5 inline-flex items-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                        style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                     >
                         Daftar Sekarang
                     </Link>

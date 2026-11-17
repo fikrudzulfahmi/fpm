@@ -306,7 +306,7 @@ export default function Register({ competitions = [], school }) {
                 <p className="text-sm text-slate-500">
                     {school?.school_name ?? 'Sekolah'} · NPSN {school?.npsn ?? '-'}
                 </p>
-                <h2 className="text-xl font-bold text-slate-900">Formulir Pendaftaran Peserta</h2>
+                <h2 className="page-title">Formulir Pendaftaran Peserta</h2>
                 <p className="mt-1 text-sm text-slate-500">
                     Satu siswa hanya boleh mengikuti satu cabang lomba dalam event ini.
                 </p>
@@ -318,8 +318,8 @@ export default function Register({ competitions = [], school }) {
 
             <form onSubmit={submit} className="space-y-5">
                 {/* 1. Cabang lomba */}
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">1. Cabang Lomba</h3>
+                <section className="panel panel--pad">
+                    <h3 className="panel__title mb-3">1. Cabang Lomba</h3>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Field
@@ -379,8 +379,8 @@ export default function Register({ competitions = [], school }) {
 
                 {/* 2. Nama grup */}
                 {isGroup && (
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">2. Data Grup</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">2. Data Grup</h3>
                         <Field
                             label="Nama Grup / Tim"
                             name="group_name"
@@ -394,9 +394,9 @@ export default function Register({ competitions = [], school }) {
                 )}
 
                 {/* 3. Peserta */}
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="panel panel--pad">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+                        <h3 className="panel__title">
                             {isGroup ? '3. Anggota Grup' : '3. Data Peserta'}
                         </h3>
                         <span className="text-xs text-slate-500">
@@ -458,8 +458,8 @@ export default function Register({ competitions = [], school }) {
                 </section>
 
                 {/* 4. Pendamping */}
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">4. Pendamping</h3>
+                <section className="panel panel--pad">
+                    <h3 className="panel__title mb-3">4. Pendamping</h3>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Field
                             label="Nama Pendamping / Guru Pembina"
@@ -483,8 +483,8 @@ export default function Register({ competitions = [], school }) {
                 </section>
 
                 {/* 5. Surat rekomendasi */}
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
+                <section className="panel panel--pad">
+                    <h3 className="panel__title mb-3">
                         5. Surat Rekomendasi Kepala Sekolah
                     </h3>
 
@@ -518,7 +518,7 @@ export default function Register({ competitions = [], school }) {
                         type="submit"
                         disabled={form.processing || blocked}
                         className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                        style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                     >
                         {form.processing ? 'Mengirim…' : 'Kirim Pendaftaran'}
                     </button>

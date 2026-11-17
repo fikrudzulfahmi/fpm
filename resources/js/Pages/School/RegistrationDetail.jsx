@@ -49,11 +49,11 @@ export default function RegistrationDetail({ registration, enable_certificates, 
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Data Peserta</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Data Peserta</h3>
 
                         <div className="overflow-x-auto">
-                            <table className="min-w-full text-left text-sm">
+                            <table className="data-table">
                                 <thead>
                                     <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                                         <th className="py-2 pr-3 font-semibold">#</th>
@@ -63,7 +63,7 @@ export default function RegistrationDetail({ registration, enable_certificates, 
                                         <th className="py-2 font-semibold">Tanggal Lahir</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="data-table__body">
                                     {participants.map((p, i) => (
                                         <tr key={p.id ?? p.nisn}>
                                             <td className="py-2 pr-3 text-slate-400">{i + 1}</td>
@@ -87,8 +87,8 @@ export default function RegistrationDetail({ registration, enable_certificates, 
                         </div>
                     </section>
 
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">
                             Hasil Verifikasi AI
                         </h3>
                         <div className="flex flex-wrap items-center gap-2">
@@ -106,8 +106,8 @@ export default function RegistrationDetail({ registration, enable_certificates, 
                 </div>
 
                 <div className="space-y-5">
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Rincian</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Rincian</h3>
                         <dl className="space-y-3">
                             <Info label="Sekolah">
                                 {r.school?.school_name}
@@ -143,8 +143,8 @@ export default function RegistrationDetail({ registration, enable_certificates, 
                         </dl>
                     </section>
 
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Nilai</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Nilai</h3>
 
                         {publish_scores ? (
                             r.score ? (
@@ -170,15 +170,15 @@ export default function RegistrationDetail({ registration, enable_certificates, 
                         )}
                     </section>
 
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Sertifikat</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Sertifikat</h3>
 
                         {enable_certificates ? (
                             isApproved ? (
                                 <a
                                     href={`/sertifikat/${r.id}`}
                                     className="inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                                    style={{ backgroundColor: 'var(--secondary-color, #c9a45c)' }}
+                                    style={{ backgroundColor: 'var(--secondary-color, #f3d95b)' }}
                                 >
                                     Unduh Sertifikat
                                 </a>

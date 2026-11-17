@@ -412,7 +412,7 @@ export default function CertificateIndex({
             footer: certificate.footer ?? '',
             bg_color: certificate.bg_color ?? '#ffffff',
             text_color: certificate.text_color ?? '#1e293b',
-            accent_color: certificate.accent_color ?? '#0f766e',
+            accent_color: certificate.accent_color ?? '#064b3d',
             signer_name: certificate.signer_name ?? '',
             signer_title: certificate.signer_title ?? 'Ketua Panitia',
             show_signature: certificate.show_signature !== false,
@@ -422,7 +422,7 @@ export default function CertificateIndex({
         award: {
             bg_color: award.bg_color ?? '#ffffff',
             text_color: award.text_color ?? '#1e293b',
-            accent_color: award.accent_color ?? '#0f766e',
+            accent_color: award.accent_color ?? '#064b3d',
             signer_name: award.signer_name ?? '',
             signer_title: award.signer_title ?? 'Ketua Panitia',
             place: award.place ?? '',
@@ -448,15 +448,15 @@ export default function CertificateIndex({
             <Head title="Sertifikat & Piagam" />
 
             <div className="mb-5">
-                <h2 className="text-xl font-bold text-slate-900">Sertifikat Peserta & Piagam Juara</h2>
+                <h2 className="page-title">Sertifikat Peserta & Piagam Juara</h2>
                 <p className="text-sm text-slate-500">
                     Atur akses unduh, palet warna, latar, dan penandatangan. Pratinjau memakai PDF asli.
                 </p>
             </div>
 
             <form onSubmit={submit} className="space-y-5">
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Kontrol Akses</h3>
+                <section className="panel panel--pad">
+                    <h3 className="panel__title mb-3">Kontrol Akses</h3>
                     <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3">
                             <input
@@ -486,9 +486,9 @@ export default function CertificateIndex({
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="panel panel--pad">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">Desain Sertifikat Peserta</h3>
+                        <h3 className="panel__title">Desain Sertifikat Peserta</h3>
                         <a
                             href={previewUrl('certificate')}
                             target="_blank"
@@ -585,9 +585,9 @@ export default function CertificateIndex({
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="panel panel--pad">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">Desain Piagam Juara</h3>
+                        <h3 className="panel__title">Desain Piagam Juara</h3>
                         <a
                             href={previewUrl('award')}
                             target="_blank"
@@ -673,23 +673,23 @@ export default function CertificateIndex({
                         type="submit"
                         disabled={form.processing}
                         className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                        style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                     >
                         {form.processing ? 'Menyimpan…' : 'Simpan semua setelan'}
                     </button>
                 </div>
             </form>
 
-            <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section className="panel panel--flush mt-6">
                 <div className="border-b border-slate-100 px-5 py-3">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">Cetak Piagam Juara</h3>
+                    <h3 className="panel__title">Cetak Piagam Juara</h3>
                     <p className="mt-1 text-xs text-slate-500">
                         Daftar pendaftaran yang sudah punya peringkat. Piagam dibuat dari nilai & peringkat terakhir.
                     </p>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
+                    <table className="data-table">
                         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                             <tr>
                                 <th className="px-4 py-2 font-semibold">Cabang</th>
@@ -699,7 +699,7 @@ export default function CertificateIndex({
                                 <th className="px-4 py-2 font-semibold">Piagam</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="data-table__body">
                             {awards.map((row) => (
                                 <tr key={row.id}>
                                     <td className="px-4 py-2 text-slate-700">{row.competition}</td>

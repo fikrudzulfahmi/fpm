@@ -69,10 +69,10 @@ export default function RegistrationShow({ registration }) {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Peserta</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Peserta</h3>
                         <div className="overflow-x-auto">
-                            <table className="min-w-full text-left text-sm">
+                            <table className="data-table">
                                 <thead>
                                     <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                                         <th className="py-2 pr-3 font-semibold">#</th>
@@ -82,7 +82,7 @@ export default function RegistrationShow({ registration }) {
                                         <th className="py-2 font-semibold">Lahir</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="data-table__body">
                                     {participants.map((p, i) => (
                                         <tr key={p.id ?? p.nisn}>
                                             <td className="py-2 pr-3 text-slate-400">{i + 1}</td>
@@ -106,9 +106,9 @@ export default function RegistrationShow({ registration }) {
                         </div>
                     </section>
 
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <section className="panel panel--pad">
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">Verifikasi AI</h3>
+                            <h3 className="panel__title">Verifikasi AI</h3>
                             <AiStatusBadge status={r.ai_status} />
                         </div>
                         <p className="whitespace-pre-line rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -119,8 +119,8 @@ export default function RegistrationShow({ registration }) {
                         )}
                     </section>
 
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Keputusan</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Keputusan</h3>
 
                         <div className="flex flex-wrap gap-2">
                             <button
@@ -204,8 +204,8 @@ export default function RegistrationShow({ registration }) {
                 </div>
 
                 <div className="space-y-5">
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Rincian</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Rincian</h3>
                         <dl className="space-y-3">
                             <Info label="Sekolah">
                                 {r.school?.school_name}
@@ -243,8 +243,8 @@ export default function RegistrationShow({ registration }) {
                         </dl>
                     </section>
 
-                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Nilai</h3>
+                    <section className="panel panel--pad">
+                        <h3 className="panel__title mb-3">Nilai</h3>
                         {r.score ? (
                             <div className="flex items-end gap-4">
                                 <div>
@@ -265,7 +265,7 @@ export default function RegistrationShow({ registration }) {
                             <a
                                 href={`/admin/piagam/${r.id}`}
                                 className="mt-3 inline-flex rounded-lg px-3 py-2 text-xs font-semibold text-white"
-                                style={{ backgroundColor: 'var(--secondary-color, #c9a45c)' }}
+                                style={{ backgroundColor: 'var(--secondary-color, #f3d95b)' }}
                             >
                                 Cetak Piagam
                             </a>

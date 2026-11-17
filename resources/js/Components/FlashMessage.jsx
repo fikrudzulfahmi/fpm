@@ -26,15 +26,8 @@ export default function FlashMessage({ timeout = 4000 }) {
     const message = success ?? error;
 
     return (
-        <div
-            role="status"
-            className={`mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-sm ${
-                isSuccess
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : 'border-rose-200 bg-rose-50 text-rose-800'
-            }`}
-        >
-            <span className="mt-0.5 font-semibold">{isSuccess ? 'Berhasil' : 'Gagal'}</span>
+        <div role="status" className={`flash ${isSuccess ? 'flash--ok' : 'flash--err'}`}>
+            <span className="font-semibold">{isSuccess ? 'Berhasil' : 'Gagal'}</span>
             <p className="flex-1 whitespace-pre-line">{message}</p>
             <button
                 type="button"

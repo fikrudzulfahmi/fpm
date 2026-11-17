@@ -4,17 +4,14 @@ import AppLayout from '../../Layouts/AppLayout';
 function Card({ label, value, hint, href, accent }) {
     const body = (
         <>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-            <p className="mt-2 text-3xl font-black text-slate-900">{value}</p>
-            {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+            <span className="stat-card__label">{label}</span>
+            <span className="stat-card__value">{value}</span>
+            {hint && <span className="stat-card__hint">{hint}</span>}
         </>
     );
 
-    const cls = `block rounded-xl border bg-white p-5 shadow-sm ${
-        accent ? 'border-l-4' : 'border-slate-200'
-    } ${href ? 'transition hover:shadow-md' : ''}`;
-
-    const style = accent ? { borderLeftColor: accent } : undefined;
+    const cls = 'stat-card';
+    const style = accent ? { borderInlineStartWidth: '4px', borderInlineStartColor: accent } : undefined;
 
     return href ? (
         <Link href={href} className={cls} style={style}>
@@ -35,15 +32,15 @@ export default function AdminDashboard({ stats }) {
         <AppLayout title="Dashboard Panitia">
             <Head title="Dashboard Panitia" />
 
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div className="page-head-row">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900">Ringkasan Event</h2>
+                    <h2 className="page-title">Ringkasan Event</h2>
                     <p className="text-sm text-slate-500">Pantau pendaftaran dan kuota tiap cabang lomba.</p>
                 </div>
                 <Link
                     href="/admin/pendaftaran?status=pending"
                     className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                    style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                 >
                     Verifikasi Pendaftaran Pending
                 </Link>
@@ -51,23 +48,23 @@ export default function AdminDashboard({ stats }) {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Card label="Total Pendaftaran" value={s.total_registrations ?? 0} />
-                <Card label="Menunggu Verifikasi" value={s.pending_count ?? 0} accent="#f59e0b" href="/admin/pendaftaran?status=pending" />
-                <Card label="Disetujui" value={s.approved_count ?? 0} accent="#10b981" href="/admin/pendaftaran?status=approved" />
+                <Card label="Menunggu Verifikasi" value={s.pending_count ?? 0} accent="#b45309" href="/admin/pendaftaran?status=pending" />
+                <Card label="Disetujui" value={s.approved_count ?? 0} accent="#0a5b4a" href="/admin/pendaftaran?status=approved" />
                 <Card label="Cabang Lomba" value={perCompetition.length} />
             </div>
 
-            <section className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">Per Cabang Lomba</h3>
+            <section className="panel panel--flush mt-6">
+                <div className="panel__head">
+                    <h3 className="panel__title">Per Cabang Lomba</h3>
                     <Link href="/admin/nilai" className="text-xs font-semibold text-slate-600 hover:text-slate-900">
                         Input nilai →
                     </Link>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
+                    <table className="data-table">
                         <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <tr className="data-table__head">
                                 <th className="px-5 py-2 font-semibold">Lomba</th>
                                 <th className="px-3 py-2 font-semibold">Jenis</th>
                                 <th className="px-3 py-2 font-semibold">Terpakai</th>
@@ -76,7 +73,7 @@ export default function AdminDashboard({ stats }) {
                                 <th className="px-5 py-2 font-semibold">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="data-table__body">
                             {perCompetition.map((c) => {
                                 const full = Number(c.remaining_global) <= 0;
                                 return (

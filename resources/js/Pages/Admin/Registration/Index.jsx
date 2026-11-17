@@ -101,7 +101,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
             <Head title="Verifikasi Pendaftaran" />
 
             <div className="mb-5">
-                <h2 className="text-xl font-bold text-slate-900">Pendaftaran Masuk</h2>
+                <h2 className="page-title">Pendaftaran Masuk</h2>
                 <p className="text-sm text-slate-500">Saring, tinjau, lalu setujui atau tolak pendaftaran.</p>
             </div>
 
@@ -131,7 +131,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
 
             <form
                 onSubmit={submitFilters}
-                className="mb-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4"
+                className="panel panel--pad-sm mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
             >
                 <div className="lg:col-span-2">
                     <label htmlFor="filter-q" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -190,7 +190,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
                     <button
                         type="submit"
                         className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                        style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                     >
                         Terapkan
                     </button>
@@ -204,11 +204,11 @@ export default function RegistrationIndex({ registrations, filters, competitions
                 </div>
             </form>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="panel panel--flush">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
+                    <table className="data-table">
                         <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <tr className="data-table__head">
                                 <th className="px-5 py-3 font-semibold">#</th>
                                 <th className="px-3 py-3 font-semibold">Nama</th>
                                 <th className="px-3 py-3 font-semibold">Sekolah</th>
@@ -220,7 +220,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
                                 <th className="px-5 py-3" />
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="data-table__body">
                             {rows.map((r) => (
                                 <tr key={r.id} className="hover:bg-slate-50/70">
                                     <td className="px-5 py-3 font-mono text-xs text-slate-400">{r.id}</td>

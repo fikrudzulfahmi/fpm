@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import FlashMessage from '../Components/FlashMessage';
 
-function Icon({ path, className = 'h-5 w-5' }) {
+function Icon({ path, className = '' }) {
     return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth="1.75" stroke="currentColor">
+        <svg
+            className={className}
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.8"
+            stroke="currentColor"
+            aria-hidden="true"
+        >
             <path strokeLinecap="round" strokeLinejoin="round" d={path} />
         </svg>
     );
@@ -23,20 +30,50 @@ const icons = {
     certificate: 'M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.746 3.746 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z',
 };
 
+/**
+ * Kerangka panel panitia & sekolah dengan tema FPM XII.
+ * Permukaan: krem–putih, aksen hijau tua + emas; kartu tanpa shadow dasar.
+ */
 export default function AppLayout({ title, children }) {
     const { auth, event, theme } = usePage().props;
     const user = auth?.user ?? null;
+    const { url } = usePage();
     const [open, setOpen] = useState(false);
 
-    // Tutup drawer mobile setiap kali path berubah.
-    const { url } = usePage();
     useEffect(() => {
         setOpen(false);
     }, [url]);
 
+    useEffect(() => {
+        document.body.style.overflow = open ? 'hidden' : '';
+
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [open]);
+
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const onKey = (e) => {
+            if (e.key === 'Escape') setOpen(false);
+        };
+        window.addEventListener('keydown', onKey);
+
+        return () => window.removeEventListener('keydown', onKey);
+    }, [open]);
+
     const isAdmin = user?.role === 'admin';
     const eventName = event?.event_name ?? 'Festival Pelajar Muslim';
     const year = event?.year;
+    const roleLabel = isAdmin ? (user?.access_level === 'juri' ? 'Juri' : 'Panitia') : 'Akun Sekolah';
+    const initials = (user?.name ?? 'FPM')
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase();
 
     const nav = isAdmin
         ? [
@@ -54,119 +91,112 @@ export default function AppLayout({ title, children }) {
               { href: '/daftar', label: 'Pendaftaran Baru', icon: icons.plus },
           ];
 
-    const current = (href) => (url === href || url.startsWith(`${href}/`) ? true : false);
+    const current = (href) => url === href || url.startsWith(`${href}/`) || url.startsWith(`${href}?`);
 
     const sidebar = (
-        <div className="flex h-full flex-col">
-            <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
-                <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black text-white ring-1 ring-white/20"
-                    style={{ backgroundColor: 'var(--secondary-color, #c9a45c)' }}
-                >
-                    FP
-                </div>
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-white">{eventName}</p>
-                    <p className="text-[11px] uppercase tracking-wide text-white/60">
-                        {year ? `Edisi ${year}` : 'Panitia & Sekolah'}
-                    </p>
-                </div>
-            </div>
+        <>
+            <Link href="/dashboard" className="admin-brand">
+                <img
+                    className="admin-brand__mark"
+                    src={theme?.logo_url ?? '/branding/logo-mark.png'}
+                    alt=""
+                    width="38"
+                    height="43"
+                />
+                <span className="min-w-0">
+                    <span className="admin-brand__name block truncate">{eventName}</span>
+                    <span className="admin-brand__sub block truncate">
+                        {year ? `Edisi ${year}` : 'FPM'}
+                    </span>
+                </span>
+            </Link>
 
-            <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-                {nav.map((item) => {
-                    const active = current(item.href);
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                                active ? 'bg-white/15 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'
-                            }`}
-                        >
-                            <Icon path={item.icon} />
-                            <span className="truncate">{item.label}</span>
-                        </Link>
-                    );
-                })}
+            <nav className="admin-nav" aria-label="Navigasi panel">
+                <span className="admin-nav__label">{isAdmin ? 'Menu panitia' : 'Menu sekolah'}</span>
+                {nav.map((item) => (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`admin-nav__link${current(item.href) ? ' is-active' : ''}`}
+                        aria-current={current(item.href) ? 'page' : undefined}
+                    >
+                        <Icon path={item.icon} />
+                        <span className="truncate">{item.label}</span>
+                    </Link>
+                ))}
             </nav>
 
-            <div className="border-t border-white/10 px-3 py-3">
-                <div className="mb-2 px-2">
-                    <p className="truncate text-sm font-semibold text-white">{user?.name ?? 'Pengguna'}</p>
-                    <p className="truncate text-[11px] text-white/60">
-                        {isAdmin ? 'Panitia' : user?.school?.school_name ?? 'Akun sekolah'}
-                    </p>
+            <div className="admin-side__foot">
+                <div className="admin-user">
+                    <span className="admin-user__avatar" aria-hidden="true">
+                        {initials}
+                    </span>
+                    <div className="min-w-0">
+                        <p className="admin-user__name truncate">{user?.name ?? 'Pengguna'}</p>
+                        <p className="admin-user__role truncate">
+                            {isAdmin ? roleLabel : user?.school?.school_name ?? roleLabel}
+                        </p>
+                    </div>
                 </div>
-                <Link
-                    href="/logout"
-                    method="post"
-                    as="button"
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white"
-                >
+                <Link href="/logout" method="post" as="button" className="admin-logout">
                     <Icon path={icons.logout} />
                     Keluar
                 </Link>
             </div>
-        </div>
+        </>
     );
 
     return (
-        <div className="min-h-full bg-slate-50">
-            <aside
-                className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block"
-                style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
-            >
-                {sidebar}
-            </aside>
+        <div className="fpm-admin">
+            <div className="admin-shell">
+                <aside className={`admin-side${open ? ' is-open' : ''}`} aria-label="Menu panel">
+                    {sidebar}
+                </aside>
 
-            {open && (
-                <div className="fixed inset-0 z-40 lg:hidden">
+                {open && (
                     <button
                         type="button"
+                        className="admin-overlay"
                         aria-label="Tutup menu"
-                        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
                         onClick={() => setOpen(false)}
                     />
-                    <aside
-                        className="absolute inset-y-0 left-0 w-64 shadow-xl"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
-                    >
-                        {sidebar}
-                    </aside>
+                )}
+
+                <div className="admin-main">
+                    <header className="admin-top">
+                        <button
+                            type="button"
+                            className="admin-menu-btn"
+                            onClick={() => setOpen(true)}
+                            aria-label="Buka menu"
+                            aria-expanded={open ? 'true' : 'false'}
+                        >
+                            <Icon path="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" className="h-5 w-5" />
+                        </button>
+
+                        <div className="min-w-0 flex-1">
+                            <p className="admin-top__event truncate">
+                                {eventName}
+                                {theme?.edition_title && theme.edition_title !== eventName
+                                    ? ` · ${theme.edition_title}`
+                                    : ''}
+                            </p>
+                            <h1 className="admin-top__title truncate">{title}</h1>
+                        </div>
+
+                        <div className="hidden items-center gap-2 sm:flex">
+                            <Link href="/" className="admin-link-soft">
+                                Lihat situs
+                            </Link>
+                            <span className="admin-chip">{roleLabel}</span>
+                        </div>
+                    </header>
+
+                    <main className="admin-content">
+                        <FlashMessage />
+                        {children}
+                    </main>
                 </div>
-            )}
-
-            <div className="lg:pl-64">
-                <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6">
-                    <button
-                        type="button"
-                        onClick={() => setOpen(true)}
-                        className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
-                        aria-label="Buka menu"
-                    >
-                        <Icon path="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" className="h-6 w-6" />
-                    </button>
-
-                    <div className="min-w-0 flex-1">
-                        <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            {eventName}
-                            {theme?.edition_title && theme.edition_title !== eventName ? ` · ${theme.edition_title}` : ''}
-                        </p>
-                        <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg">{title}</h1>
-                    </div>
-
-                    <div className="hidden items-center gap-2 sm:flex">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                            {isAdmin ? 'Panitia' : 'Sekolah'}
-                        </span>
-                    </div>
-                </header>
-
-                <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
-                    <FlashMessage />
-                    {children}
-                </main>
             </div>
         </div>
     );

@@ -2,6 +2,8 @@
 /* Design system halaman publik (diadopsi dari template FPM XII).
    Aturan dasarnya di-scope ke .fpm-site supaya panel admin tetap memakai Tailwind. */
 @import './fpm-site.css';
+/* Tema panel admin & sekolah (memakai token yang sama). */
+@import './admin.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

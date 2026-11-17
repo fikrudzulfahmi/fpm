@@ -25,7 +25,7 @@ const empty = {
 
 function StatCard({ label, value, accent }) {
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="panel panel--pad-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
             <p className={`mt-1 text-2xl font-black ${accent ?? 'text-slate-900'}`}>{value}</p>
         </div>
@@ -36,7 +36,7 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
     const isGroup = form.data.category_type === 'group';
 
     return (
-        <form onSubmit={onSubmit} className="mb-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+        <form onSubmit={onSubmit} className="panel panel--pad-sm mb-5 grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-3 flex items-center justify-between">
                 <p className="text-sm font-semibold text-slate-700">{title}</p>
                 {onCancel && (
@@ -224,7 +224,7 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
                     type="submit"
                     disabled={form.processing}
                     className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                 >
                     {form.processing ? 'Menyimpan…' : 'Simpan cabang lomba'}
                 </button>
@@ -294,9 +294,9 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
         <AppLayout title="Manajemen Lomba">
             <Head title="Manajemen Lomba" />
 
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div className="page-head-row">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900">Manajemen Cabang Lomba</h2>
+                    <h2 className="page-title">Manajemen Cabang Lomba</h2>
                     <p className="text-sm text-slate-500">
                         {event?.event_name} {event?.year} — atur kuota, jenis peserta, dan buka/tutup pendaftaran.
                     </p>
@@ -313,7 +313,7 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
                         type="button"
                         onClick={() => setPanel(panel === 'create' ? null : 'create')}
                         className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
-                        style={{ backgroundColor: 'var(--primary-color, #0f766e)' }}
+                        style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
                     >
                         Tambah cabang
                     </button>
@@ -347,9 +347,9 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
                 />
             )}
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="panel panel--flush">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
+                    <table className="data-table">
                         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                             <tr>
                                 <th className="px-4 py-2 font-semibold">Cabang</th>
@@ -359,7 +359,7 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
                                 <th className="px-4 py-2 font-semibold">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="data-table__body">
                             {competitions.map((competition) => {
                                 const pct = competition.global_quota
                                     ? Math.min(100, Math.round((competition.used_slots / competition.global_quota) * 100))

@@ -30,7 +30,7 @@ export default function Button({
     } ${sizes[size] ?? sizes.md} ${className}`;
 
     const themedStyle =
-        variant === 'primary' ? { backgroundColor: 'var(--primary-color, #0f766e)', ...style } : style;
+        variant === 'primary' ? { backgroundColor: 'var(--primary-color, #064b3d)', ...style } : style;
 
     return (
         <Tag className={cls} style={themedStyle} {...props}>
