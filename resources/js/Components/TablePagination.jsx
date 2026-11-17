@@ -23,13 +23,12 @@ export default function TablePagination({ paginator, label = 'baris' }) {
             {links.length > 3 && (
                 <nav className="pager" aria-label="Navigasi halaman">
                     {links.map((link, index) => {
-                        const label2 = String(link.label ?? '')
-                            .replace(/&laquo;\s*Previous/i, 'Sebelumnya')
-                            .replace(/Previous/i, 'Sebelumnya')
-                            .replace(/Next\s*&raquo;/i, 'Berikutnya')
-                            .replace(/Next/i, 'Berikutnya')
-                            .replace(/&[^;]+;/g, '')
-                            .trim();
+                        const raw = String(link.label ?? '');
+                        const label2 = /previous/i.test(raw)
+                            ? '‹ Sebelumnya'
+                            : /next/i.test(raw)
+                              ? 'Berikutnya ›'
+                              : raw.replace(/&[^;]+;/g, '').trim();
 
                         const isDots = label2 === '...';
 

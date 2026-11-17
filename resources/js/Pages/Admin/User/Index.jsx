@@ -375,6 +375,7 @@ export default function UserIndex({ users = [], competitions = [], filters = {} 
                 rows={rows}
                 rowKey={(user) => user.id}
                 paginator={users?.links ? users : null}
+                paginationLabel="akun"
                 empty="Belum ada akun panitia/PJ Lomba."
             />
 
