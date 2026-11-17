@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import StatusBadge, { AiStatusBadge } from '../../../Components/StatusBadge';
-import { formatDate } from '../../../lib/format';
+import { formatDate, pageLinkLabel } from '../../../lib/format';
 
 const PAGE_LABEL = {
     '&laquo; Previous': '‹ Sebelumnya',
@@ -15,15 +15,16 @@ function Pagination({ links }) {
     return (
         <nav className="flex flex-wrap items-center justify-center gap-1 px-5 py-4">
             {links.map((link, i) => {
-                const label = PAGE_LABEL[link.label] ?? link.label.replace(/&[^;]+;/g, '').trim();
+                const label = pageLinkLabel(PAGE_LABEL[link.label] ?? link.label);
 
                 if (!link.url) {
                     return (
                         <span
                             key={i}
-                            className="rounded-md px-3 py-1.5 text-sm text-slate-300"
-                            dangerouslySetInnerHTML={{ __html: label }}
-                        />
+                            className="rounded-md px-3 py-1.5 text-sm text-[color:var(--ink-3)] opacity-60"
+                        >
+                            {label}
+                        </span>
                     );
                 }
 
@@ -35,11 +36,12 @@ function Pagination({ links }) {
                         preserveScroll
                         className={`rounded-md px-3 py-1.5 text-sm font-medium ${
                             link.active
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50'
+                                ? 'bg-[#064b3d] text-[#f8f6ec]'
+                                : 'text-[color:var(--ink-2)] ring-1 ring-inset ring-[color:var(--line-strong)] hover:bg-[rgba(13,48,41,0.06)]'
                         }`}
-                        dangerouslySetInnerHTML={{ __html: label }}
-                    />
+                    >
+                        {label}
+                    </Link>
                 );
             })}
         </nav>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { pageLinkLabel } from '../../../lib/format';
 
 function StatCard({ label, value, accent }) {
     return (
@@ -350,7 +351,7 @@ export default function SchoolIndex({ schools, filters = {}, counts = {} }) {
                 </div>
 
                 {links.length > 3 && (
-                    <div className="flex flex-wrap gap-1 border-t border-slate-100 px-4 py-3">
+                    <div className="flex flex-wrap gap-1 border-t border-[color:var(--line)] px-4 py-3">
                         {links.map((link, index) => (
                             <Link
                                 key={index}
@@ -358,13 +359,14 @@ export default function SchoolIndex({ schools, filters = {}, counts = {} }) {
                                 preserveScroll
                                 className={`rounded-md px-2.5 py-1 text-xs font-semibold ${
                                     link.active
-                                        ? 'bg-slate-900 text-white'
+                                        ? 'bg-[#064b3d] text-[#f8f6ec]'
                                         : link.url
-                                          ? 'text-slate-600 hover:bg-slate-100'
-                                          : 'cursor-not-allowed text-slate-300'
+                                          ? 'text-[color:var(--ink-2)] hover:bg-[rgba(13,48,41,0.06)]'
+                                          : 'cursor-not-allowed text-[color:var(--ink-3)] opacity-50'
                                 }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                            >
+                                {pageLinkLabel(link.label)}
+                            </Link>
                         ))}
                     </div>
                 )}

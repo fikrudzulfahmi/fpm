@@ -53,3 +53,16 @@ export function errorList(errors, key) {
     if (!value) return [];
     return Array.isArray(value) ? value : [value];
 }
+
+/**
+ * Label tombol paginasi Laravel. Bila terjemahan bahasa belum tersedia,
+ * Laravel mengirim "pagination.previous"/"pagination.next" mentah.
+ */
+export function pageLinkLabel(label = '') {
+    const text = String(label);
+
+    if (/previous/i.test(text)) return '‹ Sebelumnya';
+    if (/next/i.test(text)) return 'Berikutnya ›';
+
+    return text.replace(/&[^;]+;/g, '').trim() || text;
+}
