@@ -4,6 +4,7 @@ import AppLayout from '../../../Layouts/AppLayout';
 import { pageLinkLabel } from '../../../lib/format';
 import Modal from '../../../Components/Modal';
 import ConfirmDialog from '../../../Components/ConfirmDialog';
+import TablePagination from '../../../Components/TablePagination';
 
 function StatCard({ label, value, accent }) {
     return (
@@ -366,7 +367,7 @@ export default function SchoolIndex({ schools, filters = {}, counts = {} }) {
                 </button>
             </form>
 
-            <div className="panel panel--flush">
+            <div className="table-card">
                 <div className="overflow-x-auto">
                     <table className="data-table">
                         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
@@ -398,26 +399,7 @@ export default function SchoolIndex({ schools, filters = {}, counts = {} }) {
                     </table>
                 </div>
 
-                {links.length > 3 && (
-                    <div className="flex flex-wrap gap-1 border-t border-[color:var(--line)] px-4 py-3">
-                        {links.map((link, index) => (
-                            <Link
-                                key={index}
-                                href={link.url ?? '#'}
-                                preserveScroll
-                                className={`rounded-md px-2.5 py-1 text-xs font-semibold ${
-                                    link.active
-                                        ? 'bg-[#064b3d] text-[#f8f6ec]'
-                                        : link.url
-                                          ? 'text-[color:var(--ink-2)] hover:bg-[rgba(13,48,41,0.06)]'
-                                          : 'cursor-not-allowed text-[color:var(--ink-3)] opacity-50'
-                                }`}
-                            >
-                                {pageLinkLabel(link.label)}
-                            </Link>
-                        ))}
-                    </div>
-                )}
+                <TablePagination paginator={schools} label="sekolah" />
             </div>
             <ConfirmDialog
                 open={Boolean(confirmAction)}

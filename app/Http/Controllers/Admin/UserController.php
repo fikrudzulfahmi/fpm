@@ -40,8 +40,9 @@ class UserController extends Controller
             })
             ->orderByRaw("FIELD(access_level, 'full', 'pj')")
             ->orderBy('name')
-            ->get()
-            ->map(fn (User $user) => [
+            ->paginate(12)
+            ->withQueryString()
+            ->through(fn (User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,

@@ -2,51 +2,8 @@ import { useEffect, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import StatusBadge, { AiStatusBadge } from '../../../Components/StatusBadge';
-import { formatDate, pageLinkLabel } from '../../../lib/format';
-
-const PAGE_LABEL = {
-    '&laquo; Previous': '‹ Sebelumnya',
-    'Next &raquo;': 'Berikutnya ›',
-};
-
-function Pagination({ links }) {
-    if (!links || links.length <= 3) return null;
-
-    return (
-        <nav className="flex flex-wrap items-center justify-center gap-1 px-5 py-4">
-            {links.map((link, i) => {
-                const label = pageLinkLabel(PAGE_LABEL[link.label] ?? link.label);
-
-                if (!link.url) {
-                    return (
-                        <span
-                            key={i}
-                            className="rounded-md px-3 py-1.5 text-sm text-[color:var(--ink-3)] opacity-60"
-                        >
-                            {label}
-                        </span>
-                    );
-                }
-
-                return (
-                    <Link
-                        key={i}
-                        href={link.url}
-                        preserveState
-                        preserveScroll
-                        className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                            link.active
-                                ? 'bg-[#064b3d] text-[#f8f6ec]'
-                                : 'text-[color:var(--ink-2)] ring-1 ring-inset ring-[color:var(--line-strong)] hover:bg-[rgba(13,48,41,0.06)]'
-                        }`}
-                    >
-                        {label}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
-}
+import { formatDate } from '../../../lib/format';
+import TablePagination from '../../../Components/TablePagination';
 
 export default function RegistrationIndex({ registrations, filters, competitions, counts }) {
     const rows = registrations?.data ?? [];
@@ -206,7 +163,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
                 </div>
             </form>
 
-            <div className="panel panel--flush">
+            <div className="table-card">
                 <div className="overflow-x-auto">
                     <table className="data-table">
                         <thead>
@@ -258,7 +215,7 @@ export default function RegistrationIndex({ registrations, filters, competitions
                     </table>
                 </div>
 
-                <Pagination links={registrations?.links ?? []} />
+                <TablePagination paginator={registrations} label="pendaftaran" />
             </div>
         </AppLayout>
     );

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import Modal from '../../../Components/Modal';
+import DataTable from '../../../Components/DataTable';
 import ConfirmDialog from '../../../Components/ConfirmDialog';
 
 const emptyForm = {
@@ -153,6 +154,7 @@ export default function UserIndex({ users = [], competitions = [], filters = {} 
     const [panel, setPanel] = useState(null);
     const [editing, setEditing] = useState(null);
     const [search, setSearch] = useState(filters.q ?? '');
+    const rows = users?.data ?? users ?? [];
     const [confirmUser, setConfirmUser] = useState(null);
     const [passwordFor, setPasswordFor] = useState(null);
 
@@ -289,92 +291,93 @@ export default function UserIndex({ users = [], competitions = [], filters = {} 
                 </button>
             </form>
 
-            <div className="panel panel--flush">
-                <div className="overflow-x-auto">
-                    <table className="data-table">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                            <tr>
-                                <th className="px-4 py-2 font-semibold">Akun</th>
-                                <th className="px-4 py-2 font-semibold">Akses</th>
-                                <th className="px-4 py-2 font-semibold">Status</th>
-                                <th className="px-4 py-2 font-semibold">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="data-table__body">
-                            {users.map((user) => {
-                                const isEditing = panel === 'edit' && editing?.id === user.id;
+            <DataTable
+                title="Daftar akun"
+                subtitle="Panitia penuh mengelola semua menu; PJ Lomba hanya cabangnya."
+                columns={[
+                    {
+                        key: 'account',
+                        label: 'Akun',
+                        render: (user) => (
+                            <>
+                                <p className="font-semibold text-slate-900">
+                                    {user.name}
+                                    {user.is_self && <span className="ml-2 text-xs font-normal text-slate-400">(Anda)</span>}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    {user.username} · {user.email}
+                                </p>
+                            </>
+                        ),
+                    },
+                    {
+                        key: 'access',
+                        label: 'Akses',
+                        render: (user) => (
+                            <>
+                                <Badge tone={user.access_level === 'full' ? 'sky' : 'amber'}>
+                                    {user.access_level === 'full' ? 'Panitia penuh' : 'PJ Lomba'}
+                                </Badge>
+                                {user.access_level === 'pj' && (
+                                    <p className="mt-1 text-[11.5px] text-slate-500">
+                                        {user.competition_name ?? 'Belum ada cabang'}
+                                    </p>
+                                )}
+                            </>
+                        ),
+                    },
+                    {
+                        key: 'status',
+                        label: 'Status',
+                        render: (user) => (
+                            <Badge tone={user.is_active ? 'emerald' : 'slate'}>
+                                {user.is_active ? 'Aktif' : 'Nonaktif'}
+                            </Badge>
+                        ),
+                    },
+                    {
+                        key: 'actions',
+                        label: 'Aksi',
+                        align: 'right',
+                        render: (user) => (
+                            <div className="flex flex-wrap justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => startEdit(user)}
+                                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        passwordForm.reset();
+                                        passwordForm.clearErrors();
+                                        setPasswordFor(user);
+                                    }}
+                                    className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                                >
+                                    Reset sandi
+                                </button>
+                                {!user.is_self && (
+                                    <button
+                                        type="button"
+                                        onClick={() => destroy(user)}
+                                        className="rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 hover:bg-rose-100"
+                                    >
+                                        Hapus
+                                    </button>
+                                )}
+                            </div>
+                        ),
+                    },
+                ]}
+                rows={rows}
+                rowKey={(user) => user.id}
+                paginator={users?.links ? users : null}
+                empty="Belum ada akun panitia/PJ Lomba."
+            />
 
-                                return (
-                                    <tr key={user.id} className={isEditing ? 'bg-slate-50' : undefined}>
-                                        <td className="px-4 py-3">
-                                            <p className="font-semibold text-slate-900">
-                                                {user.name}
-                                                {user.is_self && <span className="ml-2 text-xs font-normal text-slate-400">(Anda)</span>}
-                                            </p>
-                                            <p className="text-xs text-slate-500">
-                                                {user.username} · {user.email}
-                                            </p>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge tone={user.access_level === 'full' ? 'sky' : 'amber'}>
-                                                {user.access_level === 'full' ? 'Panitia penuh' : 'PJ Lomba'}
-                                            </Badge>
-                                            {user.access_level === 'pj' && (
-                                                <p className="mt-1 text-[11.5px] text-slate-500">
-                                                    {user.competition_name ?? 'Belum ada cabang'}
-                                                </p>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge tone={user.is_active ? 'emerald' : 'slate'}>
-                                                {user.is_active ? 'Aktif' : 'Nonaktif'}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex flex-wrap gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => startEdit(user)}
-                                                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        passwordForm.reset();
-                                                        passwordForm.clearErrors();
-                                                        setPasswordFor(user);
-                                                    }}
-                                                    className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
-                                                >
-                                                    Reset sandi
-                                                </button>
-                                                {!user.is_self && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => destroy(user)}
-                                                        className="rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 hover:bg-rose-100"
-                                                    >
-                                                        Hapus
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            {users.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-400">
-                                        Belum ada akun panitia/PJ Lomba.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
             <Modal
                 open={Boolean(passwordFor)}
                 onClose={() => setPasswordFor(null)}

@@ -10,6 +10,8 @@ use App\Models\Score;
 use App\Models\ScoreCriterion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -137,11 +139,23 @@ class ScoreController extends Controller
 
         $setting = $event->setting();
 
+        // Peringkat dihitung di PHP, jadi paginasi dilakukan setelah pengurutan.
+        $page = Paginator::resolveCurrentPage();
+        $perPage = 20;
+
+        $registrations = new LengthAwarePaginator(
+            $rows->forPage($page, $perPage)->values(),
+            $rows->count(),
+            $perPage,
+            $page,
+            ['path' => route('admin.nilai.index'), 'query' => $request->query()],
+        );
+
         return Inertia::render('Admin/Score/Index', [
             'competitions' => $competitions,
             'competition_id' => $competitionId,
             'criteria' => $criteria,
-            'registrations' => $rows,
+            'registrations' => $registrations,
             'publish_scores' => (bool) $setting->publish_scores,
             'gender_mode' => $separate ? 'separate' : 'mixed',
             'can_adjust' => $canAdjust,

@@ -1102,3 +1102,122 @@
         inset-inline-end: -2px;
     }
 }
+
+/* ============================================================
+   Tabel data (DataTable) — header lengket, zebra, paginasi tema
+   ============================================================ */
+.table-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.table-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #fffdf7;
+    border-bottom: 1px solid var(--line);
+}
+
+.table-toolbar__title {
+    font-family: var(--H);
+    font-size: 14.5px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+
+.table-toolbar__sub { margin-top: 2px; font-size: 12px; color: var(--ink-3); }
+.table-toolbar__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.table-scroll { overflow-x: auto; }
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13.5px;
+    color: var(--ink-2);
+}
+
+.data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 11px 14px;
+    background: #f3efe0;
+    color: var(--ink-2);
+    font-family: var(--H);
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+}
+
+.data-table tbody td {
+    padding: 12px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(13, 48, 41, 0.07);
+}
+
+.data-table tbody tr:nth-child(even) { background: rgba(248, 246, 236, 0.6); }
+.data-table tbody tr:hover { background: rgba(243, 217, 91, 0.16); }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+
+.table-empty {
+    padding: 44px 18px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--ink-3);
+}
+
+.table-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 18px;
+    background: #fffdf7;
+    border-top: 1px solid var(--line);
+}
+
+.pager { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+
+.pager__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--H);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.pager__btn:hover { background: rgba(13, 48, 41, 0.06); border-color: var(--line-strong); color: var(--ink); }
+.pager__btn.is-active { background: var(--green-900); border-color: var(--green-900); color: var(--cream); }
+.pager__btn--muted { background: transparent; border-color: transparent; color: var(--ink-3); pointer-events: none; }
+
+.pager__meta { font-size: 12px; color: var(--ink-3); }
+
+@media (max-width: 640px) {
+    .table-toolbar { padding: 12px 14px; }
+    .data-table thead th { padding: 10px 12px; }
+    .data-table tbody td { padding: 11px 12px; }
+    .pager__btn { min-width: 32px; height: 32px; font-size: 12px; }
+}

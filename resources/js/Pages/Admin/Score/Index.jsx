@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import Modal from '../../../Components/Modal';
+import DataTable from '../../../Components/DataTable';
 import { useConfirm } from '../../../Components/ConfirmProvider';
 
 const SAVE_DELAY = 700;
@@ -238,7 +239,7 @@ export default function ScoreIndex({
     const [criteriaOpen, setCriteriaOpen] = useState(false);
     const [criteriaRows, setCriteriaRows] = useState([]);
     const [criteriaBusy, setCriteriaBusy] = useState(false);
-    const rows = registrations ?? [];
+    const rows = registrations?.data ?? registrations ?? [];
     const activeCompetition = competitions.find((c) => String(c.id) === String(competitionId));
     const totalWeight = criteria.reduce((sum, c) => sum + (Number(c.weight) || 0), 0);
 
@@ -503,62 +504,46 @@ export default function ScoreIndex({
                 </div>
             )}
 
-            <div className="panel panel--flush">
-                <div className="overflow-x-auto">
-                    <table className="data-table">
-                        <thead>
-                            <tr className="data-table__head">
-                                <th className="px-3 py-3 text-center font-semibold">No.</th>
-                                <th className="px-4 py-3 text-center font-semibold">Rank</th>
-                                <th className="px-3 py-3 font-semibold">Peserta / Grup</th>
-                                <th className="px-3 py-3 font-semibold">Sekolah</th>
-                                {criteria.length > 0 ? (
-                                    criteria.map((criterion) => (
-                                        <th key={criterion.id} className="px-2 py-3 font-semibold">
-                                            {criterion.name}
-                                            <span className="block text-[10.5px] font-normal text-slate-400">
-                                                bobot {criterion.weight}
-                                            </span>
-                                        </th>
-                                    ))
-                                ) : (
-                                    <th className="px-3 py-3 font-semibold">Nilai</th>
-                                )}
-                                <th className="px-3 py-3 font-semibold">{can_adjust ? 'Nilai akhir' : 'Nilai'}</th>
-                                <th className="px-3 py-3 font-semibold">Status</th>
-                                {can_adjust && <th className="px-3 py-3 font-semibold">Koreksi</th>}
-                            </tr>
-                        </thead>
-                        <tbody className="data-table__body">
-                            {rows.map((row) => (
-                                <ScoreRow
-                                    key={`${row.id}-${competitionId}-${criteria.length}`}
-                                    row={row}
-                                    criteria={criteria}
-                                    competitionId={competitionId}
-                                    separate={separate}
-                                    canAdjust={can_adjust}
-                                    onAdjust={openAdjust}
-                                />
-                            ))}
-                            {rows.length === 0 && (
-                                <tr>
-                                    <td
-                                        colSpan={6 + criteria.length + (can_adjust ? 1 : 0)}
-                                        className="px-5 py-12 text-center text-sm text-slate-400"
-                                    >
-                                        {is_pj && !competitionId
-                                            ? 'Akun Anda belum ditugaskan ke cabang lomba mana pun. Hubungi panitia.'
-                                            : competitionId
-                                              ? 'Belum ada pendaftaran disetujui untuk cabang lomba ini.'
-                                              : 'Pilih cabang lomba untuk mulai menilai.'}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <DataTable
+                title={activeCompetition ? `Peserta ${activeCompetition.name}` : 'Peserta'}
+                subtitle="Nilai tersimpan otomatis saat berhenti mengetik."
+                paginator={registrations?.links ? registrations : null}
+                paginationLabel="peserta"
+                rows={rows}
+                rowKey={(row) => row.id}
+                empty={
+                    is_pj && !competitionId
+                        ? 'Akun Anda belum ditugaskan ke cabang lomba mana pun. Hubungi panitia.'
+                        : competitionId
+                          ? 'Belum ada pendaftaran disetujui untuk cabang lomba ini.'
+                          : 'Pilih cabang lomba untuk mulai menilai.'
+                }
+                columns={[
+                    { key: 'no', label: 'No.', align: 'center' },
+                    { key: 'rank', label: 'Rank', align: 'center' },
+                    { key: 'name', label: 'Peserta / Grup' },
+                    { key: 'school', label: 'Sekolah' },
+                    ...criteria.map((criterion) => ({
+                        key: `c-${criterion.id}`,
+                        label: `${criterion.name} · bobot ${criterion.weight}`,
+                    })),
+                    ...(criteria.length === 0 ? [{ key: 'score', label: 'Nilai' }] : []),
+                    { key: 'final', label: can_adjust ? 'Nilai akhir' : 'Nilai' },
+                    { key: 'status', label: 'Status' },
+                    ...(can_adjust ? [{ key: 'adjust', label: 'Koreksi' }] : []),
+                ]}
+                renderRow={(row) => (
+                    <ScoreRow
+                        key={`${row.id}-${competitionId}-${criteria.length}`}
+                        row={row}
+                        criteria={criteria}
+                        competitionId={competitionId}
+                        separate={separate}
+                        canAdjust={can_adjust}
+                        onAdjust={openAdjust}
+                    />
+                )}
+            />
 
             {/* Koreksi nilai per kriteria — panitia penuh */}
             <Modal
