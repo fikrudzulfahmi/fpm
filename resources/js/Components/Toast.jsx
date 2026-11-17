@@ -24,9 +24,10 @@ function ToastIcon({ tone }) {
  * komponen lain bisa memanggil `useToast()` untuk memberi umpan balik lokal.
  */
 export function ToastProvider({ children }) {
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
     const [toasts, setToasts] = useState([]);
     const lastFlash = useRef(null);
+    const lastError = useRef(null);
 
     const remove = useCallback((id) => {
         setToasts((list) => list.filter((toast) => toast.id !== id));
@@ -69,6 +70,21 @@ export function ToastProvider({ children }) {
         if (success) push(success, 'success');
         else push(error, 'error');
     }, [flash?.success, flash?.error, push]);
+
+    // Validasi server gagal → tampilkan pesan pertama sebagai toast galat.
+    useEffect(() => {
+        const first = errors ? Object.values(errors)[0] : null;
+
+        if (!first) {
+            lastError.current = null;
+            return;
+        }
+
+        if (lastError.current === first) return;
+        lastError.current = first;
+
+        push(String(first), 'error');
+    }, [errors, push]);
 
     return (
         <ToastContext.Provider value={api}>

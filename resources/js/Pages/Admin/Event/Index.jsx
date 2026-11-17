@@ -22,23 +22,42 @@ function EventSettings({ event }) {
     };
 
     return (
-        <div className="border-t border-slate-100 px-4 py-3">
-            <button
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                className="flex w-full items-center justify-between text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
-            >
-                Setelan Event
-                <span className="text-slate-400">{open ? '−' : '+'}</span>
-            </button>
+        <>
+            <div className="border-t border-slate-100 px-4 py-3">
+                <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className="flex w-full items-center justify-between text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
+                >
+                    Setelan Event
+                    <span className="text-slate-400">›</span>
+                </button>
+            </div>
 
-            {open && (
-                <form onSubmit={save} className="mt-3 grid gap-3 sm:grid-cols-3">
-                    <div>
-                        <label
-                            htmlFor={`wa-${event.id}`}
-                            className="mb-1 block text-xs font-medium text-slate-600"
+            <Modal
+                open={open}
+                onClose={() => setOpen(false)}
+                title="Setelan event"
+                subtitle={event.event_name}
+                footer={
+                    <>
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setOpen(false)}>
+                            Tutup
+                        </button>
+                        <button
+                            type="submit"
+                            form={`settings-${event.id}`}
+                            className="btn btn--dark btn--sm"
+                            disabled={form.processing}
                         >
+                            {form.processing ? 'Menyimpan…' : 'Simpan setelan'}
+                        </button>
+                    </>
+                }
+            >
+                <form id={`settings-${event.id}`} onSubmit={save} className="grid gap-4">
+                    <div>
+                        <label htmlFor={`wa-${event.id}`} className="mb-1 block text-xs font-medium text-slate-600">
                             WhatsApp Panitia
                         </label>
                         <input
@@ -47,14 +66,14 @@ function EventSettings({ event }) {
                             value={form.data.admin_whatsapp}
                             onChange={(e) => form.setData('admin_whatsapp', e.target.value)}
                             placeholder="08xxxxxxxxxx"
-                            className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-sm outline-none focus:ring-2 focus:ring-slate-200"
+                            className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm outline-none"
                         />
                         {form.errors.admin_whatsapp && (
                             <p className="mt-1 text-xs text-rose-600">{form.errors.admin_whatsapp}</p>
                         )}
                     </div>
 
-                    <label className="flex items-center gap-2 self-end text-sm text-slate-700">
+                    <label className="flex items-center gap-2 text-sm text-slate-700">
                         <input
                             type="checkbox"
                             checked={form.data.publish_scores}
@@ -64,7 +83,7 @@ function EventSettings({ event }) {
                         Publikasikan nilai
                     </label>
 
-                    <label className="flex items-center gap-2 self-end text-sm text-slate-700">
+                    <label className="flex items-center gap-2 text-sm text-slate-700">
                         <input
                             type="checkbox"
                             checked={form.data.enable_certificates}
@@ -73,26 +92,11 @@ function EventSettings({ event }) {
                         />
                         Buka unduh sertifikat
                     </label>
-
-                    <div className="sm:col-span-3">
-                        <button
-                            type="submit"
-                            disabled={form.processing}
-                            className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-                        >
-                            {form.processing ? 'Menyimpan…' : 'Simpan Setelan'}
-                        </button>
-                    </div>
                 </form>
-            )}
-        </div>
+            </Modal>
+        </>
     );
 }
-
-/**
- * Identitas & tema event (PRD bagian A): logo, judul edisi, palet warna.
- * Backend: PUT /admin/event/{id}, POST/DELETE /admin/event/{id}/logo.
- */
 function EventBranding({ event }) {
     const confirm = useConfirm();
     const [open, setOpen] = useState(false);
