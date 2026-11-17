@@ -84,6 +84,11 @@
     $stripLogo = $has('logo-strip.png') ? $assetPath('logo-strip.png') : null;
     $logoFpm = $assetPath('logo-fpm.png');
     $bgImage = $config['bg_image_url'] ?? null;
+    // Krem template dipakai bila admin belum memilih warna lain (nilai lama #ffffff).
+    $sheetBg = $config['bg_color'] ?? null;
+    if (! $sheetBg || in_array(strtolower($sheetBg), ['#ffffff', '#fff'], true)) {
+        $sheetBg = '#f8f6ec';
+    }
     $showLogo = $config['show_logo'] ?? true;
     $showSignature = $config['show_signature'] ?? true;
 
@@ -130,7 +135,7 @@
             position: relative;
             width: 297mm;
             height: 210mm;
-            background: {{ $config['bg_color'] ?? '#f8f6ec' }};
+            background: {{ $sheetBg }};
             overflow: hidden;
             @if ($bgImage)
                 background-image: url('{{ $bgImage }}');
