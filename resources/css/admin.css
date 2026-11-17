@@ -1064,3 +1064,41 @@
 @keyframes sheetUp {
     from { transform: translateY(24px); opacity: 0.6; }
 }
+
+/* ---------- Topbar mobile: brand kiri, avatar rata kanan ---------- */
+@media (max-width: 1023px) {
+    .admin-top {
+        gap: 10px;
+        padding-inline: 14px;
+        min-height: 60px;
+    }
+
+    .admin-top__brand {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 8px;
+    }
+
+    .admin-top__brand img {
+        width: 28px;
+        height: auto;
+    }
+
+    .admin-userdd {
+        margin-inline-start: 0;
+        flex: none;
+    }
+
+    .admin-userdd__btn {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* Panel dropdown pengguna tidak boleh keluar layar di ponsel */
+@media (max-width: 480px) {
+    .admin-userdd__panel {
+        width: 210px;
+        inset-inline-end: -2px;
+    }
+}

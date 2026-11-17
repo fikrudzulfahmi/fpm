@@ -18,18 +18,35 @@ class ScoreController extends Controller
 {
     /**
      * Daftar pendaftaran disetujui untuk satu cabang lomba + nilainya.
+     *
+     * PJ Lomba hanya melihat cabang lombanya sendiri dan tidak melihat nilai
+     * hasil koreksi panitia (katrol) — angka itu wewenang panitia penuh.
      */
     public function index(Request $request): Response
     {
         $event = Event::current();
         abort_if(! $event, 404, 'Belum ada event.');
 
-        $competitionId = $request->integer('competition_id') ?: null;
+        $user = $request->user();
+        $canAdjust = $user->canManage();
+        $isPj = $user->isPjOnly();
+        $scopedId = $isPj ? ($user->competition_id ?: null) : null;
 
-        $competitions = Competition::where('event_id', $event->id)
+        $competitionsQuery = Competition::where('event_id', $event->id)
             ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'category_type', 'gender_mode']);
+            ->orderBy('name');
+
+        if ($scopedId) {
+            $competitionsQuery->whereKey($scopedId);
+        }
+
+        $competitions = ($isPj && ! $scopedId)
+            ? collect()
+            : $competitionsQuery->get(['id', 'name', 'category_type', 'gender_mode']);
+
+        $competitionId = $isPj
+            ? $scopedId
+            : ($request->integer('competition_id') ?: null);
 
         $competitionId ??= $competitions->first()?->id;
 
@@ -41,7 +58,7 @@ class ScoreController extends Controller
         if ($competitionId) {
             $rows = Registration::with([
                 'participants:id,registration_id,full_name,nisn',
-                'score',
+                'score.adjustedBy:id,name',
                 'school:id,school_name',
             ])
                 ->where('event_id', $event->id)
@@ -58,8 +75,14 @@ class ScoreController extends Controller
                     'gender_label' => $r->genderLabel(),
                     'performance_number' => $r->performance_number,
                     'score_value' => $r->score?->score_value,
+                    'final_value' => $r->score?->finalValue(),
                     'rank' => $r->score?->rank,
                     'is_published' => (bool) $r->score?->is_published,
+                    // Data koreksi hanya untuk panitia penuh.
+                    'adjusted_value' => $canAdjust ? $r->score?->adjusted_value : null,
+                    'adjust_reason' => $canAdjust ? $r->score?->adjust_reason : null,
+                    'adjusted_by' => $canAdjust ? $r->score?->adjustedBy?->name : null,
+                    'adjusted_at' => $canAdjust ? $r->score?->adjusted_at?->toIso8601String() : null,
                 ])
                 ->sortBy(fn ($row) => [
                     $separate ? ($row['gender'] === 'P' ? 1 : 0) : 0,
@@ -77,11 +100,13 @@ class ScoreController extends Controller
             'registrations' => $rows,
             'publish_scores' => (bool) $setting->publish_scores,
             'gender_mode' => $separate ? 'separate' : 'mixed',
+            'can_adjust' => $canAdjust,
+            'is_pj' => $isPj,
         ]);
     }
 
     /**
-     * Simpan/ubah satu nilai lalu hitung ulang peringkat cabang lomba itu.
+     * Simpan/ubah nilai input (PJ Lomba / panitia) lalu hitung ulang peringkat.
      */
     public function upsert(Request $request): RedirectResponse
     {
@@ -94,6 +119,12 @@ class ScoreController extends Controller
 
         $event = Event::current();
         abort_if(! $event, 404, 'Belum ada event.');
+
+        $user = $request->user();
+
+        if ($user->isPjOnly() && (int) $user->competition_id !== (int) $data['competition_id']) {
+            abort(403, 'Anda hanya bisa menilai cabang lomba yang menjadi tanggung jawab Anda.');
+        }
 
         $competition = Competition::where('event_id', $event->id)->findOrFail($data['competition_id']);
 
@@ -133,11 +164,64 @@ class ScoreController extends Controller
     }
 
     /**
-     * Buka/tutup publikasi nilai untuk event aktif. competition_id hanya
-     * dipakai untuk menyelaraskan flag is_published pada baris skor cabang itu.
+     * Koreksi nilai akhir oleh panitia penuh (mis. penyesuaian promosi sekolah).
+     * Wajib menyertakan alasan; jejak koreksi disimpan untuk audit.
+     */
+    public function adjust(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->canManage(), 403, 'Koreksi nilai khusus panitia penuh.');
+
+        $data = $request->validate([
+            'competition_id' => ['required', 'integer', 'exists:competitions,id'],
+            'registration_id' => ['required', 'integer', 'exists:registrations,id'],
+            'adjusted_value' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'adjust_reason' => ['nullable', 'string', 'min:5', 'max:500', 'required_with:adjusted_value'],
+        ]);
+
+        $event = Event::current();
+        abort_if(! $event, 404, 'Belum ada event.');
+
+        $competition = Competition::where('event_id', $event->id)->findOrFail($data['competition_id']);
+
+        $registration = Registration::where('event_id', $event->id)
+            ->where('competition_id', $competition->id)
+            ->find($data['registration_id']);
+
+        if (! $registration) {
+            throw ValidationException::withMessages([
+                'registration_id' => 'Pendaftaran tidak termasuk cabang lomba ini.',
+            ]);
+        }
+
+        $score = Score::firstWhere('registration_id', $registration->id);
+        abort_if(! $score, 422, 'Isi nilai dasar terlebih dahulu sebelum mengoreksi.');
+
+        $hasAdjustment = filled($data['adjusted_value'] ?? null);
+
+        DB::transaction(function () use ($score, $data, $hasAdjustment, $competition) {
+            $score->forceFill([
+                'adjusted_value' => $hasAdjustment ? $data['adjusted_value'] : null,
+                'adjust_reason' => $hasAdjustment ? $data['adjust_reason'] : null,
+                'adjusted_by' => $hasAdjustment ? auth()->id() : null,
+                'adjusted_at' => $hasAdjustment ? now() : null,
+            ])->save();
+
+            $this->recalculateRanks($competition, (bool) $competition->event?->setting()->publish_scores);
+        });
+
+        return back()->with(
+            'success',
+            $hasAdjustment ? 'Nilai akhir dikoreksi dan peringkat dihitung ulang.' : 'Koreksi nilai dibatalkan.'
+        );
+    }
+
+    /**
+     * Buka/tutup publikasi nilai untuk event aktif.
      */
     public function publish(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->canManage(), 403, 'Publikasi nilai khusus panitia penuh.');
+
         $data = $request->validate([
             'competition_id' => ['required', 'integer', 'exists:competitions,id'],
             'publish' => ['nullable', 'boolean'],
@@ -165,14 +249,13 @@ class ScoreController extends Controller
     }
 
     /**
-     * Peringkat 1..n berdasarkan nilai tertinggi; seri diberi nomor urut
-     * tetap (id dipakai sebagai pemecah supaya hasil stabil).
+     * Peringkat 1..n berdasarkan nilai akhir (koreksi bila ada) tertinggi.
      */
     private function recalculateRanks(Competition $competition, bool $publishScores): void
     {
         $scores = Score::where('competition_id', $competition->id)
             ->with('registration:id,gender')
-            ->orderByDesc('score_value')
+            ->orderByRaw('COALESCE(adjusted_value, score_value) DESC')
             ->orderBy('registration_id')
             ->get();
 
@@ -186,10 +269,16 @@ class ScoreController extends Controller
             $previous = null;
             $position = 0;
 
-            foreach ($group->sortBy([['score_value', 'desc'], ['registration_id', 'asc']]) as $score) {
-                $position++;
+            $sorted = $group->sortBy([
+                fn (Score $a, Score $b) => ($b->finalValue() ?? 0) <=> ($a->finalValue() ?? 0),
+                fn (Score $a, Score $b) => $a->registration_id <=> $b->registration_id,
+            ]);
 
-                if ($previous === null || $score->score_value < $previous) {
+            foreach ($sorted as $score) {
+                $position++;
+                $value = $score->finalValue();
+
+                if ($previous === null || $value < $previous) {
                     $rank = $position;
                 }
 
@@ -198,7 +287,7 @@ class ScoreController extends Controller
                     'is_published' => $publishScores,
                 ])->save();
 
-                $previous = $score->score_value;
+                $previous = $value;
             }
         }
     }

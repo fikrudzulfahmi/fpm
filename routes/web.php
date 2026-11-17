@@ -189,4 +189,7 @@ Route::middleware(['auth', 'admin', 'full-admin'])
             ->name('sertifikat.latar.destroy');
         Route::get('/sertifikat/pratinjau', [CertificateSettingController::class, 'preview'])
             ->name('sertifikat.pratinjau');
+
+        // Koreksi nilai akhir (katrol) — hanya panitia penuh.
+        Route::post('/nilai/koreksi', [ScoreController::class, 'adjust'])->name('nilai.adjust');
     });

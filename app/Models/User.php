@@ -14,7 +14,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'school_id', 'username', 'whatsapp',
+        'name', 'email', 'password', 'school_id', 'competition_id', 'username', 'whatsapp',
         'role', 'access_level', 'is_juri', 'is_active',
     ];
 
@@ -35,6 +35,14 @@ class User extends Authenticatable
         return $this->belongsTo(School::class);
     }
 
+    /**
+     * Cabang lomba yang menjadi tanggung jawab akun PJ Lomba.
+     */
+    public function competition(): BelongsTo
+    {
+        return $this->belongsTo(Competition::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -46,11 +54,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Akun juri: boleh masuk area penilaian saja.
+     * Akun PJ Lomba: hanya mengelola penilaian cabang lombanya sendiri.
      */
-    public function isJuriOnly(): bool
+    public function isPjOnly(): bool
     {
-        return $this->role === 'admin' && $this->access_level === 'juri';
+        return $this->role === 'admin' && $this->access_level === 'pj';
     }
 
     /**
@@ -58,7 +66,15 @@ class User extends Authenticatable
      */
     public function canManage(): bool
     {
-        return $this->isAdmin() && ! $this->isJuriOnly() && $this->is_active;
+        return $this->isAdmin() && ! $this->isPjOnly() && $this->is_active;
+    }
+
+    /**
+     * ID cabang yang boleh dinilai akun ini (null = semua cabang, khusus panitia).
+     */
+    public function scopedCompetitionId(): ?int
+    {
+        return $this->isPjOnly() ? $this->competition_id : null;
     }
 
     protected static function booted(): void

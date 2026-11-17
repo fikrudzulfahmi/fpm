@@ -17,8 +17,8 @@ class DashboardController extends Controller
         $user = $request->user();
 
         if ($user->isAdmin()) {
-            // Akun juri langsung diarahkan ke halaman penilaian.
-            if ($user->isJuriOnly()) {
+            // Akun PJ Lomba langsung diarahkan ke halaman penilaian.
+            if ($user->isPjOnly()) {
                 return redirect()->route('admin.nilai.index');
             }
 

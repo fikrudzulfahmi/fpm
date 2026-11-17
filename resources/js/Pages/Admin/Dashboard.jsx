@@ -229,8 +229,8 @@ export default function AdminDashboard({ stats }) {
                             <div className="flow__item">
                                 <span className="flow__num">3</span>
                                 <span className="flow__text">
-                                    <strong>Juri menilai</strong>
-                                    Nilai masuk per cabang dan bisa dipublikasikan.
+                                    <strong>PJ Lomba input nilai</strong>
+                                    Nilai dari kertas penilaian juri dimasukkan per cabang.
                                 </span>
                             </div>
                             <div className="flow__item">

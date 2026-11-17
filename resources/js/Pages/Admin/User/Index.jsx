@@ -11,7 +11,8 @@ const emptyForm = {
     whatsapp: '',
     password: '',
     password_confirmation: '',
-    access_level: 'juri',
+    access_level: 'pj',
+    competition_id: '',
 };
 
 function Badge({ children, tone = 'slate' }) {
@@ -29,7 +30,7 @@ function Badge({ children, tone = 'slate' }) {
     );
 }
 
-function AccountForm({ open, formId, title, subtitle, form, onSubmit, onCancel, withPassword, submitLabel = 'Simpan' }) {
+function AccountForm({ open, formId, title, subtitle, form, onSubmit, onCancel, withPassword, competitions = [], submitLabel = 'Simpan' }) {
     return (
         <Modal
             open={open}
@@ -111,17 +112,44 @@ function AccountForm({ open, formId, title, subtitle, form, onSubmit, onCancel, 
                         onChange={(e) => form.setData('access_level', e.target.value)}
                         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                     >
-                        <option value="juri">Juri — hanya penilaian</option>
+                        <option value="pj">PJ Lomba — peserta &amp; nilai satu cabang</option>
                         <option value="full">Panitia penuh — semua menu</option>
                     </select>
                     {form.errors.access_level && <p className="mt-1 text-xs text-rose-600">{form.errors.access_level}</p>}
                 </div>
+
+                {form.data.access_level === 'pj' && (
+                    <div className="sm:col-span-2">
+                        <label htmlFor={`${formId}-competition`} className="mb-1 block text-xs font-medium text-slate-600">
+                            Cabang lomba yang ditangani
+                        </label>
+                        <select
+                            id={`${formId}-competition`}
+                            value={form.data.competition_id ?? ''}
+                            onChange={(e) => form.setData('competition_id', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        >
+                            <option value="">— Pilih cabang lomba —</option>
+                            {competitions.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
+                        {form.errors.competition_id && (
+                            <p className="mt-1 text-xs text-rose-600">{form.errors.competition_id}</p>
+                        )}
+                        <p className="mt-1 text-[11.5px] text-slate-500">
+                            PJ hanya bisa melihat pendaftar dan menginput nilai cabang ini.
+                        </p>
+                    </div>
+                )}
             </form>
         </Modal>
     );
 }
 
-export default function UserIndex({ users = [], filters = {} }) {
+export default function UserIndex({ users = [], competitions = [], filters = {} }) {
     const [panel, setPanel] = useState(null);
     const [editing, setEditing] = useState(null);
     const [search, setSearch] = useState(filters.q ?? '');
@@ -129,7 +157,7 @@ export default function UserIndex({ users = [], filters = {} }) {
     const [passwordFor, setPasswordFor] = useState(null);
 
     const createForm = useForm({ ...emptyForm });
-    const editForm = useForm({ name: '', email: '', username: '', whatsapp: '', access_level: 'juri', is_active: true });
+    const editForm = useForm({ name: '', email: '', username: '', whatsapp: '', access_level: 'pj', competition_id: '', is_active: true });
     const passwordForm = useForm({ password: '', password_confirmation: '' });
 
     const submitCreate = (event) => {
@@ -151,6 +179,7 @@ export default function UserIndex({ users = [], filters = {} }) {
             username: user.username ?? '',
             whatsapp: user.whatsapp ?? '',
             access_level: user.access_level ?? 'full',
+            competition_id: user.competition_id ?? '',
             is_active: Boolean(user.is_active),
         });
         editForm.clearErrors();
@@ -194,14 +223,14 @@ export default function UserIndex({ users = [], filters = {} }) {
     };
 
     return (
-        <AppLayout title="Akun Panitia & Juri">
-            <Head title="Akun Panitia & Juri" />
+        <AppLayout title="Akun Panitia & PJ Lomba">
+            <Head title="Akun Panitia & PJ Lomba" />
 
             <div className="page-head-row">
                 <div>
-                    <h2 className="page-title">Akun Panitia & Juri</h2>
+                    <h2 className="page-title">Akun Panitia &amp; PJ Lomba</h2>
                     <p className="text-sm text-slate-500">
-                        Juri hanya melihat menu penilaian; panitia penuh mengelola seluruh data.
+                        PJ Lomba hanya melihat peserta & menilai cabang lombanya; panitia penuh mengelola seluruh data.
                     </p>
                 </div>
                 <button
@@ -218,10 +247,11 @@ export default function UserIndex({ users = [], filters = {} }) {
                 open={panel === 'create'}
                 formId="account-create"
                 title="Tambah akun"
-                subtitle="Akun baru untuk panitia atau juri."
+                subtitle="Akun baru untuk panitia penuh atau PJ Lomba."
                 form={createForm}
                 onSubmit={submitCreate}
                 onCancel={() => setPanel(null)}
+                competitions={competitions}
                 withPassword
                 submitLabel="Simpan akun"
             />
@@ -233,6 +263,7 @@ export default function UserIndex({ users = [], filters = {} }) {
                 subtitle={editing?.username}
                 form={editForm}
                 onSubmit={submitEdit}
+                competitions={competitions}
                 onCancel={() => {
                     setPanel(null);
                     setEditing(null);
@@ -286,8 +317,13 @@ export default function UserIndex({ users = [], filters = {} }) {
                                         </td>
                                         <td className="px-4 py-3">
                                             <Badge tone={user.access_level === 'full' ? 'sky' : 'amber'}>
-                                                {user.access_level === 'full' ? 'Panitia penuh' : 'Juri'}
+                                                {user.access_level === 'full' ? 'Panitia penuh' : 'PJ Lomba'}
                                             </Badge>
+                                            {user.access_level === 'pj' && (
+                                                <p className="mt-1 text-[11.5px] text-slate-500">
+                                                    {user.competition_name ?? 'Belum ada cabang'}
+                                                </p>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3">
                                             <Badge tone={user.is_active ? 'emerald' : 'slate'}>
@@ -331,7 +367,7 @@ export default function UserIndex({ users = [], filters = {} }) {
                             {users.length === 0 && (
                                 <tr>
                                     <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-400">
-                                        Belum ada akun panitia/juri.
+                                        Belum ada akun panitia/PJ Lomba.
                                     </td>
                                 </tr>
                             )}

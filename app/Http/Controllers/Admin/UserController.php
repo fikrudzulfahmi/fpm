@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Competition;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,15 +15,21 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Akun panitia & juri. Akun sekolah dikelola dari menu Sekolah (lewat klaim).
+ * Akun panitia & PJ Lomba. Akun sekolah dikelola dari menu Sekolah (lewat klaim).
+ *
+ * - Panitia penuh (access_level "full"): seluruh menu.
+ * - PJ Lomba (access_level "pj"): hanya daftar peserta + input nilai untuk
+ *   satu cabang lomba yang ditugaskan.
  */
 class UserController extends Controller
 {
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('q', ''));
+        $event = Event::current();
 
         $users = User::query()
+            ->with('competition:id,name')
             ->where('role', 'admin')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
@@ -30,7 +38,7 @@ class UserController extends Controller
                         ->orWhere('username', 'like', "%{$search}%");
                 });
             })
-            ->orderByRaw("FIELD(access_level, 'full', 'juri')")
+            ->orderByRaw("FIELD(access_level, 'full', 'pj')")
             ->orderBy('name')
             ->get()
             ->map(fn (User $user) => [
@@ -40,27 +48,30 @@ class UserController extends Controller
                 'username' => $user->username,
                 'whatsapp' => $user->whatsapp,
                 'access_level' => $user->access_level,
+                'competition_id' => $user->competition_id,
+                'competition_name' => $user->competition?->name,
                 'is_active' => (bool) $user->is_active,
                 'is_self' => $user->id === auth()->id(),
                 'created_at' => $user->created_at?->toIso8601String(),
             ]);
 
+        $competitions = $event
+            ? Competition::where('event_id', $event->id)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name'])
+            : collect();
+
         return Inertia::render('Admin/User/Index', [
             'users' => $users,
+            'competitions' => $competitions,
             'filters' => ['q' => $search],
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:150', 'unique:users,email'],
-            'username' => ['required', 'string', 'min:3', 'max:40', 'alpha_dash', 'unique:users,username'],
-            'whatsapp' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'access_level' => ['required', 'in:full,juri'],
-        ]);
+        $data = $this->validatePayload($request);
 
         User::create([
             'name' => $data['name'],
@@ -70,7 +81,8 @@ class UserController extends Controller
             'password' => $data['password'],
             'role' => 'admin',
             'access_level' => $data['access_level'],
-            'is_juri' => $data['access_level'] === 'juri',
+            'competition_id' => $data['access_level'] === 'pj' ? $data['competition_id'] : null,
+            'is_juri' => false,
             'is_active' => true,
             'email_verified_at' => now(),
         ]);
@@ -82,15 +94,7 @@ class UserController extends Controller
     {
         abort_unless($user->isAdmin(), 404);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
-            'username' => ['required', 'string', 'min:3', 'max:40', 'alpha_dash',
-                Rule::unique('users', 'username')->ignore($user->id)],
-            'whatsapp' => ['nullable', 'string', 'max:30'],
-            'access_level' => ['required', 'in:full,juri'],
-            'is_active' => ['required', 'boolean'],
-        ]);
+        $data = $this->validatePayload($request, $user);
 
         $this->guardSelfLockout($user, $data);
 
@@ -100,7 +104,8 @@ class UserController extends Controller
             'username' => $data['username'],
             'whatsapp' => $data['whatsapp'] ?? null,
             'access_level' => $data['access_level'],
-            'is_juri' => $data['access_level'] === 'juri',
+            'competition_id' => $data['access_level'] === 'pj' ? $data['competition_id'] : null,
+            'is_juri' => false,
             'is_active' => (bool) $data['is_active'],
         ]);
 
@@ -143,8 +148,39 @@ class UserController extends Controller
         return back()->with('success', 'Akun dihapus.');
     }
 
+    private function validatePayload(Request $request, ?User $user = null): array
+    {
+        // Pilihan cabang yang kosong dikirim sebagai "" oleh <select>.
+        $request->merge(['competition_id' => $request->input('competition_id') ?: null]);
+
+        $uniqueEmail = Rule::unique('users', 'email');
+        $uniqueUsername = Rule::unique('users', 'username');
+
+        if ($user) {
+            $uniqueEmail->ignore($user->id);
+            $uniqueUsername->ignore($user->id);
+        }
+
+        $rules = [
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:150', $uniqueEmail],
+            'username' => ['required', 'string', 'min:3', 'max:40', 'alpha_dash', $uniqueUsername],
+            'whatsapp' => ['nullable', 'string', 'max:30'],
+            'access_level' => ['required', 'in:full,pj'],
+            'competition_id' => ['nullable', 'integer', 'exists:competitions,id', 'required_if:access_level,pj'],
+        ];
+
+        if (! $user) {
+            $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
+        } else {
+            $rules['is_active'] = ['required', 'boolean'];
+        }
+
+        return $request->validate($rules);
+    }
+
     /**
-     * Cegah admin mengunci dirinya sendiri (nonaktif / turun jadi juri).
+     * Cegah admin mengunci dirinya sendiri (nonaktif / turun jadi PJ Lomba).
      */
     private function guardSelfLockout(User $user, array $data): void
     {
@@ -152,7 +188,7 @@ class UserController extends Controller
             return;
         }
 
-        $lockingOut = $data['access_level'] === 'juri' || ! (bool) $data['is_active'];
+        $lockingOut = $data['access_level'] === 'pj' || ! (bool) $data['is_active'];
 
         if ($lockingOut) {
             throw ValidationException::withMessages([

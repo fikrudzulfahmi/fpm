@@ -115,8 +115,12 @@ export default function AppLayout({ title, children }) {
     const eventName = event?.event_name ?? 'Festival Pelajar Muslim';
     const year = event?.year;
     const logo = theme?.logo_url ?? '/branding/logo-mark.png';
-    const roleLabel = isAdmin ? (user?.access_level === 'juri' ? 'Juri' : 'Panitia') : 'Akun Sekolah';
-    const identity = isAdmin ? roleLabel : user?.school?.school_name ?? roleLabel;
+    const canManage = Boolean(user?.can_manage);
+    const isPj = Boolean(user?.is_pj);
+    const roleLabel = isAdmin ? (isPj ? 'PJ Lomba' : 'Panitia') : 'Akun Sekolah';
+    const identity = isAdmin
+        ? (isPj ? user?.competition?.name ?? 'PJ Lomba' : roleLabel)
+        : user?.school?.school_name ?? roleLabel;
     const initials = (user?.name ?? 'FPM')
         .trim()
         .split(/\s+/)
@@ -125,17 +129,23 @@ export default function AppLayout({ title, children }) {
         .join('')
         .toUpperCase();
 
+    // Menu mengikuti hak akses: PJ Lomba hanya dashboard + penilaian cabangnya.
     const nav = isAdmin
-        ? [
-              { href: '/dashboard', label: 'Dashboard', icon: icons.home },
-              { href: '/admin/pendaftaran', label: 'Verifikasi Pendaftaran', icon: icons.list },
-              { href: '/admin/nilai', label: 'Penilaian', icon: icons.trophy },
-              { href: '/admin/event', label: 'Event & Lomba', icon: icons.calendar },
-              { href: '/admin/lomba', label: 'Manajemen Lomba', icon: icons.flag },
-              { href: '/admin/sekolah', label: 'Master Sekolah', icon: icons.school },
-              { href: '/admin/akun', label: 'Akun Panitia & Juri', icon: icons.users },
-              { href: '/admin/sertifikat', label: 'Sertifikat & Piagam', icon: icons.certificate },
-          ]
+        ? canManage
+            ? [
+                  { href: '/dashboard', label: 'Dashboard', icon: icons.home },
+                  { href: '/admin/pendaftaran', label: 'Verifikasi Pendaftaran', icon: icons.list },
+                  { href: '/admin/nilai', label: 'Penilaian', icon: icons.trophy },
+                  { href: '/admin/event', label: 'Event & Lomba', icon: icons.calendar },
+                  { href: '/admin/lomba', label: 'Manajemen Lomba', icon: icons.flag },
+                  { href: '/admin/sekolah', label: 'Master Sekolah', icon: icons.school },
+                  { href: '/admin/akun', label: 'Akun Panitia & PJ Lomba', icon: icons.users },
+                  { href: '/admin/sertifikat', label: 'Sertifikat & Piagam', icon: icons.certificate },
+              ]
+            : [
+                  { href: '/dashboard', label: 'Dashboard', icon: icons.home },
+                  { href: '/admin/nilai', label: 'Penilaian', icon: icons.trophy },
+              ]
         : [
               { href: '/dashboard', label: 'Dashboard', icon: icons.home },
               { href: '/daftar', label: 'Pendaftaran Baru', icon: icons.plus },
@@ -145,11 +155,16 @@ export default function AppLayout({ title, children }) {
 
     // Bottom bar: menu utama + tombol "Menu" yang membuka bottom sheet.
     const bottomItems = (isAdmin
-        ? [
-              { href: '/dashboard', label: 'Dashboard', icon: icons.home },
-              { href: '/admin/pendaftaran', label: 'Verifikasi', icon: icons.list },
-              { href: '/admin/nilai', label: 'Nilai', icon: icons.trophy },
-          ]
+        ? canManage
+            ? [
+                  { href: '/dashboard', label: 'Dashboard', icon: icons.home },
+                  { href: '/admin/pendaftaran', label: 'Verifikasi', icon: icons.list },
+                  { href: '/admin/nilai', label: 'Nilai', icon: icons.trophy },
+              ]
+            : [
+                  { href: '/dashboard', label: 'Dashboard', icon: icons.home },
+                  { href: '/admin/nilai', label: 'Nilai', icon: icons.trophy },
+              ]
         : [
               { href: '/dashboard', label: 'Dashboard', icon: icons.home },
               { href: '/daftar', label: 'Daftar', icon: icons.plus },
@@ -173,7 +188,7 @@ export default function AppLayout({ title, children }) {
                             </Link>
 
                             <nav className="admin-nav" aria-label="Navigasi panel">
-                                <span className="admin-nav__label">{isAdmin ? 'Menu panitia' : 'Menu sekolah'}</span>
+                                <span className="admin-nav__label">{isAdmin ? (isPj ? 'Menu PJ Lomba' : 'Menu panitia') : 'Menu sekolah'}</span>
                                 {nav.map((item) => (
                                     <Link
                                         key={item.href}
@@ -330,7 +345,7 @@ export default function AppLayout({ title, children }) {
 
                                 <div className="admin-sheet__head">
                                     <div className="min-w-0">
-                                        <p className="admin-sheet__title">{isAdmin ? 'Menu panitia' : 'Menu sekolah'}</p>
+                                        <p className="admin-sheet__title">{isAdmin ? (isPj ? 'Menu PJ Lomba' : 'Menu panitia') : 'Menu sekolah'}</p>
                                         <p className="admin-sheet__sub truncate">
                                             {eventName}
                                             {year ? ` · ${year}` : ''}

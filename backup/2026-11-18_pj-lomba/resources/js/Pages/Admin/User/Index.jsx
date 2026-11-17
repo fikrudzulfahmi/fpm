@@ -1,0 +1,404 @@
+import { useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
+import AppLayout from '../../../Layouts/AppLayout';
+import Modal from '../../../Components/Modal';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
+
+const emptyForm = {
+    name: '',
+    email: '',
+    username: '',
+    whatsapp: '',
+    password: '',
+    password_confirmation: '',
+    access_level: 'juri',
+};
+
+function Badge({ children, tone = 'slate' }) {
+    const tones = {
+        slate: 'bg-slate-100 text-slate-600 ring-slate-200',
+        emerald: 'bg-emerald-100 text-emerald-700 ring-emerald-200',
+        amber: 'bg-amber-100 text-amber-700 ring-amber-200',
+        sky: 'bg-sky-100 text-sky-700 ring-sky-200',
+    };
+
+    return (
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${tones[tone]}`}>
+            {children}
+        </span>
+    );
+}
+
+function AccountForm({ open, formId, title, subtitle, form, onSubmit, onCancel, withPassword, submitLabel = 'Simpan' }) {
+    return (
+        <Modal
+            open={open}
+            onClose={onCancel}
+            title={title}
+            subtitle={subtitle}
+            footer={
+                <>
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={onCancel}>
+                        Batal
+                    </button>
+                    <button type="submit" form={formId} className="btn btn--dark btn--sm" disabled={form.processing}>
+                        {form.processing ? 'Menyimpan…' : submitLabel}
+                    </button>
+                </>
+            }
+        >
+            <form id={formId} onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+                {[
+                    ['name', 'Nama lengkap', 'text'],
+                    ['email', 'Email', 'email'],
+                    ['username', 'Username', 'text'],
+                    ['whatsapp', 'No. WhatsApp', 'tel'],
+                ].map(([key, label, type]) => (
+                    <div key={key}>
+                        <label htmlFor={`${formId}-${key}`} className="mb-1 block text-xs font-medium text-slate-600">
+                            {label}
+                        </label>
+                        <input
+                            id={`${formId}-${key}`}
+                            type={type}
+                            value={form.data[key]}
+                            onChange={(e) => form.setData(key, e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                        {form.errors[key] && <p className="mt-1 text-xs text-rose-600">{form.errors[key]}</p>}
+                    </div>
+                ))}
+
+                {withPassword && (
+                    <>
+                        <div>
+                            <label htmlFor={`${formId}-password`} className="mb-1 block text-xs font-medium text-slate-600">
+                                Password
+                            </label>
+                            <input
+                                id={`${formId}-password`}
+                                type="password"
+                                autoComplete="new-password"
+                                value={form.data.password}
+                                onChange={(e) => form.setData('password', e.target.value)}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            />
+                            {form.errors.password && <p className="mt-1 text-xs text-rose-600">{form.errors.password}</p>}
+                        </div>
+                        <div>
+                            <label htmlFor={`${formId}-password2`} className="mb-1 block text-xs font-medium text-slate-600">
+                                Ulangi password
+                            </label>
+                            <input
+                                id={`${formId}-password2`}
+                                type="password"
+                                autoComplete="new-password"
+                                value={form.data.password_confirmation ?? ''}
+                                onChange={(e) => form.setData('password_confirmation', e.target.value)}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            />
+                        </div>
+                    </>
+                )}
+
+                <div className="sm:col-span-2">
+                    <label htmlFor={`${formId}-access`} className="mb-1 block text-xs font-medium text-slate-600">
+                        Hak akses
+                    </label>
+                    <select
+                        id={`${formId}-access`}
+                        value={form.data.access_level}
+                        onChange={(e) => form.setData('access_level', e.target.value)}
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    >
+                        <option value="juri">Juri — hanya penilaian</option>
+                        <option value="full">Panitia penuh — semua menu</option>
+                    </select>
+                    {form.errors.access_level && <p className="mt-1 text-xs text-rose-600">{form.errors.access_level}</p>}
+                </div>
+            </form>
+        </Modal>
+    );
+}
+
+export default function UserIndex({ users = [], filters = {} }) {
+    const [panel, setPanel] = useState(null);
+    const [editing, setEditing] = useState(null);
+    const [search, setSearch] = useState(filters.q ?? '');
+    const [confirmUser, setConfirmUser] = useState(null);
+    const [passwordFor, setPasswordFor] = useState(null);
+
+    const createForm = useForm({ ...emptyForm });
+    const editForm = useForm({ name: '', email: '', username: '', whatsapp: '', access_level: 'juri', is_active: true });
+    const passwordForm = useForm({ password: '', password_confirmation: '' });
+
+    const submitCreate = (event) => {
+        event.preventDefault();
+        createForm.post('/admin/akun', {
+            preserveScroll: true,
+            onSuccess: () => {
+                createForm.reset();
+                setPanel(null);
+            },
+        });
+    };
+
+    const startEdit = (user) => {
+        setEditing(user);
+        editForm.setData({
+            name: user.name ?? '',
+            email: user.email ?? '',
+            username: user.username ?? '',
+            whatsapp: user.whatsapp ?? '',
+            access_level: user.access_level ?? 'full',
+            is_active: Boolean(user.is_active),
+        });
+        editForm.clearErrors();
+        passwordForm.reset();
+        setPanel('edit');
+    };
+
+    const submitEdit = (event) => {
+        event.preventDefault();
+        editForm.put(`/admin/akun/${editing.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setPanel(null);
+                setEditing(null);
+            },
+        });
+    };
+
+    const submitPassword = (event) => {
+        event.preventDefault();
+        if (!passwordFor) return;
+
+        passwordForm.post(`/admin/akun/${passwordFor.id}/reset-password`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                passwordForm.reset();
+                setPasswordFor(null);
+            },
+        });
+    };
+
+    const destroy = (user) => setConfirmUser(user);
+
+    const runDelete = () => {
+        if (!confirmUser) return;
+
+        router.delete(`/admin/akun/${confirmUser.id}`, {
+            preserveScroll: true,
+            onFinish: () => setConfirmUser(null),
+        });
+    };
+
+    return (
+        <AppLayout title="Akun Panitia & Juri">
+            <Head title="Akun Panitia & Juri" />
+
+            <div className="page-head-row">
+                <div>
+                    <h2 className="page-title">Akun Panitia & Juri</h2>
+                    <p className="text-sm text-slate-500">
+                        Juri hanya melihat menu penilaian; panitia penuh mengelola seluruh data.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setPanel(panel === 'create' ? null : 'create')}
+                    className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
+                >
+                    Tambah akun
+                </button>
+            </div>
+
+            <AccountForm
+                open={panel === 'create'}
+                formId="account-create"
+                title="Tambah akun"
+                subtitle="Akun baru untuk panitia atau juri."
+                form={createForm}
+                onSubmit={submitCreate}
+                onCancel={() => setPanel(null)}
+                withPassword
+                submitLabel="Simpan akun"
+            />
+
+            <AccountForm
+                open={panel === 'edit' && Boolean(editing)}
+                formId="account-edit"
+                title="Edit akun"
+                subtitle={editing?.username}
+                form={editForm}
+                onSubmit={submitEdit}
+                onCancel={() => {
+                    setPanel(null);
+                    setEditing(null);
+                }}
+                submitLabel="Simpan perubahan"
+            />
+
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    router.get('/admin/akun', { q: search }, { preserveState: true, replace: true });
+                }}
+                className="mb-4 flex flex-wrap items-center gap-2"
+            >
+                <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari nama, username, email…"
+                    className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <button type="submit" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">
+                    Cari
+                </button>
+            </form>
+
+            <div className="panel panel--flush">
+                <div className="overflow-x-auto">
+                    <table className="data-table">
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <tr>
+                                <th className="px-4 py-2 font-semibold">Akun</th>
+                                <th className="px-4 py-2 font-semibold">Akses</th>
+                                <th className="px-4 py-2 font-semibold">Status</th>
+                                <th className="px-4 py-2 font-semibold">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="data-table__body">
+                            {users.map((user) => {
+                                const isEditing = panel === 'edit' && editing?.id === user.id;
+
+                                return (
+                                    <tr key={user.id} className={isEditing ? 'bg-slate-50' : undefined}>
+                                        <td className="px-4 py-3">
+                                            <p className="font-semibold text-slate-900">
+                                                {user.name}
+                                                {user.is_self && <span className="ml-2 text-xs font-normal text-slate-400">(Anda)</span>}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {user.username} · {user.email}
+                                            </p>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge tone={user.access_level === 'full' ? 'sky' : 'amber'}>
+                                                {user.access_level === 'full' ? 'Panitia penuh' : 'Juri'}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge tone={user.is_active ? 'emerald' : 'slate'}>
+                                                {user.is_active ? 'Aktif' : 'Nonaktif'}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => startEdit(user)}
+                                                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        passwordForm.reset();
+                                                        passwordForm.clearErrors();
+                                                        setPasswordFor(user);
+                                                    }}
+                                                    className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                                                >
+                                                    Reset sandi
+                                                </button>
+                                                {!user.is_self && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => destroy(user)}
+                                                        className="rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 hover:bg-rose-100"
+                                                    >
+                                                        Hapus
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {users.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-400">
+                                        Belum ada akun panitia/juri.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <Modal
+                open={Boolean(passwordFor)}
+                onClose={() => setPasswordFor(null)}
+                title="Reset password"
+                subtitle={passwordFor ? `Akun ${passwordFor.username}` : undefined}
+                footer={
+                    <>
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPasswordFor(null)}>
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="account-password-form"
+                            className="btn btn--dark btn--sm"
+                            disabled={passwordForm.processing}
+                        >
+                            {passwordForm.processing ? 'Menyimpan…' : 'Reset password'}
+                        </button>
+                    </>
+                }
+            >
+                <form id="account-password-form" onSubmit={submitPassword} className="grid gap-3">
+                    <div>
+                        <label htmlFor="new-password" className="mb-1 block text-xs font-medium text-slate-600">
+                            Password baru
+                        </label>
+                        <input
+                            id="new-password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={passwordForm.data.password}
+                            onChange={(e) => passwordForm.setData('password', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                        {passwordForm.errors.password && <p className="mt-1 text-xs text-rose-600">{passwordForm.errors.password}</p>}
+                    </div>
+                    <div>
+                        <label htmlFor="new-password2" className="mb-1 block text-xs font-medium text-slate-600">
+                            Ulangi password
+                        </label>
+                        <input
+                            id="new-password2"
+                            type="password"
+                            autoComplete="new-password"
+                            value={passwordForm.data.password_confirmation}
+                            onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                    </div>
+                </form>
+            </Modal>
+
+            <ConfirmDialog
+                open={Boolean(confirmUser)}
+                title="Hapus akun?"
+                message={`Akun ${confirmUser?.username} akan dihapus dan tidak bisa dipakai lagi.`}
+                confirmLabel="Hapus akun"
+                onConfirm={runDelete}
+                onClose={() => setConfirmUser(null)}
+            />
+        </AppLayout>
+    );
+}

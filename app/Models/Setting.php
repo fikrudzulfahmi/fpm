@@ -25,6 +25,20 @@ class Setting extends Model
     }
 
     /**
+     * Penanda tangan bawaan: Ketua Panitia (akun panitia penuh pertama).
+     * Peran juri tidak lagi dipakai, jadi tanda tangan tidak bergantung pada juri.
+     */
+    public static function defaultSignerName(): string
+    {
+        return User::query()
+            ->where('role', 'admin')
+            ->where('access_level', 'full')
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->value('name') ?? 'Ketua Panitia';
+    }
+
+    /**
      * Konfigurasi template sertifikat default.
      */
     public function certificateConfig(): array
@@ -40,7 +54,7 @@ class Setting extends Model
             'title' => $cfg['title'] ?? 'Sertifikat Peserta',
             'subtitle' => $cfg['subtitle'] ?? 'Diberikan kepada',
             'footer' => $cfg['footer'] ?? null,
-            'signer_name' => $cfg['signer_name'] ?? null,
+            'signer_name' => $cfg['signer_name'] ?? self::defaultSignerName(),
             'signer_title' => $cfg['signer_title'] ?? 'Ketua Panitia',
             'show_signature' => $cfg['show_signature'] ?? true,
             'paper' => $cfg['paper'] ?? 'landscape',
@@ -61,7 +75,7 @@ class Setting extends Model
             'accent_color' => $cfg['accent_color'] ?? '#0f766e',
             'bg_image_url' => $cfg['bg_image_url'] ?? null,
             'show_logo' => $cfg['show_logo'] ?? true,
-            'signer_name' => $cfg['signer_name'] ?? null,
+            'signer_name' => $cfg['signer_name'] ?? self::defaultSignerName(),
             'signer_title' => $cfg['signer_title'] ?? 'Ketua Panitia',
             'place' => $cfg['place'] ?? null,
             'number_prefix' => $cfg['number_prefix'] ?? null,

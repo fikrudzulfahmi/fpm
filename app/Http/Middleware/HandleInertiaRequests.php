@@ -32,6 +32,11 @@ class HandleInertiaRequests extends Middleware
                     'role' => $user->role,
                     'is_juri' => (bool) $user->is_juri,
                     'access_level' => $user->access_level,
+                    'is_pj' => $user->isPjOnly(),
+                    'competition' => $user->competition ? [
+                        'id' => $user->competition->id,
+                        'name' => $user->competition->name,
+                    ] : null,
                     'is_active' => (bool) $user->is_active,
                     'can_manage' => $user->canManage(),
                     'school' => $user->school ? [
