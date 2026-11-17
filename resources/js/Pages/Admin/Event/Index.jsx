@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { useConfirm } from '../../../Components/ConfirmProvider';
+import Modal from '../../../Components/Modal';
 
 const DEFAULT_PRIMARY = '#064b3d';
 const DEFAULT_SECONDARY = '#f3d95b';
@@ -92,6 +94,7 @@ function EventSettings({ event }) {
  * Backend: PUT /admin/event/{id}, POST/DELETE /admin/event/{id}/logo.
  */
 function EventBranding({ event }) {
+    const confirm = useConfirm();
     const [open, setOpen] = useState(false);
     const logoForm = useForm({ logo: null });
     const logo = event.theme?.logo_url ?? null;
@@ -125,8 +128,14 @@ function EventBranding({ event }) {
         });
     };
 
-    const removeLogo = () => {
-        if (!window.confirm('Hapus logo event ini?')) return;
+    const removeLogo = async () => {
+        const ok = await confirm({
+            title: 'Hapus logo event?',
+            message: 'Logo event akan dihapus dan tampilan publik kembali memakai logo bawaan FPM.',
+            confirmLabel: 'Hapus logo',
+        });
+        if (!ok) return;
+
         router.delete(`/admin/event/${event.id}/logo`, { preserveScroll: true });
     };
 
@@ -281,6 +290,8 @@ function EventBranding({ event }) {
 }
 
 export default function EventIndex({ events = [] }) {
+    const confirm = useConfirm();
+    const [createOpen, setCreateOpen] = useState(false);
     const createForm = useForm({
         event_name: '',
         year: new Date().getFullYear() + 1,
@@ -295,17 +306,33 @@ export default function EventIndex({ events = [] }) {
         e.preventDefault();
         createForm.post('/admin/event', {
             preserveScroll: true,
-            onSuccess: () => createForm.reset('event_name'),
+            onSuccess: () => {
+                createForm.reset('event_name');
+                setCreateOpen(false);
+            },
         });
     };
 
-    const activate = (id) => {
-        if (!window.confirm('Jadikan event ini satu-satunya event aktif?')) return;
+    const activate = async (id) => {
+        const ok = await confirm({
+            title: 'Aktifkan event ini?',
+            message: 'Event lain otomatis dinonaktifkan. Pendaftaran publik akan memakai event ini.',
+            confirmLabel: 'Aktifkan',
+            tone: 'primary',
+        });
+        if (!ok) return;
+
         router.post(`/admin/event/${id}/aktifkan`, {}, { preserveScroll: true });
     };
 
-    const destroy = (event) => {
-        if (!window.confirm(`Hapus event "${event.event_name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+    const destroy = async (event) => {
+        const ok = await confirm({
+            title: 'Hapus event?',
+            message: `Event "${event.event_name}" beserta cabang lomba dan pendaftarannya akan dihapus permanen.`,
+            confirmLabel: 'Hapus event',
+        });
+        if (!ok) return;
+
         router.delete(`/admin/event/${event.id}`, { preserveScroll: true });
     };
 
@@ -313,11 +340,21 @@ export default function EventIndex({ events = [] }) {
         <AppLayout title="Event & Lomba">
             <Head title="Event & Lomba" />
 
-            <div className="mb-5">
-                <h2 className="page-title">Manajemen Event</h2>
-                <p className="text-sm text-slate-500">
-                    Hanya satu event yang aktif pada satu waktu. Setelan nilai dan sertifikat disimpan per event.
-                </p>
+            <div className="page-head-row mb-5">
+                <div>
+                    <h2 className="page-title">Manajemen Event</h2>
+                    <p className="text-sm text-slate-500">
+                        Hanya satu event yang aktif pada satu waktu. Setelan nilai dan sertifikat disimpan per event.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setCreateOpen(true)}
+                    className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
+                >
+                    Buat event
+                </button>
             </div>
 
             <section className="panel panel--flush mb-6">
@@ -411,10 +448,29 @@ export default function EventIndex({ events = [] }) {
                 )}
             </section>
 
-            <section className="panel panel--pad">
-                <h3 className="panel__title mb-3">Buat Event Baru</h3>
-
-                <form onSubmit={submitCreate} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Modal
+                open={createOpen}
+                onClose={() => setCreateOpen(false)}
+                title="Buat event baru"
+                subtitle="Event aktif dipakai halaman publik dan pendaftaran."
+                size="lg"
+                footer={
+                    <>
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setCreateOpen(false)}>
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="event-create-form"
+                            className="btn btn--dark btn--sm"
+                            disabled={createForm.processing}
+                        >
+                            {createForm.processing ? 'Menyimpan…' : 'Buat event'}
+                        </button>
+                    </>
+                }
+            >
+                <form id="event-create-form" onSubmit={submitCreate} className="grid gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                         <label htmlFor="event_name" className="mb-1 block text-sm font-medium text-slate-700">
                             Nama Event <span className="text-rose-600">*</span>
@@ -497,18 +553,8 @@ export default function EventIndex({ events = [] }) {
                         />
                     </div>
 
-                    <div className="sm:col-span-2 lg:col-span-4">
-                        <button
-                            type="submit"
-                            disabled={createForm.processing}
-                            className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-60"
-                            style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
-                        >
-                            {createForm.processing ? 'Menyimpan…' : 'Buat Event'}
-                        </button>
-                    </div>
                 </form>
-            </section>
+            </Modal>
         </AppLayout>
     );
 }

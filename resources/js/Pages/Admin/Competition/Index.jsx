@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import Modal from '../../../Components/Modal';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 
 const slugify = (value) =>
     value
@@ -32,26 +34,34 @@ function StatCard({ label, value, accent }) {
     );
 }
 
-function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
+function CompetitionForm({ open, formId, title, subtitle, form, onSubmit, onCancel, lockSlug, submitLabel = 'Simpan cabang lomba' }) {
     const isGroup = form.data.category_type === 'group';
 
     return (
-        <form onSubmit={onSubmit} className="panel panel--pad-sm mb-5 grid gap-3 sm:grid-cols-3">
-            <div className="sm:col-span-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-700">{title}</p>
-                {onCancel && (
-                    <button type="button" onClick={onCancel} className="text-xs font-semibold text-slate-500">
-                        Tutup
+        <Modal
+            open={open}
+            onClose={onCancel}
+            title={title}
+            subtitle={subtitle}
+            size="lg"
+            footer={
+                <>
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={onCancel}>
+                        Batal
                     </button>
-                )}
-            </div>
-
+                    <button type="submit" form={formId} className="btn btn--dark btn--sm" disabled={form.processing}>
+                        {form.processing ? 'Menyimpan…' : submitLabel}
+                    </button>
+                </>
+            }
+        >
+            <form id={formId} onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-2">
-                <label htmlFor={`${title}-name`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-name`} className="mb-1 block text-xs font-medium text-slate-600">
                     Nama cabang lomba
                 </label>
                 <input
-                    id={`${title}-name`}
+                    id={`${formId}-name`}
                     value={form.data.name}
                     onChange={(e) => {
                         const name = e.target.value;
@@ -68,11 +78,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             </div>
 
             <div>
-                <label htmlFor={`${title}-slug`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-slug`} className="mb-1 block text-xs font-medium text-slate-600">
                     Slug URL
                 </label>
                 <input
-                    id={`${title}-slug`}
+                    id={`${formId}-slug`}
                     value={form.data.slug}
                     onChange={(e) => form.setData('slug', slugify(e.target.value))}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
@@ -81,11 +91,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             </div>
 
             <div>
-                <label htmlFor={`${title}-type`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-type`} className="mb-1 block text-xs font-medium text-slate-600">
                     Jenis peserta
                 </label>
                 <select
-                    id={`${title}-type`}
+                    id={`${formId}-type`}
                     value={form.data.category_type}
                     onChange={(e) => form.setData('category_type', e.target.value)}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -96,11 +106,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             </div>
 
             <div>
-                <label htmlFor={`${title}-gender`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-gender`} className="mb-1 block text-xs font-medium text-slate-600">
                     Kategori gender
                 </label>
                 <select
-                    id={`${title}-gender`}
+                    id={`${formId}-gender`}
                     value={form.data.gender_mode}
                     onChange={(e) => form.setData('gender_mode', e.target.value)}
                     disabled={form.data.category_type === 'group'}
@@ -116,11 +126,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             </div>
 
             <div>
-                <label htmlFor={`${title}-gq`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-gq`} className="mb-1 block text-xs font-medium text-slate-600">
                     Kuota total
                 </label>
                 <input
-                    id={`${title}-gq`}
+                    id={`${formId}-gq`}
                     type="number"
                     min={1}
                     value={form.data.global_quota}
@@ -131,11 +141,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             </div>
 
             <div>
-                <label htmlFor={`${title}-sq`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-sq`} className="mb-1 block text-xs font-medium text-slate-600">
                     Kuota per sekolah
                 </label>
                 <input
-                    id={`${title}-sq`}
+                    id={`${formId}-sq`}
                     type="number"
                     min={1}
                     value={form.data.school_quota}
@@ -148,11 +158,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             {isGroup && (
                 <>
                     <div>
-                        <label htmlFor={`${title}-min`} className="mb-1 block text-xs font-medium text-slate-600">
+                        <label htmlFor={`${formId}-min`} className="mb-1 block text-xs font-medium text-slate-600">
                             Anggota minimal
                         </label>
                         <input
-                            id={`${title}-min`}
+                            id={`${formId}-min`}
                             type="number"
                             min={1}
                             value={form.data.min_group_members ?? ''}
@@ -164,11 +174,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
                         )}
                     </div>
                     <div>
-                        <label htmlFor={`${title}-max`} className="mb-1 block text-xs font-medium text-slate-600">
+                        <label htmlFor={`${formId}-max`} className="mb-1 block text-xs font-medium text-slate-600">
                             Anggota maksimal
                         </label>
                         <input
-                            id={`${title}-max`}
+                            id={`${formId}-max`}
                             type="number"
                             min={1}
                             value={form.data.max_group_members ?? ''}
@@ -183,11 +193,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             )}
 
             <div>
-                <label htmlFor={`${title}-sort`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-sort`} className="mb-1 block text-xs font-medium text-slate-600">
                     Urutan tampil
                 </label>
                 <input
-                    id={`${title}-sort`}
+                    id={`${formId}-sort`}
                     type="number"
                     min={0}
                     value={form.data.sort_order}
@@ -207,11 +217,11 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
             </label>
 
             <div className="sm:col-span-3">
-                <label htmlFor={`${title}-desc`} className="mb-1 block text-xs font-medium text-slate-600">
+                <label htmlFor={`${formId}-desc`} className="mb-1 block text-xs font-medium text-slate-600">
                     Deskripsi / ketentuan
                 </label>
                 <textarea
-                    id={`${title}-desc`}
+                    id={`${formId}-desc`}
                     rows={3}
                     value={form.data.description ?? ''}
                     onChange={(e) => form.setData('description', e.target.value)}
@@ -219,23 +229,15 @@ function CompetitionForm({ title, form, onSubmit, onCancel, lockSlug }) {
                 />
             </div>
 
-            <div className="sm:col-span-3">
-                <button
-                    type="submit"
-                    disabled={form.processing}
-                    className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
-                >
-                    {form.processing ? 'Menyimpan…' : 'Simpan cabang lomba'}
-                </button>
-            </div>
-        </form>
+            </form>
+        </Modal>
     );
 }
 
 export default function CompetitionIndex({ event, competitions = [], stats = {} }) {
     const [panel, setPanel] = useState(null);
     const [editing, setEditing] = useState(null);
+    const [confirmCompetition, setConfirmCompetition] = useState(null);
 
     const createForm = useForm({ ...empty });
     const editForm = useForm({ ...empty });
@@ -285,9 +287,15 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
         router.post(`/admin/lomba/${competition.id}/status`, {}, { preserveScroll: true });
     };
 
-    const destroy = (competition) => {
-        if (!window.confirm(`Hapus cabang ${competition.name}? Pendaftaran yang sudah ditolak ikut terhapus.`)) return;
-        router.delete(`/admin/lomba/${competition.id}`, { preserveScroll: true });
+    const destroy = (competition) => setConfirmCompetition(competition);
+
+    const runDelete = () => {
+        if (!confirmCompetition) return;
+
+        router.delete(`/admin/lomba/${confirmCompetition.id}`, {
+            preserveScroll: true,
+            onFinish: () => setConfirmCompetition(null),
+        });
     };
 
     return (
@@ -322,30 +330,37 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
 
             <div className="mb-5 grid gap-3 sm:grid-cols-4">
                 <StatCard label="Cabang lomba" value={stats.total ?? 0} />
-                <StatCard label="Pendaftaran dibuka" value={stats.open ?? 0} accent="text-emerald-600" />
+                <StatCard label="Pendaftaran dibuka" value={stats.open ?? 0} accent="text-[#0a5b4a]" />
                 <StatCard label="Total kuota" value={stats.quota ?? 0} />
-                <StatCard label="Slot terpakai" value={stats.used ?? 0} accent="text-amber-600" />
+                <StatCard label="Slot terpakai" value={stats.used ?? 0} accent="text-[#b45309]" />
             </div>
 
-            {panel === 'create' && (
-                <CompetitionForm
-                    title="Cabang baru"
-                    form={createForm}
-                    onSubmit={submitCreate}
-                    onCancel={() => setPanel(null)}
-                    lockSlug={false}
-                />
-            )}
+            <CompetitionForm
+                open={panel === 'create'}
+                formId="competition-create"
+                title="Tambah cabang lomba"
+                subtitle="Kuota, jenis peserta, dan status pendaftaran."
+                form={createForm}
+                onSubmit={submitCreate}
+                onCancel={() => setPanel(null)}
+                lockSlug={false}
+                submitLabel="Simpan cabang"
+            />
 
-            {panel === 'edit' && editing && (
-                <CompetitionForm
-                    title={`Edit: ${editing.name}`}
-                    form={editForm}
-                    onSubmit={submitEdit}
-                    onCancel={() => setPanel(null)}
-                    lockSlug
-                />
-            )}
+            <CompetitionForm
+                open={panel === 'edit' && Boolean(editing)}
+                formId="competition-edit"
+                title="Edit cabang lomba"
+                subtitle={editing?.name}
+                form={editForm}
+                onSubmit={submitEdit}
+                onCancel={() => {
+                    setPanel(null);
+                    setEditing(null);
+                }}
+                lockSlug
+                submitLabel="Simpan perubahan"
+            />
 
             <div className="panel panel--flush">
                 <div className="overflow-x-auto">
@@ -456,6 +471,14 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
                     </table>
                 </div>
             </div>
+            <ConfirmDialog
+                open={Boolean(confirmCompetition)}
+                title="Hapus cabang lomba?"
+                message={`Cabang ${confirmCompetition?.name} akan dihapus. Pendaftaran dan nilai yang terkait ikut terhapus permanen.`}
+                confirmLabel="Hapus cabang"
+                onConfirm={runDelete}
+                onClose={() => setConfirmCompetition(null)}
+            />
         </AppLayout>
     );
 }

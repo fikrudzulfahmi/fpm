@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { useConfirm } from '../../../Components/ConfirmProvider';
 
 function ColorField({ id, label, value, onChange, error }) {
     return (
@@ -46,6 +47,7 @@ function TextField({ id, label, value, onChange, error, placeholder }) {
 }
 
 function BackgroundUploader({ target, currentUrl, onDone }) {
+    const confirm = useConfirm();
     const [file, setFile] = useState(null);
     const [busy, setBusy] = useState(false);
 
@@ -67,8 +69,13 @@ function BackgroundUploader({ target, currentUrl, onDone }) {
         });
     };
 
-    const remove = () => {
-        if (!window.confirm('Hapus latar ini?')) return;
+    const remove = async () => {
+        const ok = await confirm({
+            title: 'Hapus latar sertifikat?',
+            message: 'Latar yang dihapus akan kembali memakai latar bawaan tema.',
+            confirmLabel: 'Hapus latar',
+        });
+        if (!ok) return;
         router.delete('/admin/sertifikat/latar', {
             data: { target },
             preserveScroll: true,

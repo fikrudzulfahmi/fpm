@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import FlashMessage from '../Components/FlashMessage';
+import { ToastProvider } from '../Components/Toast';
+import { ConfirmProvider } from '../Components/ConfirmProvider';
 
 function Icon({ path, className = '' }) {
     return (
@@ -148,7 +149,9 @@ export default function AppLayout({ title, children }) {
 
     return (
         <div className="fpm-admin">
-            <div className="admin-shell">
+            <ToastProvider>
+                <ConfirmProvider>
+                <div className="admin-shell">
                 <aside className={`admin-side${open ? ' is-open' : ''}`} aria-label="Menu panel">
                     {sidebar}
                 </aside>
@@ -193,11 +196,12 @@ export default function AppLayout({ title, children }) {
                     </header>
 
                     <main className="admin-content">
-                        <FlashMessage />
                         {children}
                     </main>
                 </div>
-            </div>
+                </div>
+                </ConfirmProvider>
+            </ToastProvider>
         </div>
     );
 }

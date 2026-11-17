@@ -1,0 +1,239 @@
+/* ============================================================
+   Komponen bersama panel admin: modal, konfirmasi, toast.
+   Memakai token dari fpm-site.css.
+   ============================================================ */
+
+/* ---------- Modal ---------- */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.modal__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: rgba(5, 35, 30, 0.5);
+    backdrop-filter: blur(3px);
+    cursor: pointer;
+    animation: modalFade 0.18s ease both;
+}
+
+.modal__card {
+    position: relative;
+    width: 100%;
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 40px 80px -40px rgba(5, 35, 30, 0.65);
+    animation: modalIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    outline: none;
+}
+
+.modal__card--sm { max-width: 440px; }
+.modal__card--md { max-width: 620px; }
+.modal__card--lg { max-width: 820px; }
+
+.modal__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--line);
+    background: #fffdf7;
+    border-radius: 20px 20px 0 0;
+}
+
+.modal__title {
+    font-family: var(--H);
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    line-height: 1.3;
+}
+
+.modal__sub {
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+}
+
+.modal__close {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.modal__close svg { width: 16px; height: 16px; }
+.modal__close:hover { background: rgba(13, 48, 41, 0.07); color: var(--ink); }
+
+.modal__body {
+    padding: 20px 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.modal__text {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--ink-2);
+}
+
+.modal__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 22px;
+    border-top: 1px solid var(--line);
+    background: #fffdf7;
+    border-radius: 0 0 20px 20px;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.985); }
+}
+
+@keyframes modalFade {
+    from { opacity: 0; }
+}
+
+/* Tombol bahaya */
+.btn--danger {
+    --btn-bg: #a03030;
+    --btn-fg: #fff7f6;
+    --btn-bd: #8c2626;
+}
+.btn--danger:hover { --btn-bg: #8c2626; --btn-bd: #7a2020; }
+
+/* ---------- Toast ---------- */
+.toast-stack {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 100;
+    display: grid;
+    gap: 10px;
+    width: min(360px, calc(100vw - 36px));
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--paper);
+    box-shadow: 0 24px 48px -28px rgba(5, 35, 30, 0.6);
+    animation: toastIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.toast__icon {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+}
+
+.toast__icon svg { width: 16px; height: 16px; }
+
+.toast__text {
+    flex: 1;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    white-space: pre-line;
+}
+
+.toast__close {
+    flex: none;
+    border: 0;
+    background: transparent;
+    padding: 2px;
+    border-radius: 6px;
+    color: var(--ink-3);
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.toast__close svg { width: 14px; height: 14px; }
+.toast__close:hover { opacity: 1; background: rgba(0, 0, 0, 0.05); }
+
+.toast--success { border-color: rgba(8, 122, 91, 0.3); }
+.toast--success .toast__icon { background: var(--green-100); color: var(--green-800); }
+
+.toast--error { border-color: rgba(160, 48, 48, 0.3); }
+.toast--error .toast__icon { background: #fdeceb; color: #a03030; }
+
+.toast--info { border-color: rgba(226, 195, 63, 0.6); }
+.toast--info .toast__icon { background: var(--gold-soft); color: #6b5714; }
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+
+@media (max-width: 640px) {
+    .modal { padding: 12px; align-items: end; }
+    .modal__card { max-height: calc(100vh - 24px); border-radius: 18px; }
+    .modal__head { border-radius: 18px 18px 0 0; }
+    .modal__foot { border-radius: 0 0 18px 18px; }
+    .toast-stack { right: 12px; bottom: 12px; }
+}
+
+/* Form di dalam modal otomatis mengikuti tema */
+.modal :where(label) {
+    display: block;
+    margin-bottom: 4px;
+    font-family: var(--H);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.modal :where(input, select, textarea) {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--B);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.modal :where(input, select, textarea):focus {
+    outline: none;
+    border-color: var(--green-700);
+    background: var(--paper);
+    box-shadow: 0 0 0 3px rgba(243, 217, 91, 0.45);
+}
+
+.modal :where(textarea) { min-height: 110px; resize: vertical; }
+.modal :where(code) { font-size: 11.5px; }
+
+.modal__card { font-family: var(--B); color: var(--ink-2); }
+.toast { font-family: var(--B); }

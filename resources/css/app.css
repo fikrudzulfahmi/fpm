@@ -4,6 +4,8 @@
 @import './fpm-site.css';
 /* Tema panel admin & sekolah (memakai token yang sama). */
 @import './admin.css';
+/* Komponen bersama: modal, dialog konfirmasi, toast. */
+@import './components.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

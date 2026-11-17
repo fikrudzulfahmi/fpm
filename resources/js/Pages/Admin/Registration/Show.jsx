@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import StatusBadge, { AiStatusBadge } from '../../../Components/StatusBadge';
+import Modal from '../../../Components/Modal';
 import { formatDate, formatDateTime, waLink } from '../../../lib/format';
 
 function Info({ label, children }) {
@@ -157,49 +158,47 @@ export default function RegistrationShow({ registration }) {
                             </p>
                         )}
 
-                        {rejectOpen && (
-                            <form onSubmit={doReject} className="mt-4 rounded-lg border border-rose-200 bg-rose-50/60 p-4">
-                                <label htmlFor="rejection_reason" className="block text-sm font-semibold text-rose-900">
-                                    Alasan penolakan
-                                </label>
-                                <textarea
-                                    id="rejection_reason"
-                                    name="rejection_reason"
-                                    rows={3}
-                                    maxLength={500}
-                                    required
-                                    value={rejectForm.data.rejection_reason}
-                                    onChange={(e) => rejectForm.setData('rejection_reason', e.target.value)}
-                                    placeholder="Minimal 5 karakter, misalnya: surat rekomendasi tidak sesuai nama peserta."
-                                    className={`mt-1 block w-full rounded-lg border bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 ${
-                                        rejectForm.errors.rejection_reason
-                                            ? 'border-rose-400 focus:ring-rose-200'
-                                            : 'border-slate-300 focus:ring-slate-200'
-                                    }`}
-                                />
-                                {rejectForm.errors.rejection_reason && (
-                                    <p className="mt-1 text-xs font-medium text-rose-700">
-                                        {rejectForm.errors.rejection_reason}
-                                    </p>
-                                )}
-                                <div className="mt-2 flex gap-2">
-                                    <button
-                                        type="submit"
-                                        disabled={rejectForm.processing}
-                                        className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
-                                    >
-                                        {rejectForm.processing ? 'Mengirim…' : 'Konfirmasi Tolak'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setRejectOpen(false)}
-                                        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-white"
-                                    >
-                                        Batal
-                                    </button>
-                                </div>
-                            </form>
-                        )}
+            <Modal
+                open={rejectOpen}
+                onClose={() => setRejectOpen(false)}
+                title="Tolak pendaftaran"
+                subtitle={`${r.group_name ?? r.school?.school_name ?? ''} — alasan akan tampil di dashboard sekolah.`}
+                footer={
+                    <>
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setRejectOpen(false)}>
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="reject-form"
+                            className="btn btn--danger btn--sm"
+                            disabled={rejectForm.processing}
+                        >
+                            {rejectForm.processing ? 'Mengirim…' : 'Konfirmasi tolak'}
+                        </button>
+                    </>
+                }
+            >
+                <form id="reject-form" onSubmit={doReject}>
+                    <label htmlFor="rejection_reason" className="block text-sm font-semibold text-slate-700">
+                        Alasan penolakan
+                    </label>
+                    <textarea
+                        id="rejection_reason"
+                        name="rejection_reason"
+                        rows={4}
+                        maxLength={500}
+                        required
+                        value={rejectForm.data.rejection_reason}
+                        onChange={(e) => rejectForm.setData('rejection_reason', e.target.value)}
+                        placeholder="Minimal 5 karakter, misalnya: surat rekomendasi tidak sesuai nama peserta."
+                        className="mt-1 block w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none"
+                    />
+                    {rejectForm.errors.rejection_reason && (
+                        <p className="mt-1 text-xs font-medium text-rose-700">{rejectForm.errors.rejection_reason}</p>
+                    )}
+                </form>
+            </Modal>
                     </section>
                 </div>
 

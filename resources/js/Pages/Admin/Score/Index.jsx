@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { useConfirm } from '../../../Components/ConfirmProvider';
 
 function ScoreRow({ row, competitionId, separate }) {
     const form = useForm({
@@ -94,6 +95,7 @@ export default function ScoreIndex({
     publish_scores,
     gender_mode = 'mixed',
 }) {
+    const confirm = useConfirm();
     const separate = gender_mode === 'separate';
     const [competitionId, setCompetitionId] = useState(String(competition_id ?? ''));
     const rows = registrations ?? [];
@@ -110,9 +112,16 @@ export default function ScoreIndex({
         });
     };
 
-    const drawOrder = () => {
+    const drawOrder = async () => {
         if (!competitionId) return;
-        if (!window.confirm('Acak ulang nomor urut tampil untuk cabang ini?')) return;
+        const ok = await confirm({
+            title: 'Acak ulang nomor tampil?',
+            message: 'Urutan tampil peserta pada cabang ini akan diacak ulang. Penilaian yang sudah ada tidak berubah.',
+            confirmLabel: 'Acak ulang',
+            tone: 'primary',
+        });
+        if (!ok) return;
+
         router.post(`/admin/lomba/${competitionId}/undian`, {}, { preserveScroll: true });
     };
 

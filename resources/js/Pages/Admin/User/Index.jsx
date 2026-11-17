@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import Modal from '../../../Components/Modal';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 
 const emptyForm = {
     name: '',
@@ -27,96 +29,95 @@ function Badge({ children, tone = 'slate' }) {
     );
 }
 
-function AccountForm({ title, form, onSubmit, onCancel, withPassword }) {
+function AccountForm({ open, formId, title, subtitle, form, onSubmit, onCancel, withPassword, submitLabel = 'Simpan' }) {
     return (
-        <form onSubmit={onSubmit} className="panel panel--pad-sm mb-5 grid gap-3 sm:grid-cols-3">
-            <div className="sm:col-span-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-700">{title}</p>
-                {onCancel && (
-                    <button type="button" onClick={onCancel} className="text-xs font-semibold text-slate-500">
-                        Tutup
-                    </button>
-                )}
-            </div>
-
-            {[
-                ['name', 'Nama lengkap', 'text'],
-                ['email', 'Email', 'email'],
-                ['username', 'Username', 'text'],
-                ['whatsapp', 'No. WhatsApp', 'tel'],
-            ].map(([key, label, type]) => (
-                <div key={key}>
-                    <label htmlFor={`${title}-${key}`} className="mb-1 block text-xs font-medium text-slate-600">
-                        {label}
-                    </label>
-                    <input
-                        id={`${title}-${key}`}
-                        type={type}
-                        value={form.data[key]}
-                        onChange={(e) => form.setData(key, e.target.value)}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
-                    {form.errors[key] && <p className="mt-1 text-xs text-rose-600">{form.errors[key]}</p>}
-                </div>
-            ))}
-
-            {withPassword && (
+        <Modal
+            open={open}
+            onClose={onCancel}
+            title={title}
+            subtitle={subtitle}
+            footer={
                 <>
-                    <div>
-                        <label htmlFor={`${title}-password`} className="mb-1 block text-xs font-medium text-slate-600">
-                            Password
-                        </label>
-                        <input
-                            id={`${title}-password`}
-                            type="password"
-                            value={form.data.password}
-                            onChange={(e) => form.setData('password', e.target.value)}
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                        {form.errors.password && <p className="mt-1 text-xs text-rose-600">{form.errors.password}</p>}
-                    </div>
-                    <div>
-                        <label htmlFor={`${title}-password2`} className="mb-1 block text-xs font-medium text-slate-600">
-                            Ulangi password
-                        </label>
-                        <input
-                            id={`${title}-password2`}
-                            type="password"
-                            value={form.data.password_confirmation ?? ''}
-                            onChange={(e) => form.setData('password_confirmation', e.target.value)}
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                    </div>
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={onCancel}>
+                        Batal
+                    </button>
+                    <button type="submit" form={formId} className="btn btn--dark btn--sm" disabled={form.processing}>
+                        {form.processing ? 'Menyimpan…' : submitLabel}
+                    </button>
                 </>
-            )}
+            }
+        >
+            <form id={formId} onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+                {[
+                    ['name', 'Nama lengkap', 'text'],
+                    ['email', 'Email', 'email'],
+                    ['username', 'Username', 'text'],
+                    ['whatsapp', 'No. WhatsApp', 'tel'],
+                ].map(([key, label, type]) => (
+                    <div key={key}>
+                        <label htmlFor={`${formId}-${key}`} className="mb-1 block text-xs font-medium text-slate-600">
+                            {label}
+                        </label>
+                        <input
+                            id={`${formId}-${key}`}
+                            type={type}
+                            value={form.data[key]}
+                            onChange={(e) => form.setData(key, e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                        {form.errors[key] && <p className="mt-1 text-xs text-rose-600">{form.errors[key]}</p>}
+                    </div>
+                ))}
 
-            <div>
-                <label htmlFor={`${title}-access`} className="mb-1 block text-xs font-medium text-slate-600">
-                    Hak akses
-                </label>
-                <select
-                    id={`${title}-access`}
-                    value={form.data.access_level}
-                    onChange={(e) => form.setData('access_level', e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                >
-                    <option value="juri">Juri — hanya penilaian</option>
-                    <option value="full">Panitia penuh — semua menu</option>
-                </select>
-                {form.errors.access_level && <p className="mt-1 text-xs text-rose-600">{form.errors.access_level}</p>}
-            </div>
+                {withPassword && (
+                    <>
+                        <div>
+                            <label htmlFor={`${formId}-password`} className="mb-1 block text-xs font-medium text-slate-600">
+                                Password
+                            </label>
+                            <input
+                                id={`${formId}-password`}
+                                type="password"
+                                autoComplete="new-password"
+                                value={form.data.password}
+                                onChange={(e) => form.setData('password', e.target.value)}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            />
+                            {form.errors.password && <p className="mt-1 text-xs text-rose-600">{form.errors.password}</p>}
+                        </div>
+                        <div>
+                            <label htmlFor={`${formId}-password2`} className="mb-1 block text-xs font-medium text-slate-600">
+                                Ulangi password
+                            </label>
+                            <input
+                                id={`${formId}-password2`}
+                                type="password"
+                                autoComplete="new-password"
+                                value={form.data.password_confirmation ?? ''}
+                                onChange={(e) => form.setData('password_confirmation', e.target.value)}
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            />
+                        </div>
+                    </>
+                )}
 
-            <div className="sm:col-span-3">
-                <button
-                    type="submit"
-                    disabled={form.processing}
-                    className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
-                >
-                    {form.processing ? 'Menyimpan…' : 'Simpan'}
-                </button>
-            </div>
-        </form>
+                <div className="sm:col-span-2">
+                    <label htmlFor={`${formId}-access`} className="mb-1 block text-xs font-medium text-slate-600">
+                        Hak akses
+                    </label>
+                    <select
+                        id={`${formId}-access`}
+                        value={form.data.access_level}
+                        onChange={(e) => form.setData('access_level', e.target.value)}
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    >
+                        <option value="juri">Juri — hanya penilaian</option>
+                        <option value="full">Panitia penuh — semua menu</option>
+                    </select>
+                    {form.errors.access_level && <p className="mt-1 text-xs text-rose-600">{form.errors.access_level}</p>}
+                </div>
+            </form>
+        </Modal>
     );
 }
 
@@ -124,6 +125,8 @@ export default function UserIndex({ users = [], filters = {} }) {
     const [panel, setPanel] = useState(null);
     const [editing, setEditing] = useState(null);
     const [search, setSearch] = useState(filters.q ?? '');
+    const [confirmUser, setConfirmUser] = useState(null);
+    const [passwordFor, setPasswordFor] = useState(null);
 
     const createForm = useForm({ ...emptyForm });
     const editForm = useForm({ name: '', email: '', username: '', whatsapp: '', access_level: 'juri', is_active: true });
@@ -168,15 +171,26 @@ export default function UserIndex({ users = [], filters = {} }) {
 
     const submitPassword = (event) => {
         event.preventDefault();
-        passwordForm.post(`/admin/akun/${editing.id}/reset-password`, {
+        if (!passwordFor) return;
+
+        passwordForm.post(`/admin/akun/${passwordFor.id}/reset-password`, {
             preserveScroll: true,
-            onSuccess: () => passwordForm.reset(),
+            onSuccess: () => {
+                passwordForm.reset();
+                setPasswordFor(null);
+            },
         });
     };
 
-    const destroy = (user) => {
-        if (!window.confirm(`Hapus akun ${user.username}?`)) return;
-        router.delete(`/admin/akun/${user.id}`, { preserveScroll: true });
+    const destroy = (user) => setConfirmUser(user);
+
+    const runDelete = () => {
+        if (!confirmUser) return;
+
+        router.delete(`/admin/akun/${confirmUser.id}`, {
+            preserveScroll: true,
+            onFinish: () => setConfirmUser(null),
+        });
     };
 
     return (
@@ -200,72 +214,31 @@ export default function UserIndex({ users = [], filters = {} }) {
                 </button>
             </div>
 
-            {panel === 'create' && (
-                <AccountForm
-                    title="Akun baru"
-                    form={createForm}
-                    onSubmit={submitCreate}
-                    onCancel={() => setPanel(null)}
-                    withPassword
-                />
-            )}
+            <AccountForm
+                open={panel === 'create'}
+                formId="account-create"
+                title="Tambah akun"
+                subtitle="Akun baru untuk panitia atau juri."
+                form={createForm}
+                onSubmit={submitCreate}
+                onCancel={() => setPanel(null)}
+                withPassword
+                submitLabel="Simpan akun"
+            />
 
-            {panel === 'edit' && editing && (
-                <>
-                    <AccountForm
-                        title={`Edit: ${editing.username}`}
-                        form={editForm}
-                        onSubmit={submitEdit}
-                        onCancel={() => setPanel(null)}
-                        withPassword={false}
-                    />
-
-                    <form
-                        onSubmit={submitPassword}
-                        className="mb-5 grid gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm sm:grid-cols-3"
-                    >
-                        <div className="sm:col-span-3">
-                            <p className="text-sm font-semibold text-amber-900">Reset password</p>
-                        </div>
-                        <div>
-                            <label htmlFor="new-password" className="mb-1 block text-xs font-medium text-amber-900">
-                                Password baru
-                            </label>
-                            <input
-                                id="new-password"
-                                type="password"
-                                value={passwordForm.data.password}
-                                onChange={(e) => passwordForm.setData('password', e.target.value)}
-                                className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
-                            />
-                            {passwordForm.errors.password && (
-                                <p className="mt-1 text-xs text-rose-700">{passwordForm.errors.password}</p>
-                            )}
-                        </div>
-                        <div>
-                            <label htmlFor="new-password2" className="mb-1 block text-xs font-medium text-amber-900">
-                                Ulangi
-                            </label>
-                            <input
-                                id="new-password2"
-                                type="password"
-                                value={passwordForm.data.password_confirmation}
-                                onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
-                                className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <div className="flex items-end">
-                            <button
-                                type="submit"
-                                disabled={passwordForm.processing}
-                                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                            >
-                                Reset
-                            </button>
-                        </div>
-                    </form>
-                </>
-            )}
+            <AccountForm
+                open={panel === 'edit' && Boolean(editing)}
+                formId="account-edit"
+                title="Edit akun"
+                subtitle={editing?.username}
+                form={editForm}
+                onSubmit={submitEdit}
+                onCancel={() => {
+                    setPanel(null);
+                    setEditing(null);
+                }}
+                submitLabel="Simpan perubahan"
+            />
 
             <form
                 onSubmit={(e) => {
@@ -330,6 +303,17 @@ export default function UserIndex({ users = [], filters = {} }) {
                                                 >
                                                     Edit
                                                 </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        passwordForm.reset();
+                                                        passwordForm.clearErrors();
+                                                        setPasswordFor(user);
+                                                    }}
+                                                    className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                                                >
+                                                    Reset sandi
+                                                </button>
                                                 {!user.is_self && (
                                                     <button
                                                         type="button"
@@ -355,6 +339,66 @@ export default function UserIndex({ users = [], filters = {} }) {
                     </table>
                 </div>
             </div>
+            <Modal
+                open={Boolean(passwordFor)}
+                onClose={() => setPasswordFor(null)}
+                title="Reset password"
+                subtitle={passwordFor ? `Akun ${passwordFor.username}` : undefined}
+                footer={
+                    <>
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPasswordFor(null)}>
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            form="account-password-form"
+                            className="btn btn--dark btn--sm"
+                            disabled={passwordForm.processing}
+                        >
+                            {passwordForm.processing ? 'Menyimpan…' : 'Reset password'}
+                        </button>
+                    </>
+                }
+            >
+                <form id="account-password-form" onSubmit={submitPassword} className="grid gap-3">
+                    <div>
+                        <label htmlFor="new-password" className="mb-1 block text-xs font-medium text-slate-600">
+                            Password baru
+                        </label>
+                        <input
+                            id="new-password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={passwordForm.data.password}
+                            onChange={(e) => passwordForm.setData('password', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                        {passwordForm.errors.password && <p className="mt-1 text-xs text-rose-600">{passwordForm.errors.password}</p>}
+                    </div>
+                    <div>
+                        <label htmlFor="new-password2" className="mb-1 block text-xs font-medium text-slate-600">
+                            Ulangi password
+                        </label>
+                        <input
+                            id="new-password2"
+                            type="password"
+                            autoComplete="new-password"
+                            value={passwordForm.data.password_confirmation}
+                            onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                    </div>
+                </form>
+            </Modal>
+
+            <ConfirmDialog
+                open={Boolean(confirmUser)}
+                title="Hapus akun?"
+                message={`Akun ${confirmUser?.username} akan dihapus dan tidak bisa dipakai lagi.`}
+                confirmLabel="Hapus akun"
+                onConfirm={runDelete}
+                onClose={() => setConfirmUser(null)}
+            />
         </AppLayout>
     );
 }
