@@ -238,9 +238,29 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
     const [panel, setPanel] = useState(null);
     const [editing, setEditing] = useState(null);
     const [confirmCompetition, setConfirmCompetition] = useState(null);
+    const [pjFor, setPjFor] = useState(null);
 
     const createForm = useForm({ ...empty });
     const editForm = useForm({ ...empty });
+    const pjForm = useForm({ name: '', email: '', username: '', whatsapp: '', password: '' });
+
+    const openPj = (competition) => {
+        pjForm.reset();
+        pjForm.clearErrors();
+        setPjFor(competition);
+    };
+
+    const submitPj = (e) => {
+        e.preventDefault();
+
+        pjForm.post(`/admin/lomba/${pjFor.id}/pj-akun`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setPjFor(null);
+                pjForm.reset();
+            },
+        });
+    };
 
     const submitCreate = (e) => {
         e.preventDefault();
@@ -443,6 +463,14 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
                                             <div className="flex flex-wrap gap-2">
                                                 <button
                                                     type="button"
+                                                    onClick={() => openPj(competition)}
+                                                    className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+                                                >
+                                                    Akun PJ
+                                                    {competition.pj_count > 0 ? ` (${competition.pj_count})` : ''}
+                                                </button>
+                                                <button
+                                                    type="button"
                                                     onClick={() => startEdit(competition)}
                                                     className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                 >
@@ -471,6 +499,90 @@ export default function CompetitionIndex({ event, competitions = [], stats = {} 
                     </table>
                 </div>
             </div>
+            <Modal
+                open={Boolean(pjFor)}
+                onClose={() => setPjFor(null)}
+                title="Akun PJ Lomba"
+                subtitle={pjFor ? pjFor.name : undefined}
+                footer={
+                    <>
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPjFor(null)}>
+                            Batal
+                        </button>
+                        <button type="submit" form="pj-account-form" className="btn btn--dark btn--sm" disabled={pjForm.processing}>
+                            {pjForm.processing ? 'Menyimpan…' : 'Buat akun PJ'}
+                        </button>
+                    </>
+                }
+            >
+                <form id="pj-account-form" onSubmit={submitPj} className="grid gap-3 sm:grid-cols-2">
+                    <p className="sm:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[12.5px] text-emerald-900">
+                        Akun ini hanya bisa melihat peserta &amp; menilai cabang <strong>{pjFor?.name}</strong>.
+                    </p>
+
+                    <div className="sm:col-span-2">
+                        <label htmlFor="pj-name" className="mb-1 block text-xs font-medium text-slate-600">Nama lengkap</label>
+                        <input
+                            id="pj-name"
+                            value={pjForm.data.name}
+                            onChange={(e) => pjForm.setData('name', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            placeholder="Nama PJ Lomba"
+                        />
+                        {pjForm.errors.name && <p className="mt-1 text-xs text-rose-600">{pjForm.errors.name}</p>}
+                    </div>
+
+                    <div>
+                        <label htmlFor="pj-username" className="mb-1 block text-xs font-medium text-slate-600">Username</label>
+                        <input
+                            id="pj-username"
+                            value={pjForm.data.username}
+                            onChange={(e) => pjForm.setData('username', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            placeholder="pjmtq"
+                        />
+                        {pjForm.errors.username && <p className="mt-1 text-xs text-rose-600">{pjForm.errors.username}</p>}
+                    </div>
+
+                    <div>
+                        <label htmlFor="pj-email" className="mb-1 block text-xs font-medium text-slate-600">Email</label>
+                        <input
+                            id="pj-email"
+                            type="email"
+                            value={pjForm.data.email}
+                            onChange={(e) => pjForm.setData('email', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            placeholder="pj@contoh.sch.id"
+                        />
+                        {pjForm.errors.email && <p className="mt-1 text-xs text-rose-600">{pjForm.errors.email}</p>}
+                    </div>
+
+                    <div>
+                        <label htmlFor="pj-wa" className="mb-1 block text-xs font-medium text-slate-600">WhatsApp</label>
+                        <input
+                            id="pj-wa"
+                            value={pjForm.data.whatsapp}
+                            onChange={(e) => pjForm.setData('whatsapp', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            placeholder="08xxxxxxxxxx"
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="pj-password" className="mb-1 block text-xs font-medium text-slate-600">Sandi awal</label>
+                        <input
+                            id="pj-password"
+                            type="text"
+                            value={pjForm.data.password}
+                            onChange={(e) => pjForm.setData('password', e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            placeholder="Minimal 8 karakter"
+                        />
+                        {pjForm.errors.password && <p className="mt-1 text-xs text-rose-600">{pjForm.errors.password}</p>}
+                    </div>
+                </form>
+            </Modal>
+
             <ConfirmDialog
                 open={Boolean(confirmCompetition)}
                 title="Hapus cabang lomba?"

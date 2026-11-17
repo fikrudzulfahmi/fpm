@@ -177,6 +177,8 @@ Route::middleware(['auth', 'admin', 'full-admin'])
             ->name('competitions.update');
         Route::post('/lomba/{competition}/status', [CompetitionController::class, 'toggleOpen'])
             ->name('competitions.status');
+        Route::post('/lomba/{competition}/pj-akun', [CompetitionController::class, 'createPjAccount'])
+            ->name('competitions.pj');
         Route::post('/lomba/{competition}/undian', [CompetitionController::class, 'drawOrder'])
             ->name('competitions.draw');
         Route::delete('/lomba/{competition}', [CompetitionController::class, 'destroy'])

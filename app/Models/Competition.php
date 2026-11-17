@@ -42,6 +42,14 @@ class Competition extends Model
             ->orderBy('id');
     }
 
+    /**
+     * Akun PJ Lomba yang ditugaskan ke cabang ini.
+     */
+    public function pjAccounts(): HasMany
+    {
+        return $this->hasMany(User::class, 'competition_id');
+    }
+
     public function isGroup(): bool
     {
         return $this->category_type === 'group';

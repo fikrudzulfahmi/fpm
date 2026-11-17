@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Competition;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ class CompetitionController extends Controller
             ->withCount(['registrations as used_slots' => fn ($query) => $query
                 ->whereIn('status', ['pending', 'approved'])])
             ->withCount(['registrations as total_registrations'])
+            ->withCount('pjAccounts')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
@@ -48,6 +50,7 @@ class CompetitionController extends Controller
                 'used_putri' => $c->registrations()->whereIn('status', ['pending', 'approved'])->where('gender', 'P')->count(),
                 'remaining_slots' => max(0, $c->global_quota - $c->used_slots),
                 'total_registrations' => $c->total_registrations,
+                'pj_count' => $c->pj_accounts_count,
             ]);
 
         return Inertia::render('Admin/Competition/Index', [
@@ -88,6 +91,42 @@ class CompetitionController extends Controller
 
         return redirect()->route('admin.competitions.index')
             ->with('success', 'Cabang lomba diperbarui.');
+    }
+
+    /**
+     * Buat akun PJ Lomba langsung untuk cabang ini (panitia penuh).
+     */
+    public function createPjAccount(Request $request, Competition $competition): RedirectResponse
+    {
+        $event = Event::current();
+        abort_if(! $event || (int) $competition->event_id !== (int) $event->id, 404);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:150', 'unique:users,email'],
+            'username' => ['required', 'string', 'min:3', 'max:40', 'alpha_dash', 'unique:users,username'],
+            'whatsapp' => ['nullable', 'string', 'max:30'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'username' => $data['username'],
+            'whatsapp' => $data['whatsapp'] ?? null,
+            'password' => $data['password'],
+            'role' => 'admin',
+            'access_level' => 'pj',
+            'competition_id' => $competition->id,
+            'is_juri' => false,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        return back()->with(
+            'success',
+            "Akun PJ Lomba {$competition->name} dibuat: {$data['username']}."
+        );
     }
 
     /**

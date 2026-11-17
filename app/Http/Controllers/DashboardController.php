@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Competition;
 use App\Models\Event;
 use App\Models\Registration;
+use App\Models\Score;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,9 +18,9 @@ class DashboardController extends Controller
         $user = $request->user();
 
         if ($user->isAdmin()) {
-            // Akun PJ Lomba langsung diarahkan ke halaman penilaian.
+            // Akun PJ Lomba punya dashboard sendiri untuk cabang lombanya.
             if ($user->isPjOnly()) {
-                return redirect()->route('admin.nilai.index');
+                return $this->pjDashboard($user);
             }
 
             return $this->adminDashboard();
@@ -75,6 +76,79 @@ class DashboardController extends Controller
                 'approved_count' => $approvedCount,
                 'per_competition' => $perCompetition,
             ],
+        ]);
+    }
+
+
+    /**
+     * Dashboard PJ Lomba: fokus pada satu cabang — peserta, progres penilaian,
+     * dan peringkat sementara (tanpa data koreksi panitia).
+     */
+    private function pjDashboard($user): Response
+    {
+        $event = Event::current();
+        $competition = $user->competition;
+
+        $approved = 0;
+        $scored = 0;
+        $published = false;
+        $criteria = collect();
+        $top = collect();
+
+        if ($competition) {
+            $criteria = $competition->criteria()->get(['id', 'name', 'weight', 'max_value'])
+                ->map(fn ($c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'weight' => (float) $c->weight,
+                    'max_value' => (float) $c->max_value,
+                ])
+                ->values();
+        }
+
+        if ($event && $competition) {
+            $published = (bool) $event->setting()->publish_scores;
+
+            $base = Registration::where('event_id', $event->id)
+                ->where('competition_id', $competition->id)
+                ->where('status', 'approved');
+
+            $approved = (clone $base)->count();
+
+            $scored = Score::where('competition_id', $competition->id)
+                ->whereIn('registration_id', (clone $base)->select('id'))
+                ->count();
+
+            $top = (clone $base)
+                ->with(['score', 'school:id,school_name', 'participants:id,registration_id,full_name'])
+                ->whereHas('score')
+                ->get()
+                ->sortBy(fn (Registration $r) => [$r->score?->rank ?? PHP_INT_MAX, $r->id])
+                ->take(5)
+                ->map(fn (Registration $r) => [
+                    'id' => $r->id,
+                    'name' => $r->displayName(),
+                    'school' => $r->school?->school_name,
+                    'rank' => $r->score?->rank,
+                    'total' => $r->score?->score_value,
+                ])
+                ->values();
+        }
+
+        return Inertia::render('Admin/PjDashboard', [
+            'competition' => $competition ? [
+                'id' => $competition->id,
+                'name' => $competition->name,
+                'category_type' => $competition->category_type,
+                'gender_mode' => $competition->gender_mode,
+                'global_quota' => $competition->global_quota,
+                'approved_count' => $competition->approvedCount(),
+            ] : null,
+            'criteria' => $criteria,
+            'approved' => $approved,
+            'scored' => $scored,
+            'published' => $published,
+            'top' => $top,
         ]);
     }
 
