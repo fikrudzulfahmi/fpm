@@ -69,6 +69,7 @@ export default function GuestLayout({ title, children }) {
     const [open, setOpen] = useState(false);
     const [stuck, setStuck] = useState(false);
     const [showTop, setShowTop] = useState(false);
+    const [waOpen, setWaOpen] = useState(false);
     const rootRef = useRef(null);
 
     const eventName = event?.event_name ?? 'Festival Pelajar Muslim';
@@ -77,7 +78,23 @@ export default function GuestLayout({ title, children }) {
     const logo = theme?.logo_url ?? '/branding/logo-mark.png';
     const lightLogo = theme?.logo_url ?? '/branding/logo-mark-light.png';
     const whatsapp = event?.admin_whatsapp ?? null;
-    const wa = waLink(whatsapp, 'Halo panitia FPM, saya ingin bertanya.');
+
+    // Narahubung WhatsApp: daftar kontak resmi + nomor panitia (bila berbeda).
+    const waContacts = (() => {
+        const list = (site?.contacts ?? []).map((c) => ({
+            name: c.name,
+            role: c.role ?? 'Panitia',
+            phone: c.phone,
+        }));
+
+        const digits = (value) => String(value ?? '').replace(/\D/g, '').replace(/^0/, '62');
+
+        if (whatsapp && !list.some((c) => digits(c.phone) === digits(whatsapp))) {
+            list.push({ name: 'Panitia FPM', role: 'Narahubung umum', phone: whatsapp });
+        }
+
+        return list;
+    })();
     const user = auth?.user ?? null;
     const isAdmin = user?.role === 'admin';
 
@@ -125,6 +142,25 @@ export default function GuestLayout({ title, children }) {
             document.body.style.overflow = '';
         };
     }, [open]);
+
+    useEffect(() => {
+        if (!waOpen) return undefined;
+
+        const onKey = (e) => {
+            if (e.key === 'Escape') setWaOpen(false);
+        };
+        const onClick = (e) => {
+            if (!e.target.closest('[data-wa-menu]')) setWaOpen(false);
+        };
+
+        document.addEventListener('keydown', onKey);
+        document.addEventListener('pointerdown', onClick);
+
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.removeEventListener('pointerdown', onClick);
+        };
+    }, [waOpen]);
 
     useEffect(() => {
         if (!open) return undefined;
@@ -377,7 +413,8 @@ export default function GuestLayout({ title, children }) {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            {c.name} · {c.phone}
+                                            {c.name}
+                                            {c.role ? ` · ${c.role}` : ''} · {c.phone}
                                         </a>
                                     </li>
                                 ))}
@@ -400,17 +437,51 @@ export default function GuestLayout({ title, children }) {
             </footer>
 
             <div className="fab-stack">
-                {wa && (
-                    <a
-                        className="fab fab--wa"
-                        href={wa}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Chat WhatsApp panitia"
-                    >
-                        <span className="fab__tip">Chat panitia</span>
-                        <WaIcon />
-                    </a>
+                {waContacts.length > 0 && (
+                    <div className="fab-wa" data-wa-menu>
+                        {waOpen && (
+                            <div className="wa-menu" id="wa-menu" role="menu" aria-label="Kontak panitia">
+                                <p className="wa-menu__title">Hubungi panitia</p>
+                                {waContacts.map((contact) => (
+                                    <a
+                                        key={contact.phone}
+                                        href={waLink(contact.phone, `Halo ${contact.name}, saya ingin bertanya tentang FPM XII.`)}
+                                        className="wa-menu__item"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        role="menuitem"
+                                    >
+                                        <span className="wa-menu__avatar" aria-hidden="true">
+                                            {contact.name
+                                                .replace(/^(Pak|Bu|Ibu|Bpk)\.?\s+/i, '')
+                                                .split(/\s+/)
+                                                .slice(0, 2)
+                                                .map((part) => part[0])
+                                                .join('')
+                                                .toUpperCase()}
+                                        </span>
+                                        <span className="wa-menu__text">
+                                            <strong>{contact.name}</strong>
+                                            <span>{contact.role}</span>
+                                        </span>
+                                        <WaIcon />
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+
+                        <button
+                            type="button"
+                            className={`fab fab--wa${waOpen ? ' is-open' : ''}`}
+                            onClick={() => setWaOpen((v) => !v)}
+                            aria-expanded={waOpen ? 'true' : 'false'}
+                            aria-controls="wa-menu"
+                            aria-label="Hubungi panitia via WhatsApp"
+                        >
+                            <span className="fab__tip">{waOpen ? 'Tutup' : 'Chat panitia'}</span>
+                            <WaIcon />
+                        </button>
+                    </div>
                 )}
                 <div className={`fab-slot${showTop ? ' is-open' : ''}`}>
                     <button

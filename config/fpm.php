@@ -48,8 +48,8 @@ return [
     ],
 
     'contacts' => [
-        ['name' => 'Pak Majid', 'phone' => '0857-5548-1643'],
-        ['name' => 'Pak Wilda', 'phone' => '0889-9696-9492'],
+        ['name' => 'Pak Majid', 'role' => 'Ketua Panitia', 'phone' => '0857-5548-1643'],
+        ['name' => 'Pak Wilda', 'role' => 'Sekretariat Lomba', 'phone' => '0889-9696-9492'],
     ],
 
     'website' => 'https://smkislam1blitar.sch.id',
