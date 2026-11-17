@@ -59,7 +59,8 @@ export default function Lomba({ event_info, competitions = [] }) {
         window_label: '20 November 2026 – 22 Januari 2027',
         end_label: 'Jumat, 22 Januari 2027',
     };
-    const primaryHref = user ? '/daftar' : '/klaim';
+    const isAdmin = user?.role === 'admin';
+    const primaryHref = isAdmin ? '/dashboard' : user ? '/daftar' : '/klaim';
 
     const visible = useMemo(() => {
         if (filter === 'all') return competitions;
@@ -233,7 +234,7 @@ export default function Lomba({ event_info, competitions = [] }) {
                             </p>
                         </div>
                         <Link className="link-more" href={primaryHref}>
-                            {user ? 'Ke formulir pendaftaran' : 'Klaim akun dulu'}
+                            {isAdmin ? 'Buka dashboard' : user ? 'Ke formulir pendaftaran' : 'Klaim akun dulu'}
                             <ArrowIcon />
                         </Link>
                     </div>
@@ -270,7 +271,7 @@ export default function Lomba({ event_info, competitions = [] }) {
                         </div>
                         <div className="btn-row">
                             <Link className="btn btn--gold" href={primaryHref}>
-                                {user ? 'Daftar sekarang' : 'Klaim akun sekolah'}
+                                {isAdmin ? 'Buka dashboard' : user ? 'Daftar sekarang' : 'Klaim akun sekolah'}
                                 <ArrowIcon />
                             </Link>
                             <Link className="btn btn--ghost-light" href="/#faq">

@@ -78,6 +78,20 @@ export default function GuestLayout({ title, children }) {
     const whatsapp = event?.admin_whatsapp ?? null;
     const wa = waLink(whatsapp, 'Halo panitia FPM, saya ingin bertanya.');
     const user = auth?.user ?? null;
+    const isAdmin = user?.role === 'admin';
+
+    /**
+     * Tombol utama di halaman publik: panitia diarahkan ke dashboard (bukan
+     * /daftar yang khusus sekolah), sekolah ke formulir pendaftaran.
+     */
+    const cta = !user
+        ? { href: '/klaim', label: 'Klaim akun', title: 'Klaim akun sekolah' }
+        : isAdmin
+          ? { href: '/dashboard', label: 'Dashboard', title: 'Buka dashboard panitia' }
+          : { href: '/daftar', label: 'Daftar', title: 'Daftar lomba' };
+    const accountLink = user
+        ? { href: '/dashboard', label: isAdmin ? 'Dashboard panitia' : 'Dashboard sekolah' }
+        : { href: '/login', label: 'Masuk' };
 
     const isActive = (item) => {
         if (item.hash) return false;
@@ -185,10 +199,19 @@ export default function GuestLayout({ title, children }) {
                         )}
                     </li>
                 ))}
+                {!isAdmin && (
+                    <li>
+                        <Link href={accountLink.href} onClick={() => setOpen(false)}>
+                            <span className="menu__num">0{NAV.length + 1}</span>
+                            {accountLink.label}
+                            <Icon path={ICON.arrow} />
+                        </Link>
+                    </li>
+                )}
             </ul>
 
-            <Link href={user ? '/daftar' : '/klaim'} className="btn btn--gold menu__cta">
-                {user ? 'Daftar lomba' : 'Klaim akun sekolah'}
+            <Link href={cta.href} className="btn btn--gold menu__cta" onClick={() => setOpen(false)}>
+                {cta.title}
                 <Icon path={ICON.arrow} />
             </Link>
             <p className="menu__note">Pendaftaran tidak dipungut biaya.</p>
@@ -230,11 +253,13 @@ export default function GuestLayout({ title, children }) {
                                 ),
                             )}
                         </ul>
-                        <Link
-                            href={user ? '/daftar' : '/klaim'}
-                            className="btn btn--gold btn--sm nav__cta"
-                        >
-                            {user ? 'Daftar' : 'Klaim akun'}
+                        {!isAdmin && (
+                            <Link href={accountLink.href} className="nav__account">
+                                {accountLink.label}
+                            </Link>
+                        )}
+                        <Link href={cta.href} className="btn btn--gold btn--sm nav__cta">
+                            {cta.label}
                             <Icon path={ICON.arrow} />
                         </Link>
                     </nav>
@@ -317,8 +342,12 @@ export default function GuestLayout({ title, children }) {
                             <h3>Pendaftaran</h3>
                             <ul>
                                 <li>
-                                    <Link href={user ? '/daftar' : '/klaim'}>
-                                        {user ? 'Formulir pendaftaran' : 'Klaim akun sekolah'}
+                                    <Link href={isAdmin ? '/dashboard' : user ? '/daftar' : '/klaim'}>
+                                        {isAdmin
+                                            ? 'Dashboard panitia'
+                                            : user
+                                              ? 'Formulir pendaftaran'
+                                              : 'Klaim akun sekolah'}
                                     </Link>
                                 </li>
                                 <li>

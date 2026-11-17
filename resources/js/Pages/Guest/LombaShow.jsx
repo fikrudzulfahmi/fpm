@@ -28,7 +28,8 @@ export default function LombaShow({ event_info, competition }) {
     const eventDate = site?.event_date ?? { label: 'Sabtu, 30 Januari 2027' };
     const venue = site?.venue ?? { name: 'SMKS Islam 1 Kota Blitar', address: 'Jl. Musi No. 6, Blitar 66117' };
     const s = statusOf(competition);
-    const primaryHref = user ? '/daftar' : '/klaim';
+    const isAdmin = user?.role === 'admin';
+    const primaryHref = isAdmin ? '/dashboard' : user ? '/daftar' : '/klaim';
     const isGroup = competition.category_type === 'group';
     const usedPct =
         competition.global_quota > 0
@@ -168,16 +169,15 @@ export default function LombaShow({ event_info, competition }) {
                         <span className={`badge ${s.tone}`}>{s.label}</span>
                         <h2>Daftarkan peserta</h2>
                         <p className="small">
-                            {user
-                                ? 'Anda sudah masuk. Lanjutkan ke formulir pendaftaran untuk memilih cabang ini.'
-                                : 'Pendaftaran dilakukan oleh sekolah. Klaim akun sekolah dengan NPSN terlebih dahulu.'}
+                            {isAdmin
+                                ? 'Anda masuk sebagai panitia. Kelola pendaftaran dan penilaian dari dashboard.'
+                                : user
+                                  ? 'Anda sudah masuk. Lanjutkan ke formulir pendaftaran untuk memilih cabang ini.'
+                                  : 'Pendaftaran dilakukan oleh sekolah. Klaim akun sekolah dengan NPSN terlebih dahulu.'}
                         </p>
 
-                        <Link
-                            className="btn btn--gold"
-                            href={user ? '/daftar' : '/klaim'}
-                        >
-                            {user ? 'Daftar cabang ini' : 'Klaim akun sekolah'}
+                        <Link className="btn btn--gold" href={primaryHref}>
+                            {isAdmin ? 'Buka dashboard' : user ? 'Daftar cabang ini' : 'Klaim akun sekolah'}
                             <ArrowIcon />
                         </Link>
 

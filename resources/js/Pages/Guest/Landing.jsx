@@ -67,6 +67,7 @@ function QuotaBar({ used = 0, total = 0 }) {
 export default function Landing({ event_info, competitions = [], totals = {} }) {
     const { theme, auth, site } = usePage().props;
     const user = auth?.user ?? null;
+    const isAdmin = user?.role === 'admin';
 
     const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim XII';
     const logo = theme?.logo_url ?? '/branding/logo-mark.png';
@@ -102,7 +103,8 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
     const pendaftaranDibuka = openCompetitions > 0;
     const featured = competitions.slice(0, 6);
 
-    const primaryHref = user ? '/daftar' : '/klaim';
+    const primaryHref = isAdmin ? '/dashboard' : user ? '/daftar' : '/klaim';
+    const primaryLabel = isAdmin ? 'Buka dashboard' : user ? 'Daftarkan tim' : 'Klaim akun sekolah';
 
     return (
         <GuestLayout title="Beranda">
@@ -159,7 +161,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
 
                         <div className="btn-row">
                             <Link className="btn btn--gold" href={primaryHref}>
-                                {user ? 'Daftarkan tim' : 'Klaim akun sekolah'}
+                                {primaryLabel}
                                 <ArrowIcon />
                             </Link>
                             <Link className="btn btn--ghost-light" href="/lomba">
@@ -421,7 +423,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                         </p>
                         <p style={{ marginTop: '22px' }}>
                             <Link className="link-more" href={primaryHref}>
-                                Daftar sekarang
+                                {isAdmin ? 'Buka dashboard' : user ? 'Daftar sekarang' : 'Klaim akun sekolah'}
                                 <ArrowIcon />
                             </Link>
                         </p>
@@ -465,7 +467,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                             </p>
                         </div>
                         <Link className="link-more" href={primaryHref}>
-                            Mulai dari sini
+                            {isAdmin ? 'Buka dashboard' : user ? 'Mulai dari sini' : 'Klaim akun sekolah'}
                             <ArrowIcon />
                         </Link>
                     </div>
@@ -539,7 +541,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                         </div>
                         <div className="btn-row">
                             <Link className="btn btn--gold" href={primaryHref}>
-                                {user ? 'Mulai pendaftaran' : 'Klaim akun sekolah'}
+                                {isAdmin ? 'Buka dashboard' : user ? 'Mulai pendaftaran' : 'Klaim akun sekolah'}
                                 <ArrowIcon />
                             </Link>
                             <Link className="btn btn--ghost-light" href="/lomba">
