@@ -144,18 +144,41 @@ function EventBranding({ event }) {
     };
 
     return (
-        <div className="border-t border-slate-100 px-5 py-3">
-            <button
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                className="flex w-full items-center justify-between text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
-            >
-                Identitas & Tema (white-label)
-                <span className="text-slate-400">{open ? '−' : '+'}</span>
-            </button>
+        <>
+            <div className="border-t border-slate-100 px-5 py-3">
+                <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className="flex w-full items-center justify-between text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
+                >
+                    Identitas & Tema (white-label)
+                    <span className="text-slate-400">›</span>
+                </button>
+            </div>
 
-            {open && (
-                <div className="mt-3 grid gap-5 lg:grid-cols-[220px,1fr]">
+            <Modal
+                open={open}
+                onClose={() => setOpen(false)}
+                title="Identitas & tema event"
+                subtitle={event.event_name}
+                size="lg"
+                footer={
+                    <>
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setOpen(false)}>
+                            Tutup
+                        </button>
+                        <button
+                            type="submit"
+                            form={`meta-${event.id}`}
+                            className="btn btn--dark btn--sm"
+                            disabled={metaForm.processing}
+                        >
+                            {metaForm.processing ? 'Menyimpan…' : 'Simpan identitas'}
+                        </button>
+                    </>
+                }
+            >
+                <div className="grid gap-5 pt-1 lg:grid-cols-[200px,1fr]">
                     <div>
                         <p className="mb-2 text-xs font-semibold text-slate-600">Logo event</p>
                         <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50">
@@ -196,7 +219,7 @@ function EventBranding({ event }) {
                         </form>
                     </div>
 
-                    <form onSubmit={saveMeta} className="grid gap-3 sm:grid-cols-2">
+                    <form id={`meta-${event.id}`} onSubmit={saveMeta} className="grid gap-3 sm:grid-cols-2">
                         <div className="sm:col-span-2">
                             <label htmlFor={`name-${event.id}`} className="mb-1 block text-xs font-medium text-slate-600">
                                 Nama event
@@ -276,20 +299,10 @@ function EventBranding({ event }) {
                             </div>
                         </div>
 
-                        <div className="sm:col-span-2">
-                            <button
-                                type="submit"
-                                disabled={metaForm.processing}
-                                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                                style={{ backgroundColor: 'var(--primary-color, #064b3d)' }}
-                            >
-                                {metaForm.processing ? 'Menyimpan…' : 'Simpan identitas'}
-                            </button>
-                        </div>
                     </form>
                 </div>
-            )}
-        </div>
+            </Modal>
+        </>
     );
 }
 
