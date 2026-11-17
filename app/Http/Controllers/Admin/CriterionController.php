@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Competition;
 use App\Models\Event;
 use App\Models\Score;
+use App\Models\ScoreCriterionValue;
 use App\Models\ScoreCriterion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,8 +76,20 @@ class CriterionController extends Controller
                 $controller = app(ScoreController::class);
 
                 Score::where('competition_id', $competition->id)->get()->each(function (Score $score) use ($criteria, $controller) {
+                    // Nilai lama (tunggal) disebar proporsional ke kriteria baru
+                    // supaya nilai akhir tidak drop ke 0 saat kriteria ditambahkan.
+                    if ($score->criterionValues()->doesntExist()) {
+                        foreach ($criteria as $criterion) {
+                            ScoreCriterionValue::create([
+                                'score_id' => $score->id,
+                                'criterion_id' => $criterion->id,
+                                'value' => round(min(100, (float) $score->score_value) / 100 * $criterion->safeMax(), 2),
+                            ]);
+                        }
+                    }
+
                     $score->forceFill([
-                        'score_value' => $controller->scoreFromCriteria($score, $criteria),
+                        'score_value' => $controller->scoreFromCriteria($score->fresh(), $criteria),
                     ])->save();
                 });
             }
