@@ -9,6 +9,7 @@ use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureFullAdmin;
 use App\Http\Middleware\EnsureSchool;
+use App\Http\Middleware\ForceHttps;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         $middleware->web(append: [
+            ForceHttps::class,
             SecurityHeaders::class,
             HandleInertiaRequests::class,
         ]);
