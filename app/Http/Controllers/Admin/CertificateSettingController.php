@@ -104,7 +104,8 @@ class CertificateSettingController extends Controller
             'certificate.layout.*.x' => ['numeric', 'min:0', 'max:100'],
             'certificate.layout.*.y' => ['numeric', 'min:0', 'max:100'],
             'certificate.layout.*.w' => ['numeric', 'min:3', 'max:100'],
-            'certificate.layout.*.size' => ['numeric', 'min:4', 'max:72'],
+            // Template sertifikat memakai koordinat tetap; nilai 0 (mis. logo tanpa teks) sah.
+            'certificate.layout.*.size' => ['numeric', 'min:0', 'max:72'],
             'certificate.layout.*.align' => ['in:left,center,right'],
 
             'award.bg_color' => self::COLOR_RULE,
