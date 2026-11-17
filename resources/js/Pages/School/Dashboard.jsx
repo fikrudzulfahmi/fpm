@@ -180,7 +180,7 @@ export default function SchoolDashboard({ registrations = [], enable_certificate
                 </div>
             </section>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <Stat label="Total" value={total} hint="Semua peserta" />
                 <Stat label="Disetujui" value={approved} hint="Siap bertanding" />
                 <Stat label="Menunggu" value={pending} hint="Belum diverifikasi" />
