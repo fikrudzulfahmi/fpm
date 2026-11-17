@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Template sertifikat FPM XII — Festival Pelajar Muslim XII
+    SMKS Islam 1 Kota Blitar (Harlah ke-59)
+
+    Format : SVG 1.1, A4 landscape (1123 x 794 px @96dpi, setara 297 x 210 mm)
+    Palet  : hijau #064b3d / #0a5b4a, emas #c9a227 / #e4b93a, krem #f8f6ec
+
+    Cara pakai:
+    1. Ganti teks bertanda {{...}} dengan data peserta.
+    2. Ganti blok <g id="logo"> dengan logo event (PNG/SVG) bila perlu.
+    3. Untuk cetak: buka di browser/Inkscape lalu ekspor PDF/PNG 300dpi,
+       atau langsung cetak (background graphics ON).
+    4. Huruf memakai Plus Jakarta Sans → fallback Segoe UI/Arial, jadi tetap
+       rapi walau font khusus belum terpasang.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1123" height="794" viewBox="0 0 1123 794" role="img"
+     aria-labelledby="judul certdesc">
+    <title id="judul">Sertifikat Peserta FPM XII</title>
+    <desc id="certdesc">Template sertifikat peserta Festival Pelajar Muslim XII, SMKS Islam 1 Kota Blitar.</desc>
+
+    <defs>
+        <!-- Tekstur titik halus -->
+        <pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse">
+            <circle cx="1.2" cy="1.2" r="1.1" fill="#064b3d" opacity="0.06"/>
+        </pattern>
+
+        <!-- Glow emas -->
+        <radialGradient id="glow" cx="50%" cy="0%" r="75%">
+            <stop offset="0%" stop-color="#e4b93a" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="#e4b93a" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Gradasi garis emas -->
+        <linearGradient id="goldLine" x1="0" x2="1">
+            <stop offset="0%" stop-color="#c9a227" stop-opacity="0"/>
+            <stop offset="18%" stop-color="#c9a227"/>
+            <stop offset="82%" stop-color="#c9a227"/>
+            <stop offset="100%" stop-color="#c9a227" stop-opacity="0"/>
+        </linearGradient>
+
+        <!-- Bingkai dalam -->
+        <linearGradient id="frameGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e4b93a"/>
+            <stop offset="50%" stop-color="#c9a227"/>
+            <stop offset="100%" stop-color="#e4b93a"/>
+        </linearGradient>
+    </defs>
+
+    <!-- ================= LATAR ================= -->
+    <rect width="1123" height="794" fill="#f8f6ec"/>
+    <rect width="1123" height="794" fill="url(#dots)"/>
+    <rect width="1123" height="300" fill="url(#glow)"/>
+
+    <!-- Watermark monogram -->
+    <text x="561.5" y="560" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="250" font-weight="800" letter-spacing="14"
+          fill="#064b3d" opacity="0.035">FPM</text>
+
+    <!-- ================= BINGKAI ================= -->
+    <rect x="26" y="26" width="1071" height="742" rx="6" fill="none" stroke="#064b3d" stroke-width="3"/>
+    <rect x="39" y="39" width="1045" height="716" rx="4" fill="none" stroke="url(#frameGold)" stroke-width="1.4"/>
+
+    <!-- Ornamen sudut -->
+    <g fill="none" stroke="#c9a227" stroke-width="2" stroke-linecap="round">
+        <path d="M39 96 V60 a21 21 0 0 1 21 -21 h36"/>
+        <path d="M1084 96 V60 a21 21 0 0 0 -21 -21 h-36"/>
+        <path d="M39 698 v36 a21 21 0 0 0 21 21 h36"/>
+        <path d="M1084 698 v36 a21 21 0 0 1 -21 21 h-36"/>
+    </g>
+    <g fill="#c9a227">
+        <circle cx="39" cy="39" r="3"/>
+        <circle cx="1084" cy="39" r="3"/>
+        <circle cx="39" cy="755" r="3"/>
+        <circle cx="1084" cy="755" r="3"/>
+    </g>
+
+    <!-- ================= LOGO EVENT (ganti isi grup ini) ================= -->
+    <g id="logo" transform="translate(561.5 116)">
+        <circle r="34" fill="#064b3d"/>
+        <circle r="28" fill="none" stroke="#e4b93a" stroke-width="1.6"/>
+        <text x="0" y="7" text-anchor="middle"
+              font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+              font-size="18" font-weight="800" letter-spacing="1.5" fill="#e4b93a">XII</text>
+    </g>
+
+    <!-- ================= KEPALA SERTIFIKAT ================= -->
+    <text x="561.5" y="186" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="11" font-weight="700" letter-spacing="7" fill="#b49114">SERTIFIKAT</text>
+
+    <text x="561.5" y="214" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="15" font-weight="700" letter-spacing="0.6" fill="#0d3029">
+        {{NAMA_EVENT}} · {{TAHUN}}
+    </text>
+
+    <text x="561.5" y="276" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="43" font-weight="800" letter-spacing="3" fill="#064b3d">
+        {{JUDUL_SERTIFIKAT}}
+    </text>
+
+    <!-- Garis emas + belah ketupat -->
+    <line x1="431" y1="298" x2="691" y2="298" stroke="url(#goldLine)" stroke-width="2"/>
+    <path d="M561.5 292 l7 6 -7 6 -7 -6 z" fill="#c9a227"/>
+
+    <!-- ================= DATA PESERTA ================= -->
+    <text x="561.5" y="344" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="12.5" font-weight="600" letter-spacing="1.2" fill="#5c6e67">
+        Diberikan kepada
+    </text>
+
+    <text x="561.5" y="404" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="38" font-weight="800" letter-spacing="0.4" fill="#0d3029">
+        {{NAMA_PESERTA}}
+    </text>
+
+    <line x1="330" y1="422" x2="793" y2="422" stroke="#c9a227" stroke-width="1.4"/>
+
+    <text x="561.5" y="452" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="13" fill="#3b4f48">
+        {{NISN}} · {{NAMA_SEKOLAH}}
+    </text>
+
+    <text x="561.5" y="497" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="19" font-weight="800" letter-spacing="1.2" fill="#0a5b4a">
+        {{NAMA_CABANG}}
+    </text>
+
+    <text x="561.5" y="536" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="12.5" fill="#3b4f48">
+        Atas partisipasinya dalam kegiatan <tspan font-weight="700" fill="#064b3d">{{NAMA_EVENT}} {{TAHUN}}</tspan>
+    </text>
+    <text x="561.5" y="558" text-anchor="middle"
+          font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="12.5" fill="#3b4f48">
+        yang diselenggarakan dalam rangka {{ACARA}} di {{LOKASI}}.
+    </text>
+
+    <!-- ================= TANDA TANGAN ================= -->
+    <g font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif" text-anchor="middle">
+        <text x="852" y="642" font-size="11.5" fill="#5c6e67">{{JABATAN_PENANDATANGAN}}</text>
+        <line x1="752" y1="694" x2="952" y2="694" stroke="#0d3029" stroke-width="1.1"/>
+        <text x="852" y="716" font-size="13" font-weight="700" fill="#0d3029">{{NAMA_PENANDATANGAN}}</text>
+    </g>
+
+    <!-- ================= FOOTER ================= -->
+    <line x1="84" y1="666" x2="430" y2="666" stroke="#c9a227" stroke-width="1.1"/>
+    <text x="84" y="690" font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="10.5" fill="#5c6e67">Nomor: {{NOMOR_SERTIFIKAT}}</text>
+    <text x="84" y="708" font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif"
+          font-size="10.5" fill="#5c6e67">Diterbitkan secara elektronik oleh panitia {{NAMA_EVENT}}.</text>
+
+    <!-- Garis aksen bawah -->
+    <line x1="26" y1="768" x2="1097" y2="768" stroke="#c9a227" stroke-width="1" opacity="0.5"/>
+</svg>
