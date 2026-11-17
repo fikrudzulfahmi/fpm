@@ -41,6 +41,15 @@
         default => 'JUARA HARAPAN '.$hopeRoman,
     };
 
+    $placeLen = mb_strlen($placeText ?? '');
+    $rankPt = match (true) {
+        $placeLen <= 8 => 26,
+        $placeLen <= 12 => 22,
+        default => 18,
+    };
+    $rankTracking = $rankPt >= 24 ? 2.2 : 1.4;
+
+
     $genderLabel = $competition?->isSeparateGender() && $registration->gender
         ? \App\Models\Competition::genderLabel($registration->gender)
         : null;
@@ -163,7 +172,7 @@
         .plaque {
             position: absolute;
             left: 98.20mm;
-            top: 61.40mm;
+            top: 64.00mm;
             width: 100.50mm;
             height: 22.40mm;
             background: {{ $PALETTE['gold-soft'] }};
@@ -172,7 +181,7 @@
         .plaque-inner {
             position: absolute;
             left: 100.05mm;
-            top: 63.20mm;
+            top: 65.80mm;
             width: 96.80mm;
             height: 18.80mm;
             border: 0.18mm solid #eed9a6;
@@ -180,18 +189,18 @@
         .rank-text {
             position: absolute;
             left: 98.20mm;
-            top: 67.70mm;
+            top: 69.20mm;
             width: 100.50mm;
             text-align: center;
             color: {{ $PALETTE['green'] }};
             font-weight: bold;
-            font-size: 26pt;
-            letter-spacing: 2.2pt;
+            font-size: {{ $rankPt }}pt;
+            letter-spacing: {{ $rankTracking }}pt;
             line-height: 1;
         }
         .rank-star {
             position: absolute;
-            top: 69.50mm;
+            top: 72.00mm;
             color: {{ $PALETTE['gold'] }};
             font-size: 11pt;
         }
