@@ -78,11 +78,12 @@ html {
 
 .fpm-site > main { flex: 1; }
 
-.fpm-site img,
-.fpm-site svg,
-.fpm-site picture { display: block; max-width: 100%; }
+/* Elemen dasar memakai :where() (specificity 0) supaya aturan kelas seperti
+   .btn / .chip / .brand / .hero__lead tetap menang. Tanpa ini, `a` di dalam
+   .fpm-site menimpa warna teks tombol dan membuat tombol menyatu dengan latar. */
+.fpm-site :where(img, svg, picture) { display: block; max-width: 100%; }
 
-.fpm-site h1, .fpm-site h2, .fpm-site h3, .fpm-site h4 {
+.fpm-site :where(h1, h2, h3, h4) {
   font-family: var(--H);
   color: var(--ink);
   font-weight: 800;
@@ -92,15 +93,15 @@ html {
   text-wrap: balance;
 }
 
-.fpm-site p { margin: 0; }
+.fpm-site :where(p) { margin: 0; }
 
-.fpm-site a { color: var(--green-800); text-underline-offset: 3px; }
+.fpm-site :where(a) { color: var(--green-800); text-underline-offset: 3px; }
 
-.fpm-site ul, .fpm-site ol { margin: 0; padding: 0; }
+.fpm-site :where(ul, ol) { margin: 0; padding: 0; }
 
-.fpm-site button { font: inherit; color: inherit; }
+.fpm-site :where(button) { font: inherit; color: inherit; }
 
-.fpm-site hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+.fpm-site :where(hr) { border: 0; border-top: 1px solid var(--line); margin: 0; }
 
 .fpm-site :focus-visible {
   outline: 3px solid var(--gold);
@@ -201,7 +202,7 @@ html {
 
 .prose { max-width: 68ch; }
 
-.fpm-site h1 + p, .fpm-site h2 + p, .fpm-site h3 + p { margin-top: 12px; }
+.fpm-site :where(h1, h2, h3) + :where(p) { margin-top: 12px; }
 .fpm-site h2 + .prose, .fpm-site .h2 + .prose { margin-top: 18px; }
 .prose > * + * { margin-top: 1.05em; }
 .prose p { color: var(--ink-2); }
@@ -236,7 +237,6 @@ html {
 .link-more:hover { border-color: var(--green-700); gap: 12px; }
 .link-more svg { width: 15px; height: 15px; }
 .section--dark .link-more { color: var(--gold); border-color: rgba(243, 217, 91, 0.4); }
-
 .section-head {
   display: flex;
   flex-wrap: wrap;
@@ -273,26 +273,39 @@ html {
 }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 .btn svg { width: 17px; height: 17px; flex: none; }
 
 .btn--dark { --btn-bg: var(--green-900); --btn-fg: var(--cream); --btn-bd: var(--green-900); }
 .btn--dark:hover { --btn-bg: var(--green-800); --btn-bd: var(--green-800); }
 
-.btn--gold:hover { --btn-bg: var(--gold-600); --btn-bd: var(--gold-600); }
+/* Emas di atas krem/putih butuh garis tepi lebih tua + bayangan tipis supaya
+   tepi tombol tidak menyatu dengan latar. */
+.btn--gold {
+  --btn-bd: var(--gold-600);
+  box-shadow: 0 10px 20px -16px rgba(180, 145, 20, 0.95);
+}
+.btn--gold:hover { --btn-bg: var(--gold-600); --btn-bd: #c9a72c; }
 
 .btn--ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink);
-  --btn-bd: var(--line-strong);
+  --btn-bd: rgba(13, 48, 41, 0.45);
 }
-.btn--ghost:hover { --btn-bg: rgba(13, 48, 41, 0.05); }
+.btn--ghost:hover { --btn-bg: rgba(13, 48, 41, 0.07); --btn-bd: var(--ink); }
 
 .btn--ghost-light {
   --btn-bg: transparent;
   --btn-fg: var(--cream);
-  --btn-bd: rgba(248, 246, 236, 0.42);
+  --btn-bd: rgba(248, 246, 236, 0.72);
 }
-.btn--ghost-light:hover { --btn-bg: rgba(248, 246, 236, 0.12); --btn-bd: rgba(248, 246, 236, 0.7); }
+.btn--ghost-light:hover { --btn-bg: rgba(248, 246, 236, 0.16); --btn-bd: var(--cream); }
 
 .btn--sm { min-height: 40px; padding: 9px 18px; font-size: 14px; }
 .btn--block { width: 100%; }
@@ -944,9 +957,9 @@ html {
   margin-bottom: clamp(24px, 3vw, 34px);
 }
 .chip {
-  border: 1px solid var(--line-strong);
+  border: 1px solid rgba(13, 48, 41, 0.34);
   background: transparent;
-  color: var(--ink-2);
+  color: var(--ink);
   border-radius: var(--r-pill);
   min-height: 42px;
   padding: 9px 18px;
@@ -1523,7 +1536,7 @@ html {
 .site-foot .brand__mark { height: 54px; width: auto; }
 .site-foot .brand__text strong { font-size: 18px; color: var(--cream); }
 .site-foot .brand__text span { font-size: 10.5px; color: rgba(248, 246, 236, 0.58); letter-spacing: 0.12em; }
-.site-foot__brand p { margin-top: 18px; max-width: 34ch; font-size: 14px; color: rgba(248, 246, 236, 0.62); }
+.site-foot__brand p { margin-top: 18px; max-width: 34ch; font-size: 14px; color: rgba(248, 246, 236, 0.74); }
 .site-foot h3 {
   color: var(--cream);
   font-size: 12px;
@@ -1533,7 +1546,7 @@ html {
   margin-bottom: 14px;
 }
 .site-foot ul { list-style: none; display: grid; gap: 9px; }
-.site-foot a { color: rgba(248, 246, 236, 0.78); text-decoration: none; transition: color 0.2s ease; }
+.site-foot a { color: rgba(248, 246, 236, 0.88); text-decoration: none; transition: color 0.2s ease; }
 .site-foot a:hover { color: var(--gold); }
 .site-foot__bottom {
   display: flex;
@@ -2032,4 +2045,9 @@ html {
 
 @media (min-width: 940px) {
   .detail-grid .side-card { position: sticky; top: calc(var(--head-h) + 16px); }
+}
+
+/* Footer 4 kolom (brand, jelajahi, pendaftaran, kontak panitia) */
+@media (min-width: 980px) {
+  .site-foot__grid--4 { grid-template-columns: 1.5fr 0.8fr 0.9fr 1.1fr; }
 }

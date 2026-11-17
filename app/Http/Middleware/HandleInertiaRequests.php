@@ -51,6 +51,8 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             // Tema dipakai root blade untuk inject CSS variables.
             'theme' => $event ? $event->theme() : null,
+            // Informasi resmi festival (config/fpm.php): tanggal, lokasi, kontak.
+            'site' => config('fpm'),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

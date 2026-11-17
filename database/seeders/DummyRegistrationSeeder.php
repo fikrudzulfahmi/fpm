@@ -70,9 +70,10 @@ class DummyRegistrationSeeder extends Seeder
             $school2->update(['is_claimed' => true, 'user_id' => $user2->id]);
         }
 
+        // Nama variabel mengikuti seeder lama; slug mengikuti cabang resmi FPM XII.
         $mq = Competition::where('event_id', $event->id)->where('slug', 'musabaqah-tilawatil-quran')->first();
-        $tahfidz = Competition::where('event_id', $event->id)->where('slug', 'tahfidz-juz-30')->first();
-        $cc = Competition::where('event_id', $event->id)->where('slug', 'cerdas-cermat-pai')->first();
+        $tahfidz = Competition::where('event_id', $event->id)->where('slug', 'pop-religi')->first();
+        $cc = Competition::where('event_id', $event->id)->where('slug', 'olimpiade-matematika-ipa')->first();
 
         if (! $mq || ! $tahfidz || ! $cc) {
             return;

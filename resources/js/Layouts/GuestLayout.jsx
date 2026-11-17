@@ -38,10 +38,20 @@ function WaIcon({ className = '' }) {
     );
 }
 
+function IgIcon({ className = '' }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" />
+        </svg>
+    );
+}
+
 const NAV = [
     { href: '/', hash: '', label: 'Beranda' },
     { href: '/lomba', hash: '', label: 'Cabang Lomba' },
-    { href: '/', hash: '#tentang', label: 'Tentang' },
+    { href: '/', hash: '#jadwal', label: 'Jadwal' },
     { href: '/', hash: '#alur', label: 'Alur' },
     { href: '/', hash: '#faq', label: 'FAQ' },
 ];
@@ -53,7 +63,7 @@ const NAV = [
  * var(--primary-color).
  */
 export default function GuestLayout({ title, children }) {
-    const { event, theme, auth } = usePage().props;
+    const { event, theme, auth, site } = usePage().props;
     const pageUrl = usePage().url;
     const [open, setOpen] = useState(false);
     const [stuck, setStuck] = useState(false);
@@ -248,7 +258,7 @@ export default function GuestLayout({ title, children }) {
 
             <footer className="site-foot">
                 <div className="container">
-                    <div className="site-foot__grid">
+                    <div className="site-foot__grid site-foot__grid--4">
                         <div className="site-foot__brand">
                             <Link href="/" className="brand" aria-label={`${eventName} — beranda`}>
                                 <img className="brand__mark" src={lightLogo} alt="" width="50" height="58" />
@@ -258,10 +268,22 @@ export default function GuestLayout({ title, children }) {
                                 </span>
                             </Link>
                             <p>
-                                Ruang bertemu, berlomba, dan bertumbuh bagi pelajar Muslim. Digelar oleh{' '}
-                                {SCHOOL_NAME}.
+                                {site?.audience ?? 'SMP/MTs se-Karesidenan Kediri'} ·{' '}
+                                {site?.event_date?.short ?? '30 Januari 2027'} di{' '}
+                                {site?.venue?.name ?? SCHOOL_NAME}. Ruang bertemu, berlomba, dan bertumbuh
+                                bagi pelajar Muslim.
                             </p>
                             <div className="socials">
+                                {site?.instagram && (
+                                    <a
+                                        href={site.instagram}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label={`Instagram ${site.instagram_handle ?? 'panitia'}`}
+                                    >
+                                        <IgIcon />
+                                    </a>
+                                )}
                                 {wa && (
                                     <a href={wa} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp panitia">
                                         <WaIcon />
@@ -283,7 +305,7 @@ export default function GuestLayout({ title, children }) {
                                     <Link href="/lomba">Cabang lomba</Link>
                                 </li>
                                 <li>
-                                    <a href="/#tentang">Tentang festival</a>
+                                    <a href="/#jadwal">Timeline kegiatan</a>
                                 </li>
                                 <li>
                                     <a href="/#faq">Pertanyaan umum</a>
@@ -307,13 +329,31 @@ export default function GuestLayout({ title, children }) {
                                 <li>
                                     <a href="/#alur">Alur pendaftaran</a>
                                 </li>
-                                {wa && (
-                                    <li>
-                                        <a href={wa} target="_blank" rel="noopener noreferrer">
-                                            WhatsApp panitia
+                                <li>
+                                    <a href={site?.website ?? '/lomba'} target="_blank" rel="noopener noreferrer">
+                                        Situs sekolah
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3>Kontak panitia</h3>
+                            <ul>
+                                {(site?.contacts ?? []).map((c) => (
+                                    <li key={c.phone}>
+                                        <a
+                                            href={waLink(c.phone, `Halo ${c.name}, saya ingin bertanya tentang FPM XII.`)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            {c.name} · {c.phone}
                                         </a>
                                     </li>
-                                )}
+                                ))}
+                                <li style={{ color: 'rgba(248, 246, 236, 0.72)', lineHeight: 1.5 }}>
+                                    {site?.venue?.address ?? 'Jl. Musi No. 6, Blitar 66117'}
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -322,7 +362,9 @@ export default function GuestLayout({ title, children }) {
                         <span>
                             © {year ?? new Date().getFullYear()} {eventName} · {SCHOOL_NAME}
                         </span>
-                        <span>Pendaftaran tidak dipungut biaya.</span>
+                        <span>
+                            Pendaftaran gratis · Pelaksanaan {site?.event_date?.short ?? '30 Januari 2027'}
+                        </span>
                     </div>
                 </div>
             </footer>

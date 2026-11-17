@@ -5,20 +5,21 @@ namespace Database\Seeders;
 use App\Models\Competition;
 use App\Models\Event;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class CompetitionSeeder extends Seeder
 {
-    /** Cabang lomba FPM beserta kuota global & kuota per sekolah. */
+    /**
+     * Cabang resmi FPM XII sesuai poster panitia (Harlah ke-59 SMKS Islam 1
+     * Kota Blitar). `slug` ditulis eksplisit supaya tautan publik stabil.
+     * Kuota adalah nilai awal — panitia dapat mengubahnya di Manajemen Lomba.
+     */
     public const COMPETITIONS = [
-        ['name' => 'Musabaqah Tilawatil Quran', 'type' => 'individual', 'global' => 30, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Seni baca Al-Quran dengan lagu mujawwad.'],
-        ['name' => 'Tahfidz Juz 30', 'type' => 'individual', 'global' => 40, 'school' => 3, 'min' => null, 'max' => null, 'desc' => 'Hafalan juz 30 dengan tajwid yang benar.'],
-        ['name' => 'Pidato Bahasa Indonesia', 'type' => 'individual', 'global' => 25, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Pidato bertema moderasi beragama.'],
-        ['name' => 'Pidato Bahasa Inggris', 'type' => 'individual', 'global' => 25, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Speech contest: islamic values in modern life.'],
-        ['name' => 'Pidato Bahasa Arab', 'type' => 'individual', 'global' => 20, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Khitobah dengan bahasa Arab fushah.'],
-        ['name' => 'Kaligrafi Islam', 'type' => 'individual', 'global' => 25, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Khat naskhi, tsuluts, dan diwani.'],
-        ['name' => 'Cerdas Cermat PAI', 'type' => 'group', 'global' => 12, 'school' => 1, 'min' => 3, 'max' => 3, 'desc' => 'Satu tim 3 siswa per sekolah.'],
-        ['name' => 'Rebana Banjari', 'type' => 'group', 'global' => 10, 'school' => 1, 'min' => 6, 'max' => 12, 'desc' => 'Grup hadrah/banjari min 6 max 12 siswa.'],
+        ['name' => 'Sholawat', 'slug' => 'sholawat', 'type' => 'group', 'global' => 15, 'school' => 1, 'min' => 5, 'max' => 12, 'desc' => 'Penampilan grup sholawat/rebana perwakilan sekolah.'],
+        ['name' => 'Kaligrafi', 'slug' => 'kaligrafi', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Karya khat dengan kaidah naskhi, tsuluts, dan diwani.'],
+        ['name' => 'Da\'i Muda', 'slug' => 'dai-muda', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Pidato dakwah bertema moderasi beragama.'],
+        ['name' => 'Pop Religi', 'slug' => 'pop-religi', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Lomba menyanyi lagu bernuansa religi.'],
+        ['name' => 'Musabaqah Tilawatil Qur\'an', 'slug' => 'musabaqah-tilawatil-quran', 'type' => 'individual', 'global' => 40, 'school' => 2, 'min' => null, 'max' => null, 'desc' => 'Seni baca Al-Quran dengan lagu mujawwad.'],
+        ['name' => 'Olimpiade Matematika & IPA', 'slug' => 'olimpiade-matematika-ipa', 'type' => 'group', 'global' => 20, 'school' => 1, 'min' => 3, 'max' => 3, 'desc' => 'Satu tim 3 siswa: matematika dan IPA.'],
     ];
 
     public function run(): void
@@ -33,7 +34,7 @@ class CompetitionSeeder extends Seeder
 
         foreach (self::COMPETITIONS as $i => $row) {
             Competition::updateOrCreate(
-                ['event_id' => $event->id, 'slug' => Str::slug($row['name'])],
+                ['event_id' => $event->id, 'slug' => $row['slug']],
                 [
                     'name' => $row['name'],
                     'category_type' => $row['type'],

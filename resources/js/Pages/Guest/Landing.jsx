@@ -1,21 +1,18 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
 
-const SCHOOL_NAME = 'SMKS Islam 1 Kota Blitar';
-
-const categoryLabel = {
-    individual: 'Individu',
-    group: 'Kelompok',
-};
-
 const FAQ = [
     {
-        q: 'Siapa yang boleh mengikuti FPM?',
-        a: 'Pelajar aktif SMP/MTs dan SMA/SMK. Setiap peserta didaftarkan oleh sekolah melalui akun sekolah, bukan mendaftar sendiri.',
+        q: 'Siapa yang boleh mengikuti FPM XII?',
+        a: 'Pelajar aktif SMP/MTs se-Karesidenan Kediri. Setiap peserta didaftarkan oleh sekolah melalui akun sekolah, bukan mendaftar sendiri.',
+    },
+    {
+        q: 'Kapan pendaftaran dan pelaksanaannya?',
+        a: 'Pendaftaran online 20 November 2026 sampai 22 Januari 2027. Technical meeting Senin, 25 Januari 2027, dan pelaksanaan lomba Sabtu, 30 Januari 2027 di SMKS Islam 1 Kota Blitar.',
     },
     {
         q: 'Apakah pendaftaran dipungut biaya?',
-        a: 'Tidak. Pendaftaran FPM tidak dipungut biaya. Kuota tiap cabang tetap terbatas, jadi daftarkan tim lebih awal.',
+        a: 'Tidak. Pendaftaran FPM XII gratis. Kuota tiap cabang tetap terbatas, jadi daftarkan tim lebih awal.',
     },
     {
         q: 'Bagaimana cara mendapatkan akun sekolah?',
@@ -68,17 +65,33 @@ function QuotaBar({ used = 0, total = 0 }) {
 }
 
 export default function Landing({ event_info, competitions = [], totals = {} }) {
-    const { theme, auth } = usePage().props;
+    const { theme, auth, site } = usePage().props;
     const user = auth?.user ?? null;
 
-    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim';
-    const year = event_info?.year ?? null;
-    const tagline = event_info?.tagline ?? null;
+    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim XII';
     const logo = theme?.logo_url ?? '/branding/logo-mark.png';
+
+    const school = site?.school ?? 'SMKS Islam 1 Kota Blitar';
+    const audience = site?.audience ?? 'SMP/MTs se-Karesidenan Kediri';
+    const audienceShort = site?.audience_short ?? 'SMP/MTs';
+    const occasion = site?.occasion ?? 'Harlah ke-59 SMKS Islam 1 Kota Blitar';
+    const occasionShort = site?.occasion_short ?? 'Harlah ke-59';
+    const venue = site?.venue ?? {
+        name: school,
+        address: 'Jl. Musi No. 6, Blitar 66117',
+        city: 'Kota Blitar, Jawa Timur',
+    };
+    const registration = site?.registration ?? {
+        start_label: 'Jumat, 20 November 2026',
+        end_label: 'Jumat, 22 Januari 2027',
+        window_label: '20 November 2026 – 22 Januari 2027',
+    };
+    const technicalMeeting = site?.technical_meeting ?? { label: 'Senin, 25 Januari 2027' };
+    const eventDate = site?.event_date ?? { label: 'Sabtu, 30 Januari 2027', short: '30 Januari 2027' };
 
     const lastWord = eventName.trim().split(/\s+/).pop() ?? '';
     const hasRomanEdition = /^[IVXLC]+$/.test(lastWord);
-    const edition = hasRomanEdition ? lastWord : year ?? 'FPM';
+    const edition = hasRomanEdition ? lastWord : site?.edition ?? 'XII';
     const headingText = hasRomanEdition
         ? eventName.trim().slice(0, -lastWord.length).trim()
         : eventName;
@@ -116,8 +129,8 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                         </h1>
 
                         <p className="hero__lead">
-                            {tagline ??
-                                'Ruang bertemu, berlomba, dan bertumbuh bagi pelajar Muslim. Satu gelaran kompetisi yang santun, meriah, dan bermakna.'}
+                            {audience}. {site?.tagline ?? occasion}. Ruang bertemu, berlomba, dan
+                            bertumbuh bagi pelajar Muslim.
                         </p>
 
                         <ul className="hero__meta">
@@ -126,22 +139,21 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                     <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
                                     <path d="M8 3v4M16 3v4M3.5 10h17" />
                                 </MetaIcon>
-                                <span>{year ? `Edisi ${year}` : 'Segera diumumkan'}</span>
+                                <span>{eventDate.label}</span>
                             </li>
                             <li>
                                 <MetaIcon>
                                     <path d="M20 10c0 5.2-6.3 10.4-7.4 11.3a1 1 0 0 1-1.2 0C10.3 20.4 4 15.2 4 10a8 8 0 1 1 16 0" />
                                     <circle cx="12" cy="10" r="2.6" />
                                 </MetaIcon>
-                                <span>{SCHOOL_NAME}</span>
+                                <span>{venue.name}</span>
                             </li>
                             <li>
                                 <MetaIcon>
-                                    <path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19" />
-                                    <circle cx="10" cy="7.5" r="3.2" />
-                                    <path d="M20 19v-1.4a3.4 3.4 0 0 0-2.6-3.3M15.6 4.6a3.2 3.2 0 0 1 0 6" />
+                                    <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
+                                    <path d="M8 8h8M8 12h8M8 16h5" />
                                 </MetaIcon>
-                                <span>SMP/MTs &amp; SMA/SMK</span>
+                                <span>Pendaftaran {registration.window_label}</span>
                             </li>
                         </ul>
 
@@ -168,18 +180,18 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                     <span>FPM</span>
                                     <strong>{edition}</strong>
                                 </div>
-                                <p className="pass__sub">{SCHOOL_NAME}</p>
+                                <p className="pass__sub">{school}</p>
 
                                 <div className="pass__perf" aria-hidden="true" />
 
                                 <dl className="pass__facts">
                                     <div>
-                                        <dt>Tanggal</dt>
-                                        <dd>{year ? `Edisi ${year}` : 'Segera diumumkan'}</dd>
+                                        <dt>Pelaksanaan</dt>
+                                        <dd>{eventDate.short}</dd>
                                     </div>
                                     <div>
                                         <dt>Peserta</dt>
-                                        <dd>SMP/MTs &amp; SMA/SMK</dd>
+                                        <dd>{audienceShort}</dd>
                                     </div>
                                     <div>
                                         <dt>Cabang</dt>
@@ -197,7 +209,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                             <i key={i} />
                                         ))}
                                     </span>
-                                    <span className="pass__code">{year ?? 'FPM'}</span>
+                                    <span className="pass__code">{occasionShort}</span>
                                 </div>
                             </div>
 
@@ -219,11 +231,11 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                     <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
                                     <path d="M8 3v4M16 3v4M3.5 10h17" />
                                 </MetaIcon>
-                                Edisi
+                                Pelaksanaan
                             </span>
                             <span className="fact__value">
-                                {year ?? 'Segera diumumkan'}
-                                <span>Festival tahunan</span>
+                                {eventDate.short}
+                                <span>{occasion}</span>
                             </span>
                         </div>
                         <div className="fact">
@@ -235,7 +247,8 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                 Tempat
                             </span>
                             <span className="fact__value">
-                                SMKS Islam 1<span>Kota Blitar, Jawa Timur</span>
+                                {venue.name}
+                                <span>{venue.address}</span>
                             </span>
                         </div>
                         <div className="fact">
@@ -248,7 +261,8 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                 Peserta
                             </span>
                             <span className="fact__value">
-                                SMP/MTs &amp; SMA/SMK<span>Perwakilan sekolah</span>
+                                {audience}
+                                <span>Perwakilan sekolah</span>
                             </span>
                         </div>
                         <div className="fact">
@@ -260,7 +274,8 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                                 Biaya
                             </span>
                             <span className="fact__value">
-                                Gratis<span>Tidak dipungut biaya</span>
+                                Gratis
+                                <span>{site?.prize_note ?? 'Total hadiah puluhan juta rupiah'}</span>
                             </span>
                         </div>
                     </div>
@@ -275,9 +290,9 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                         <h2 className="h2 reveal">Satu panggung untuk pelajar yang bertumbuh.</h2>
                         <div className="prose reveal" style={{ '--d': '80ms' }}>
                             <p>
-                                Festival Pelajar Muslim (FPM) adalah gelaran tahunan {SCHOOL_NAME} yang
-                                mempertemukan pelajar dari berbagai sekolah untuk berlomba, belajar, dan saling
-                                mengenal.
+                                Festival Pelajar Muslim (FPM) adalah gelaran tahunan {school} yang
+                                mempertemukan pelajar {audienceShort} untuk berlomba, belajar, dan saling
+                                mengenal. Edisi XII digelar {site?.tagline ?? occasion}.
                             </p>
                             <p>
                                 Setiap cabang dirancang bukan hanya untuk mencari juara, tetapi untuk melatih
@@ -342,7 +357,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                             <h2 className="h2">Pilih medan kompetisimu.</h2>
                             <p className="lead">
                                 {competitions.length > 0
-                                    ? `${totalCompetitions} cabang diperlombakan pada edisi ini. Ketentuan lengkap tiap cabang tersedia di halaman lomba.`
+                                    ? `${totalCompetitions} cabang diperlombakan pada edisi ini untuk ${audienceShort}. Ketentuan lengkap tiap cabang tersedia di halaman lomba.`
                                     : 'Panitia belum menetapkan cabang lomba pada edisi ini.'}
                             </p>
                         </div>
@@ -372,7 +387,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
 
                                         <h3>{c.name}</h3>
                                         <p className="lomba-card__meta">
-                                            {categoryLabel[c.category_type] ?? c.category_type}
+                                            {c.category_type === 'group' ? 'Kelompok' : 'Individu'}
                                             {c.gender_mode === 'separate' ? ' · Putra & Putri' : ''}
                                         </p>
                                         <p>{c.description ?? 'Panitia belum menambahkan deskripsi cabang ini.'}</p>
@@ -391,6 +406,49 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                             })}
                         </div>
                     )}
+                </div>
+            </section>
+
+            {/* ============ TIMELINE KEGIATAN ============ */}
+            <section className="section" id="jadwal">
+                <div className="container grid-2">
+                    <div>
+                        <span className="eyebrow">Timeline kegiatan</span>
+                        <h2 className="h2">Tiga tanggal yang perlu dicatat.</h2>
+                        <p className="lead" style={{ marginTop: '14px' }}>
+                            Pendaftaran dibuka daring, dilanjutkan technical meeting, lalu pelaksanaan
+                            lomba di {venue.name}.
+                        </p>
+                        <p style={{ marginTop: '22px' }}>
+                            <Link className="link-more" href={primaryHref}>
+                                Daftar sekarang
+                                <ArrowIcon />
+                            </Link>
+                        </p>
+                    </div>
+
+                    <ol className="timeline">
+                        <li className="reveal" data-status="now">
+                            <span className="timeline__date">Pendaftaran online</span>
+                            <h3>{registration.window_label}</h3>
+                            <p>
+                                Dibuka {registration.start_label} sampai {registration.end_label} melalui
+                                akun sekolah.
+                            </p>
+                        </li>
+                        <li className="reveal" style={{ '--d': '80ms' }}>
+                            <span className="timeline__date">Technical meeting</span>
+                            <h3>{technicalMeeting.label}</h3>
+                            <p>Pertemuan teknis peserta dan guru pendamping di {venue.name}.</p>
+                        </li>
+                        <li className="reveal" style={{ '--d': '160ms' }}>
+                            <span className="timeline__date">Pelaksanaan</span>
+                            <h3>{eventDate.label}</h3>
+                            <p>
+                                {venue.name}, {venue.address}.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
             </section>
 
@@ -438,14 +496,14 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
             </section>
 
             {/* ============ FAQ ============ */}
-            <section className="section section--paper" id="faq">
+            <section className="section" id="faq">
                 <div className="container grid-2">
                     <div>
                         <span className="eyebrow">Pertanyaan umum</span>
                         <h2 className="h2">Sebelum kamu mendaftar.</h2>
                         <p className="lead" style={{ marginTop: '14px' }}>
-                            Lima pertanyaan yang paling sering ditanyakan peserta. Masih ada yang ingin
-                            ditanyakan?
+                            Enam pertanyaan yang paling sering ditanyakan peserta. Masih ada yang ingin
+                            ditanyakan? Hubungi panitia di {site?.contacts?.[0]?.phone ?? 'kontak resmi'}.
                         </p>
                         <p style={{ marginTop: '22px' }}>
                             <Link className="link-more" href={user ? '/dashboard' : '/login'}>
@@ -476,7 +534,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
                             <h2>Siap jadi bagian FPM {edition}?</h2>
                             <p>
                                 Klaim akun sekolahmu, lengkapi data peserta, dan tunggu konfirmasi dari
-                                panitia.
+                                panitia. Pendaftaran ditutup {registration.end_label}.
                             </p>
                         </div>
                         <div className="btn-row">

@@ -49,12 +49,16 @@ function QuotaBar({ used = 0, total = 0 }) {
 }
 
 export default function Lomba({ event_info, competitions = [] }) {
-    const { auth } = usePage().props;
+    const { auth, site } = usePage().props;
     const user = auth?.user ?? null;
     const [filter, setFilter] = useState('all');
 
-    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim';
-    const year = event_info?.year ?? null;
+    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim XII';
+    const audienceShort = site?.audience_short ?? 'SMP/MTs';
+    const registration = site?.registration ?? {
+        window_label: '20 November 2026 – 22 Januari 2027',
+        end_label: 'Jumat, 22 Januari 2027',
+    };
     const primaryHref = user ? '/daftar' : '/klaim';
 
     const visible = useMemo(() => {
@@ -85,7 +89,7 @@ export default function Lomba({ event_info, competitions = [] }) {
                     <h1>Cabang lomba</h1>
                     <p>
                         {competitions.length > 0
-                            ? `${competitions.length} cabang pada ${eventName}${year ? ` edisi ${year}` : ''}. Pilih kategori untuk mempersempit daftar, lalu buka ketentuan tiap cabang.`
+                            ? `${competitions.length} cabang untuk ${audienceShort} se-Karesidenan Kediri. Pendaftaran ${registration.window_label}. Pilih kategori untuk mempersempit daftar, lalu buka ketentuan tiap cabang.`
                             : `Panitia ${eventName} belum mempublikasikan cabang lomba.`}
                     </p>
                 </div>
@@ -207,10 +211,11 @@ export default function Lomba({ event_info, competitions = [] }) {
                             <path d="M12 11v5M12 8h.01" />
                         </svg>
                         <span>
-                            Pendaftaran FPM <strong>tidak dipungut biaya</strong>. Kuota setiap cabang
-                            terbatas — saat ini tersisa <strong>{totalQuota}</strong> slot dari seluruh
-                            cabang. Kuota tersisa = kuota global dikurangi pendaftaran yang menunggu
-                            verifikasi dan disetujui.
+                            Pendaftaran FPM XII <strong>tidak dipungut biaya</strong>. Pendaftaran ditutup{' '}
+                            <strong>{registration.end_label}</strong>. Kuota setiap cabang terbatas — saat
+                            ini tersisa <strong>{totalQuota}</strong> slot dari seluruh cabang. Kuota
+                            tersisa = kuota global dikurangi pendaftaran yang menunggu verifikasi dan
+                            disetujui.
                         </span>
                     </div>
                 </div>

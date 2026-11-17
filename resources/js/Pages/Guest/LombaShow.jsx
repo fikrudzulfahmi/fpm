@@ -21,10 +21,12 @@ function statusOf(c) {
 }
 
 export default function LombaShow({ event_info, competition }) {
-    const { auth } = usePage().props;
+    const { auth, site } = usePage().props;
     const user = auth?.user ?? null;
 
-    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim';
+    const eventName = event_info?.event_name ?? 'Festival Pelajar Muslim XII';
+    const eventDate = site?.event_date ?? { label: 'Sabtu, 30 Januari 2027' };
+    const venue = site?.venue ?? { name: 'SMKS Islam 1 Kota Blitar', address: 'Jl. Musi No. 6, Blitar 66117' };
     const s = statusOf(competition);
     const primaryHref = user ? '/daftar' : '/klaim';
     const isGroup = competition.category_type === 'group';
@@ -205,6 +207,14 @@ export default function LombaShow({ event_info, competition }) {
                                     </span>
                                 </li>
                             )}
+                            <li>
+                                <span className="info-list__label">Pelaksanaan</span>
+                                <span className="info-list__value">{eventDate.label}</span>
+                            </li>
+                            <li>
+                                <span className="info-list__label">Tempat</span>
+                                <span className="info-list__value">{venue.name}</span>
+                            </li>
                             <li>
                                 <span className="info-list__label">Kuota tersisa</span>
                                 <span className="info-list__value">
