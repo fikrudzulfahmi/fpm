@@ -97,7 +97,7 @@ export default function LombaShow({ event_info, competition }) {
                             </p>
                         </div>
 
-                        <CompetitionFacts competition={competition} />
+                        <CompetitionFacts competition={competition} showCriteria />
 
                         <div className="info-block">
                             <p className="section-title-sm">Ketentuan lomba</p>
