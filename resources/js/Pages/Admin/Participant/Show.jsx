@@ -1,24 +1,16 @@
+import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import DataTable from '../../../Components/DataTable';
-import { useConfirm } from '../../../Components/ConfirmProvider';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 import StatusBadge from '../../../Components/StatusBadge';
 
 export default function ParticipantShow({ event, competition, registrations = [], stats = {} }) {
-    const confirm = useConfirm();
+    const [askDraw, setAskDraw] = useState(false);
     const isGroup = competition?.category_type === 'group';
 
-    const draw = async () => {
-        const ok = await confirm({
-            title: `Undi urutan ${competition.name}?`,
-            message:
-                'Nomor tampil peserta yang sudah disetujui akan diacak ulang. Nilai yang sudah diinput tidak berubah.',
-            confirmLabel: 'Undi sekarang',
-            tone: 'primary',
-        });
-
-        if (!ok) return;
-
+    const runDraw = () => {
+        setAskDraw(false);
         router.post(`/admin/peserta-lomba/${competition.id}/undian`, {}, { preserveScroll: true });
     };
 
@@ -32,7 +24,7 @@ export default function ParticipantShow({ event, competition, registrations = []
                 </Link>
                 <button
                     type="button"
-                    onClick={draw}
+                    onClick={() => setAskDraw(true)}
                     disabled={(stats.approved ?? 0) === 0}
                     className="rounded-lg bg-[#064b3d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0a5b4a] disabled:opacity-40"
                 >
@@ -150,6 +142,16 @@ export default function ParticipantShow({ event, competition, registrations = []
                 rowKey={(r) => r.id}
                 paginationLabel="peserta"
                 empty="Belum ada peserta pada cabang ini."
+            />
+
+            <ConfirmDialog
+                open={askDraw}
+                title={`Undi urutan ${competition?.name ?? ''}?`}
+                message="Nomor tampil peserta yang sudah disetujui akan diacak ulang. Nilai yang sudah diinput tidak berubah."
+                confirmLabel="Undi sekarang"
+                tone="primary"
+                onConfirm={runDraw}
+                onClose={() => setAskDraw(false)}
             />
         </AppLayout>
     );

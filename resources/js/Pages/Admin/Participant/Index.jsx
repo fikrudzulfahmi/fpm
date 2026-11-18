@@ -1,21 +1,16 @@
+import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import DataTable from '../../../Components/DataTable';
-import { useConfirm } from '../../../Components/ConfirmProvider';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 
 export default function ParticipantIndex({ event, competitions = [], totals = {} }) {
-    const confirm = useConfirm();
+    const [pending, setPending] = useState(null);
 
-    const draw = async (competition) => {
-        const ok = await confirm({
-            title: `Undi urutan ${competition.name}?`,
-            message:
-                'Nomor tampil seluruh peserta yang sudah disetujui akan diacak ulang. Nilai yang sudah diinput tidak berubah.',
-            confirmLabel: 'Undi sekarang',
-            tone: 'primary',
-        });
-
-        if (!ok) return;
+    const runDraw = () => {
+        const competition = pending;
+        setPending(null);
+        if (!competition) return;
 
         router.post(`/admin/peserta-lomba/${competition.id}/undian`, {}, { preserveScroll: true });
     };
@@ -114,7 +109,7 @@ export default function ParticipantIndex({ event, competitions = [], totals = {}
                                 </Link>
                                 <button
                                     type="button"
-                                    onClick={() => draw(c)}
+                                    onClick={() => setPending(c)}
                                     disabled={c.approved === 0}
                                     className="rounded-lg bg-[#064b3d] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#0a5b4a] disabled:opacity-40"
                                 >
@@ -127,6 +122,16 @@ export default function ParticipantIndex({ event, competitions = [], totals = {}
                 rows={competitions}
                 rowKey={(c) => c.id}
                 empty="Belum ada cabang lomba pada event ini."
+            />
+
+            <ConfirmDialog
+                open={Boolean(pending)}
+                title={`Undi urutan ${pending?.name ?? ''}?`}
+                message="Nomor tampil seluruh peserta yang sudah disetujui akan diacak ulang. Nilai yang sudah diinput tidak berubah."
+                confirmLabel="Undi sekarang"
+                tone="primary"
+                onConfirm={runDraw}
+                onClose={() => setPending(null)}
             />
         </AppLayout>
     );

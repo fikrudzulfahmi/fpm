@@ -1,28 +1,47 @@
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
-const ConfirmContext = createContext(async () => false);
+const ConfirmContext = createContext(null);
+const EVENT_NAME = 'fpm:confirm';
 
 /**
  * Dialog konfirmasi imperatif: `const ok = await confirm({ title, message })`.
- * Dipasang sekali di AppLayout supaya semua halaman memakai dialog bertema,
- * bukan window.confirm bawaan browser.
+ *
+ * Selain context, permintaan dikirim lewat event window. Dengan begitu dialog
+ * tetap muncul walau bundler memuat modul ini sebagai instans terpisah
+ * (gejala: tombol hapus/aktifkan tidak bereaksi karena context berbeda).
  */
 export function ConfirmProvider({ children }) {
     const [state, setState] = useState(null);
+    const resolveRef = useRef(null);
 
-    const confirm = useCallback(
-        (options) => new Promise((resolve) => setState({ options: typeof options === 'string' ? { message: options } : options, resolve })),
-        [],
-    );
+    const open = useCallback((options) => {
+        return new Promise((resolve) => {
+            resolveRef.current = resolve;
+            setState({ options: typeof options === 'string' ? { message: options } : options });
+        });
+    }, []);
+
+    useEffect(() => {
+        const onRequest = (event) => {
+            const { options, resolve } = event.detail ?? {};
+
+            open(options).then((value) => resolve?.(value));
+        };
+
+        window.addEventListener(EVENT_NAME, onRequest);
+
+        return () => window.removeEventListener(EVENT_NAME, onRequest);
+    }, [open]);
 
     const settle = (result) => {
-        state?.resolve(result);
+        resolveRef.current?.(result);
+        resolveRef.current = null;
         setState(null);
     };
 
     return (
-        <ConfirmContext.Provider value={confirm}>
+        <ConfirmContext.Provider value={open}>
             {children}
 
             <ConfirmDialog
@@ -40,5 +59,18 @@ export function ConfirmProvider({ children }) {
 }
 
 export function useConfirm() {
-    return useContext(ConfirmContext);
+    const fromContext = useContext(ConfirmContext);
+
+    return useCallback(
+        (options) => {
+            if (fromContext) {
+                return fromContext(options);
+            }
+
+            return new Promise((resolve) => {
+                window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: { options, resolve } }));
+            });
+        },
+        [fromContext],
+    );
 }
