@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 import DataTable from '../../../Components/DataTable';
 import ConfirmDialog from '../../../Components/ConfirmDialog';
+import AdminStatCard from '../../../Components/AdminStatCard';
 
 export default function ParticipantIndex({ event, competitions = [], totals = {} }) {
     const [pending, setPending] = useState(null);
@@ -34,23 +35,32 @@ export default function ParticipantIndex({ event, competitions = [], totals = {}
                 </Link>
             </div>
 
-            <div className="stat-grid">
-                <div className="stat-card">
-                    <p className="stat-card__label">Cabang lomba</p>
-                    <p className="stat-card__value">{totals.competitions ?? competitions.length}</p>
-                </div>
-                <div className="stat-card">
-                    <p className="stat-card__label">Total pendaftar</p>
-                    <p className="stat-card__value">{totals.registrations ?? 0}</p>
-                </div>
-                <div className="stat-card">
-                    <p className="stat-card__label">Disetujui</p>
-                    <p className="stat-card__value text-[#0a5b4a]">{totals.approved ?? 0}</p>
-                </div>
-                <div className="stat-card">
-                    <p className="stat-card__label">Menunggu verifikasi</p>
-                    <p className="stat-card__value text-[#b45309]">{totals.pending ?? 0}</p>
-                </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <AdminStatCard
+                    label="Cabang lomba"
+                    value={totals.competitions ?? competitions.length}
+                    hint="Event aktif"
+                    icon="flag"
+                />
+                <AdminStatCard
+                    label="Total pendaftar"
+                    value={totals.registrations ?? 0}
+                    hint="Seluruh status"
+                    icon="users"
+                />
+                <AdminStatCard
+                    label="Disetujui"
+                    value={totals.approved ?? 0}
+                    hint="Siap dinilai"
+                    icon="check"
+                />
+                <AdminStatCard
+                    label="Menunggu verifikasi"
+                    value={totals.pending ?? 0}
+                    hint={(totals.pending ?? 0) > 0 ? 'Perlu ditinjau panitia' : 'Semua sudah ditinjau'}
+                    icon="clock"
+                    tone="amber"
+                />
             </div>
 
             <DataTable

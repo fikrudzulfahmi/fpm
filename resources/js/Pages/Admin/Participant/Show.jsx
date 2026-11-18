@@ -4,6 +4,7 @@ import AppLayout from '../../../Layouts/AppLayout';
 import DataTable from '../../../Components/DataTable';
 import ConfirmDialog from '../../../Components/ConfirmDialog';
 import StatusBadge from '../../../Components/StatusBadge';
+import AdminStatCard from '../../../Components/AdminStatCard';
 
 export default function ParticipantShow({ event, competition, registrations = [], stats = {} }) {
     const [askDraw, setAskDraw] = useState(false);
@@ -45,23 +46,37 @@ export default function ParticipantShow({ event, competition, registrations = []
                 </div>
             </div>
 
-            <div className="stat-grid">
-                <div className="stat-card">
-                    <p className="stat-card__label">Total peserta</p>
-                    <p className="stat-card__value">{stats.total ?? 0}</p>
-                </div>
-                <div className="stat-card">
-                    <p className="stat-card__label">Disetujui</p>
-                    <p className="stat-card__value text-[#0a5b4a]">{stats.approved ?? 0}</p>
-                </div>
-                <div className="stat-card">
-                    <p className="stat-card__label">Menunggu verifikasi</p>
-                    <p className="stat-card__value text-[#b45309]">{stats.pending ?? 0}</p>
-                </div>
-                <div className="stat-card">
-                    <p className="stat-card__label">Sudah dapat nomor</p>
-                    <p className="stat-card__value">{stats.drawn ?? 0}</p>
-                </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <AdminStatCard
+                    label="Total peserta"
+                    value={stats.total ?? 0}
+                    hint={`Kuota ${competition?.global_quota ?? 0}`}
+                    icon="users"
+                />
+                <AdminStatCard
+                    label="Disetujui"
+                    value={stats.approved ?? 0}
+                    hint="Boleh dinilai"
+                    icon="check"
+                />
+                <AdminStatCard
+                    label="Menunggu verifikasi"
+                    value={stats.pending ?? 0}
+                    hint={(stats.pending ?? 0) > 0 ? 'Perlu ditinjau panitia' : 'Semua sudah ditinjau'}
+                    icon="clock"
+                    tone="amber"
+                />
+                <AdminStatCard
+                    label="Sudah dapat nomor"
+                    value={stats.drawn ?? 0}
+                    hint={`dari ${stats.approved ?? 0} peserta disetujui`}
+                    icon="flag"
+                    bar={
+                        (stats.approved ?? 0) > 0
+                            ? Math.round(((stats.drawn ?? 0) / (stats.approved ?? 1)) * 100)
+                            : 0
+                    }
+                />
             </div>
 
             <DataTable
