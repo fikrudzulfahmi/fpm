@@ -2,7 +2,7 @@ import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
 const ConfirmContext = createContext(null);
-const EVENT_NAME = 'fpm:confirm'; // deploy-retrigger 2026-11-18
+const EVENT_NAME = 'fpm:confirm';
 
 /**
  * Dialog konfirmasi imperatif: `const ok = await confirm({ title, message })`.
