@@ -252,8 +252,10 @@ export default function ClaimIndex({ admin_whatsapp: waFromServer }) {
                                         required
                                         value={form.data.name}
                                         error={form.errors}
-                                        onChange={(e) => form.setData('name', e.target.value)}
-                                        placeholder="Nama lengkap"
+                                        onChange={(e) => form.setData('name', e.target.value.toUpperCase())}
+                                        placeholder="NAMA LENGKAP"
+                                        style={{ textTransform: 'uppercase' }}
+                                        autoCapitalize="characters"
                                         className="field--full"
                                     />
                                     <Field

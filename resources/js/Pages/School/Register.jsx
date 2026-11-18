@@ -85,7 +85,9 @@ function ParticipantRow({
                     name={`name-${row._key}`}
                     required
                     value={row.full_name}
-                    onChange={(e) => onChange(index, 'full_name', e.target.value)}
+                    onChange={(e) => onChange(index, 'full_name', e.target.value.toUpperCase())}
+                    style={{ textTransform: 'uppercase' }}
+                    autoCapitalize="characters"
                     error={rowError?.(index, 'full_name')}
                     className="[&_label]:text-xs"
                 />
@@ -387,7 +389,9 @@ export default function Register({ competitions = [], school }) {
                             required
                             value={form.data.group_name}
                             error={form.errors.group_name}
-                            onChange={(e) => form.setData('group_name', e.target.value)}
+                            onChange={(e) => form.setData('group_name', e.target.value.toUpperCase())}
+                            style={{ textTransform: 'uppercase' }}
+                            autoCapitalize="characters"
                             placeholder="Contoh: Tim Elang SMAN 1"
                         />
                     </section>
@@ -467,7 +471,9 @@ export default function Register({ competitions = [], school }) {
                             required
                             value={form.data.companion_name}
                             error={form.errors.companion_name}
-                            onChange={(e) => form.setData('companion_name', e.target.value)}
+                            onChange={(e) => form.setData('companion_name', e.target.value.toUpperCase())}
+                            style={{ textTransform: 'uppercase' }}
+                            autoCapitalize="characters"
                         />
                         <Field
                             label="No. WhatsApp Pendamping"

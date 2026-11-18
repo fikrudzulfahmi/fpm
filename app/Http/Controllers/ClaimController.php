@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -90,7 +91,7 @@ class ClaimController extends Controller
             }
 
             $created = User::create([
-                'name' => $data['name'],
+                'name' => Str::upper(trim($data['name'])),
                 'email' => $data['email'],
                 'username' => $data['username'],
                 'password' => Hash::make($data['password']),

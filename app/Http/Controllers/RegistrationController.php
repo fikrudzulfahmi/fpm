@@ -138,6 +138,18 @@ class RegistrationController extends Controller
             'participants.*.birth_date' => ['required', 'date', 'before:today'],
         ]);
 
+        // Nama peserta/pembimbing/grup disimpan kapital agar konsisten di semua dokumen.
+        $data['companion_name'] = Str::upper(trim($data['companion_name']));
+        $data['group_name'] = isset($data['group_name']) && $data['group_name'] !== null
+            ? Str::upper(trim($data['group_name']))
+            : null;
+        $data['participants'] = array_map(function (array $row) {
+            $row['full_name'] = Str::upper(trim((string) $row['full_name']));
+            $row['nisn'] = trim((string) $row['nisn']);
+
+            return $row;
+        }, $data['participants']);
+
         $competition = Competition::where('event_id', $event->id)
             ->find($data['competition_id']);
 
