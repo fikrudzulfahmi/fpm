@@ -146,5 +146,12 @@ return [
         'slug' => 'slug',
         'letter' => 'surat rekomendasi',
         'reason' => 'alasan',
+        'access_level' => 'tingkat akses',
+        'competition' => 'cabang lomba',
+        'registration' => 'pendaftaran',
+        'place' => 'tempat',
+        'number_prefix' => 'awalan nomor',
+        'signer_name' => 'nama penandatangan',
+        'signer_title' => 'jabatan penandatangan',
     ],
 ];
