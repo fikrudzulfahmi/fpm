@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
 const ConfirmContext = createContext(null);
@@ -59,18 +59,13 @@ export function ConfirmProvider({ children }) {
 }
 
 export function useConfirm() {
-    const fromContext = useContext(ConfirmContext);
-
+    // Selalu lewat event window: context tidak dipakai karena bisa berbeda
+    // instans antar chunk (dialog jadi tidak muncul sama sekali).
     return useCallback(
-        (options) => {
-            if (fromContext) {
-                return fromContext(options);
-            }
-
-            return new Promise((resolve) => {
+        (options) =>
+            new Promise((resolve) => {
                 window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: { options, resolve } }));
-            });
-        },
-        [fromContext],
+            }),
+        [],
     );
 }
