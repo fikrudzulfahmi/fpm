@@ -8,7 +8,7 @@
     @php($siteUrl = 'https://fpm.smkislam1blitar.sch.id')
     @php($ogImagePath = public_path('branding/og-image.png'))
     @php($ogImage = $siteUrl.'/branding/og-image.png?v='.(file_exists($ogImagePath) ? filemtime($ogImagePath) : '1'))
-    @php($pageUrl = $siteUrl.url()->getPathInfo())
+    @php($pageUrl = $siteUrl.request()->getPathInfo())
     @php($description = 'Festival Pelajar Muslim XII untuk pelajar SMP/MTs se-Karesidenan Kediri di SMKS Islam 1 Kota Blitar. Enam cabang lomba, pendaftaran gratis 20 November 2026 – 22 Januari 2027, pelaksanaan 30 Januari 2027.')
     <title inertia>{{ $eventName }}</title>
     <meta name="description" content="{{ $description }}">
