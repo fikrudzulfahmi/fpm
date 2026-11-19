@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
 import CompetitionFacts from '../../Components/CompetitionFacts';
+import PosterModal from '../../Components/PosterModal';
 
 const FAQ = [
     {
@@ -110,6 +111,7 @@ export default function Landing({ event_info, competitions = [], totals = {} }) 
     return (
         <GuestLayout title="Beranda">
             <Head title="Beranda" />
+            <PosterModal />
 
             {/* ============ HERO ============ */}
             <section className="hero">
