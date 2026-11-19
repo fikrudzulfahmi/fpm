@@ -6,8 +6,8 @@
     @php($theme = $page['props']['theme'] ?? [])
     @php($eventName = $page['props']['event']['event_name'] ?? 'Festival Pelajar Muslim XII')
     @php($siteUrl = 'https://fpm.smkislam1blitar.sch.id')
-    @php($ogImagePath = public_path('branding/og-image.png'))
-    @php($ogImage = $siteUrl.'/branding/og-image.png?v='.(file_exists($ogImagePath) ? filemtime($ogImagePath) : '1'))
+    @php($ogImagePath = public_path('branding/og-image.jpg'))
+    @php($ogImage = $siteUrl.'/branding/og-image.jpg?v='.(file_exists($ogImagePath) ? filemtime($ogImagePath) : '1'))
     @php($pageUrl = $siteUrl.request()->getPathInfo())
     @php($description = 'Festival Pelajar Muslim XII untuk pelajar SMP/MTs se-Karesidenan Kediri di SMKS Islam 1 Kota Blitar. Enam cabang lomba, pendaftaran gratis 20 November 2026 – 22 Januari 2027, pelaksanaan 30 Januari 2027.')
     <title inertia>{{ $eventName }}</title>
@@ -23,7 +23,7 @@
     <meta property="og:title" content="{{ $eventName }} — SMP/MTs se-Karesidenan Kediri">
     <meta property="og:description" content="{{ $description }}">
     <meta property="og:image" content="{{ $ogImage }}">
-    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Poster Festival Pelajar Muslim XII, enam cabang lomba, pelaksanaan 30 Januari 2027 di SMKS Islam 1 Kota Blitar">
