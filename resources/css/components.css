@@ -261,8 +261,11 @@
 .poster-pop { margin: 0; }
 .poster-pop img {
     display: block;
-    width: 100%;
+    width: auto;
+    height: auto;
+    max-width: 100%;
     max-height: min(62vh, 560px);
+    margin-inline: auto;
     object-fit: contain;
     border-radius: 14px;
     background: #f3efdc;
