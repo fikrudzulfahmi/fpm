@@ -264,7 +264,7 @@
     width: auto;
     height: auto;
     max-width: 100%;
-    max-height: min(calc(100dvh - 250px), 560px);
+    max-height: min(calc(100dvh - 300px), 540px);
     margin-inline: auto;
     object-fit: contain;
     border-radius: 14px;
@@ -272,9 +272,10 @@
     box-shadow: 0 12px 28px rgba(6, 41, 33, 0.18);
 }
 .poster-pop__note {
-    margin: 14px 0 0;
+    margin: 12px 0 0;
+    font-size: 13px;
     text-align: center;
-    line-height: 1.55;
+    line-height: 1.5;
 }
 .poster-pop__note strong { color: var(--ink); }
 
