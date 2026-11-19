@@ -264,7 +264,7 @@
     width: auto;
     height: auto;
     max-width: 100%;
-    max-height: min(62vh, 560px);
+    max-height: min(calc(100dvh - 250px), 560px);
     margin-inline: auto;
     object-fit: contain;
     border-radius: 14px;
@@ -279,5 +279,5 @@
 .poster-pop__note strong { color: var(--ink); }
 
 @media (max-width: 640px) {
-    .poster-pop img { max-height: 52vh; }
+    .poster-pop img { max-height: min(calc(100dvh - 230px), 62vh); }
 }
