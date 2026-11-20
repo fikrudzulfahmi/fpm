@@ -48,8 +48,7 @@ return [
     ],
 
     'contacts' => [
-        ['name' => 'Pak Majid', 'role' => 'Ketua Panitia', 'phone' => '0856-0858-9057'],
-        ['name' => 'Pak Wilda', 'role' => 'Sekretariat Lomba', 'phone' => '0889-9696-9492'],
+        ['name' => 'Admin FPM', 'role' => 'Narahubung Panitia', 'phone' => '0856-0858-9057'],
     ],
 
     'website' => 'https://smkislam1blitar.sch.id',
