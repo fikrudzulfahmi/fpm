@@ -18,7 +18,7 @@ function EventSettings({ event }) {
 
     const save = (e) => {
         e.preventDefault();
-        form.post(`/admin/event/${event.id}/setelan`, { preserveScroll: true });
+        form.put(`/admin/event/${event.id}/setelan`, { preserveScroll: true, preserveState: false });
     };
 
     return (

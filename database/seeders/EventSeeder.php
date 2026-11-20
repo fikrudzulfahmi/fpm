@@ -28,7 +28,7 @@ class EventSeeder extends Seeder
         $event->setting()->updateOrCreate([], [
             'publish_scores' => false,
             'enable_certificates' => false,
-            'admin_whatsapp' => '0857-5548-1643',
+            'admin_whatsapp' => '0856-0858-9057',
             'certificate_template_config' => [
                 'bg_color' => '#ffffff',
                 'text_color' => '#1e293b',
